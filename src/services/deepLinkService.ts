@@ -33,18 +33,34 @@ class DeepLinkService {
     });
   }
 
+  buildDeepLink(roomId: string, token?: string): string {
+    return token
+      ? `kunektayo://join?room=${roomId}&token=${token}`
+      : `kunektayo://join?room=${roomId}`;
+  }
+
+  buildWebInviteUrl(roomId: string, token?: string): string {
+    return token
+      ? `https://kunektayo.app/#room=${roomId}&token=${token}`
+      : `https://kunektayo.app/#room=${roomId}`;
+  }
+
+  parseInviteTarget(urlStr: string): DeepLinkPayload | null {
+    return this.parseUrl(urlStr);
+  }
+
   /**
    * Parse deep link or invite URL
    */
   parseUrl(urlStr: string): DeepLinkPayload | null {
-    if (!urlStr) return null;
+    if (!urlStr || !urlStr.trim()) return null;
 
     try {
       // Handle custom scheme kunektayo://join?room=...&token=...
       if (urlStr.startsWith("kunektayo://")) {
         const queryPart = urlStr.includes("?") ? urlStr.split("?")[1] : "";
         const params = new URLSearchParams(queryPart);
-        const roomId = params.get("room") || params.get("roomId");
+        const roomId = params.get("room") || params.get("roomId") || params.get("id");
         const token = params.get("token");
         if (roomId) {
           return { roomId, token: token || undefined, rawUrl: urlStr };

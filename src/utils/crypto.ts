@@ -89,7 +89,7 @@ export function parseInviteInput(input: string): { roomId: string; token?: strin
 
       if (paramsString) {
         const searchParams = new URLSearchParams(paramsString);
-        const roomId = searchParams.get("room");
+        const roomId = searchParams.get("room") || searchParams.get("roomId");
         const token = searchParams.get("token");
         if (roomId) {
           return { roomId, token: token || undefined };

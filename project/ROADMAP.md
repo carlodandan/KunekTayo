@@ -16,7 +16,7 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | **Phase 6** | **Call & Room UX** | **COMPLETED** | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
 | **Phase 7** | **Optional Sharing** | **COMPLETED** | Screen sharing via getDisplayMedia, temporary P2P drag-and-drop file transfers via DataChannel |
 | **Phase 8** | **Security & Reliability** | **COMPLETED** | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
-| **Phase 9** | **Production** | **COMPLETED (Pending Review)** | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment, crash handling |
+| **Phase 9** | **Production** | **In Review & Hardening** | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment, crash handling (Not tagged as production ready yet) |
 
 ---
 
@@ -97,7 +97,7 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Zero data retention architecture with instant storage destruction on room completion
 - [x] Detailed security architecture documented in `project/SECURITY.md`
 
-### Phase 9: Production (Completed - Pending Review)
+### Phase 9: Production (In Review & Hardening — Not Tagged Production Ready)
 - [x] Windows NSIS bundle installer and MSI configuration (`src-tauri/tauri.conf.json`)
 - [x] Android signed APK / AAB packaging and capability scheme
 - [x] Cloudflare Worker production deployment script (`wrangler deploy`, `server/package.json`)
