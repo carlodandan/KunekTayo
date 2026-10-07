@@ -7,6 +7,7 @@ import {
   RoomStatus,
 } from "@/types/room";
 import { roomService } from "@/services/roomService";
+import { signalingService } from "@/services/signalingService";
 import { buildInviteUrl } from "@/utils/crypto";
 
 interface RoomContextValue {
@@ -65,6 +66,48 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => clearInterval(interval);
   }, [session?.soloExpiresAt, status]);
+
+  // Connect signaling whenever active session changes
+  useEffect(() => {
+    if (!session) {
+      signalingService.disconnect();
+      return;
+    }
+
+    signalingService.connect(session.roomId, session.inviteToken, session.myParticipantId);
+
+    const unsubState = signalingService.on("room_state", (payload: any) => {
+      if (payload.state) {
+        setStatus(payload.state);
+        setSession((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: payload.state,
+            soloExpiresAt: payload.soloExpiresAt,
+            participants: payload.participants || prev.participants,
+          };
+        });
+      }
+    });
+
+    const unsubPeerJoined = signalingService.on("peer_ready", () => {
+      setStatus("active");
+      setSession((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          status: "active",
+          soloExpiresAt: null,
+        };
+      });
+    });
+
+    return () => {
+      unsubState();
+      unsubPeerJoined();
+    };
+  }, [session?.roomId, session?.inviteToken, session?.myParticipantId]);
 
   // Compute countdown object
   const computeTimeRemaining = () => {
@@ -159,6 +202,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(null);
     setStatus("idle");
     setRejoinSession(null);
+    signalingService.disconnect();
   }, [session]);
 
   const rejoinLastRoom = useCallback(async () => {

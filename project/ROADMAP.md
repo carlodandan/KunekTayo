@@ -9,9 +9,9 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | Phase | Title | Status | Primary Deliverables |
 | :--- | :--- | :--- | :--- |
 | **Phase 1** | **Foundation** | **COMPLETED** | Tauri 2, React 19, TypeScript, Vite 8, Tailwind v4, Phosphor Icons, App Shell, Env Config, Windows + Android setup |
-| **Phase 2** | **Rooms** | **COMPLETED (Pending Review)** | Authoritative Durable Object room state, crypto token generator, 2-person limit, 30m solo room expiration, rejoin handling |
-| **Phase 3** | **Invite Links & Signaling** | Ready Next | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
-| **Phase 4** | **WebRTC** | Planned | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
+| **Phase 2** | **Rooms** | **COMPLETED** | Authoritative Durable Object room state, crypto token generator, 2-person limit, 30m solo room expiration, rejoin handling |
+| **Phase 3** | **Invite Links & Signaling** | **COMPLETED (Pending Review)** | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
+| **Phase 4** | **WebRTC** | Ready Next | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
 | **Phase 5** | **Ephemeral Chat** | Planned | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
 | **Phase 6** | **Call & Room UX** | Planned | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
 | **Phase 7** | **Optional Sharing** | Planned | Screen sharing, temporary drag-and-drop file transfers via DataChannel |
@@ -47,11 +47,12 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Full UI states: `WaitingRoomView`, `ActiveRoomView`, `ExpiredRoomView`, and `RejoinBanner`
 - [x] Android UX considerations: >=48dp tap targets, touch-action safe areas, high contrast text
 
-### Phase 3: Invite Links & Signaling (Next)
-- [ ] Web invite URL structure (`https://kunektayo.app/#room=:roomId&token=:inviteToken`)
-- [ ] Deep link protocol registration (`kunektayo://join/...`) for Windows and Android
-- [ ] Full duplex WebSocket signaling protocol (offer, answer, ICE candidates)
-- [ ] Token validation and room access authorization
+### Phase 3: Invite Links & Signaling (Completed - Pending Review)
+- [x] Web invite URL structure (`https://kunektayo.app/#room=:roomId&token=:inviteToken`)
+- [x] Deep link protocol registration (`kunektayo://join/...`) for Windows and Android
+- [x] Full duplex WebSocket signaling protocol (offer, answer, ICE candidates)
+- [x] Secure room and token validation on WebSocket upgrade
+- [x] Direct InviteJoinModal for immediate joining on URL detection
 
 ### Phase 4: WebRTC
 - [ ] `RTCPeerConnection` coordinator

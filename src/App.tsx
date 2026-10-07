@@ -9,27 +9,47 @@ import { RejoinBanner } from "@/components/room/RejoinBanner";
 import { RoomProvider, useRoom } from "@/context/RoomContext";
 import { Sparkle, WarningCircle, X } from "@phosphor-icons/react";
 
+import { InviteJoinModal } from "@/components/room/InviteJoinModal";
+
 function RoomAppContent() {
   const { status, error, clearError } = useRoom();
 
   // Render Waiting room (1 participant, 30m countdown running)
   if (status === "waiting") {
-    return <WaitingRoomView />;
+    return (
+      <>
+        <InviteJoinModal />
+        <WaitingRoomView />
+      </>
+    );
   }
 
   // Render Active room (2 participants, countdown cancelled)
   if (status === "active") {
-    return <ActiveRoomView />;
+    return (
+      <>
+        <InviteJoinModal />
+        <ActiveRoomView />
+      </>
+    );
   }
 
   // Render Expired room (solo countdown elapsed or closed)
   if (status === "expired" || status === "closed") {
-    return <ExpiredRoomView />;
+    return (
+      <>
+        <InviteJoinModal />
+        <ExpiredRoomView />
+      </>
+    );
   }
 
   // Render Home / Idle Screen
   return (
     <div className="w-full flex flex-col items-center text-center space-y-8 my-auto py-6">
+      {/* Direct Invite Link Detection Modal */}
+      <InviteJoinModal />
+
       {/* Rejoin Prompt */}
       <RejoinBanner />
 

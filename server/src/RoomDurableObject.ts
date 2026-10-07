@@ -347,9 +347,33 @@ export class RoomDurableObject extends DurableObject {
       const data = JSON.parse(message.toString());
       if (data.type === "ping") {
         ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
+        return;
+      }
+
+      // Forward WebRTC signaling (offer, answer, candidate, peer_ready) to peer
+      if (
+        data.type === "offer" ||
+        data.type === "answer" ||
+        data.type === "candidate" ||
+        data.type === "peer_ready"
+      ) {
+        this.forwardToPeer(ws, data);
       }
     } catch {
-      // Ignore malformed ping
+      // Ignore malformed message
+    }
+  }
+
+  private forwardToPeer(senderWs: WebSocket, payload: unknown): void {
+    const str = JSON.stringify(payload);
+    for (const ws of this.ctx.getWebSockets()) {
+      if (ws !== senderWs) {
+        try {
+          ws.send(str);
+        } catch {
+          // Peer socket error
+        }
+      }
     }
   }
 
