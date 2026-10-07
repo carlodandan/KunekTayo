@@ -10,9 +10,9 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | :--- | :--- | :--- | :--- |
 | **Phase 1** | **Foundation** | **COMPLETED** | Tauri 2, React 19, TypeScript, Vite 8, Tailwind v4, Phosphor Icons, App Shell, Env Config, Windows + Android setup |
 | **Phase 2** | **Rooms** | **COMPLETED** | Authoritative Durable Object room state, crypto token generator, 2-person limit, 30m solo room expiration, rejoin handling |
-| **Phase 3** | **Invite Links & Signaling** | **COMPLETED (Pending Review)** | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
-| **Phase 4** | **WebRTC** | Ready Next | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
-| **Phase 5** | **Ephemeral Chat** | Planned | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
+| **Phase 3** | **Invite Links & Signaling** | **COMPLETED** | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
+| **Phase 4** | **WebRTC** | **COMPLETED (Pending Review)** | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
+| **Phase 5** | **Ephemeral Chat** | Ready Next | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
 | **Phase 6** | **Call & Room UX** | Planned | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
 | **Phase 7** | **Optional Sharing** | Planned | Screen sharing, temporary drag-and-drop file transfers via DataChannel |
 | **Phase 8** | **Security & Reliability** | Planned | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
@@ -54,12 +54,13 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Secure room and token validation on WebSocket upgrade
 - [x] Direct InviteJoinModal for immediate joining on URL detection
 
-### Phase 4: WebRTC
-- [ ] `RTCPeerConnection` coordinator
-- [ ] Local camera and microphone stream capture
-- [ ] Audio/video track negotiation
-- [ ] Device mute/unmute and camera pause/resume
-- [ ] STUN/TURN fallback configuration and ICE connection monitoring
+### Phase 4: WebRTC (Completed - Pending Review)
+- [x] `RTCPeerConnection` coordinator (`src/services/webrtcService.ts`)
+- [x] Local camera and microphone stream capture (`getUserMedia`)
+- [x] Audio/video track negotiation and SDP exchange
+- [x] Device mute/unmute and camera pause/resume
+- [x] STUN/TURN fallback configuration and ICE connection monitoring
+- [x] Responsive 2-person call layout with VideoPlayer and floating controls bar
 
 ### Phase 5: Ephemeral Chat
 - [ ] `RTCDataChannel` setup for in-band text messaging

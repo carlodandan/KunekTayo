@@ -7,6 +7,7 @@ import { ActiveRoomView } from "@/components/room/ActiveRoomView";
 import { ExpiredRoomView } from "@/components/room/ExpiredRoomView";
 import { RejoinBanner } from "@/components/room/RejoinBanner";
 import { RoomProvider, useRoom } from "@/context/RoomContext";
+import { WebRtcProvider } from "@/context/WebRtcContext";
 import { Sparkle, WarningCircle, X } from "@phosphor-icons/react";
 
 import { InviteJoinModal } from "@/components/room/InviteJoinModal";
@@ -110,9 +111,11 @@ function RoomAppContent() {
 export function App() {
   return (
     <RoomProvider>
-      <AppShell>
-        <RoomAppContent />
-      </AppShell>
+      <WebRtcProvider>
+        <AppShell>
+          <RoomAppContent />
+        </AppShell>
+      </WebRtcProvider>
     </RoomProvider>
   );
 }
