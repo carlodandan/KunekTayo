@@ -12,9 +12,9 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | **Phase 2** | **Rooms** | **COMPLETED** | Authoritative Durable Object room state, crypto token generator, 2-person limit, 30m solo room expiration, rejoin handling |
 | **Phase 3** | **Invite Links & Signaling** | **COMPLETED** | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
 | **Phase 4** | **WebRTC** | **COMPLETED** | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
-| **Phase 5** | **Ephemeral Chat** | **COMPLETED (Pending Review)** | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
-| **Phase 6** | **Call & Room UX** | Ready Next | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
-| **Phase 7** | **Optional Sharing** | Planned | Screen sharing, temporary drag-and-drop file transfers via DataChannel |
+| **Phase 5** | **Ephemeral Chat** | **COMPLETED** | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
+| **Phase 6** | **Call & Room UX** | **COMPLETED (Pending Review)** | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
+| **Phase 7** | **Optional Sharing** | Ready Next | Screen sharing, temporary drag-and-drop file transfers via DataChannel |
 | **Phase 8** | **Security & Reliability** | Planned | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
 | **Phase 9** | **Production** | Planned | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment |
 
