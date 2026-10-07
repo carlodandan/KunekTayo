@@ -4,45 +4,31 @@ import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Input } from "@/components/common/Input";
 import { Badge } from "@/components/common/Badge";
+import { useRoom } from "@/context/RoomContext";
+import { parseInviteInput } from "@/utils/crypto";
 
-export interface JoinRoomCardProps {
-  onJoinRoom?: (roomId: string) => void;
-}
-
-export const JoinRoomCard: React.FC<JoinRoomCardProps> = ({ onJoinRoom }) => {
+export const JoinRoomCard: React.FC = () => {
+  const { joinRoom, isLoading, error: roomError } = useRoom();
   const [inputValue, setInputValue] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleJoin = (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = inputValue.trim();
+    const parsed = parseInviteInput(inputValue);
 
-    if (!trimmed) {
-      setError("Please enter a room token or invite link");
+    if (!parsed) {
+      setLocalError("Please enter a valid room token or invite link");
       return;
     }
 
-    // Extract token if user pasted full URL (e.g., https://.../#room=abc123)
-    let token = trimmed;
-    if (trimmed.includes("#room=")) {
-      token = trimmed.split("#room=")[1]?.split("&")[0] || trimmed;
-    } else if (trimmed.includes("/")) {
-      token = trimmed.split("/").pop() || trimmed;
-    }
-
-    if (token.length < 6) {
-      setError("Token appears too short to be a valid room ID");
-      return;
-    }
-
-    setError(null);
-    if (onJoinRoom) {
-      onJoinRoom(token);
-    }
+    setLocalError(null);
+    await joinRoom(parsed.roomId, parsed.token);
   };
 
+  const displayError = localError || (roomError ? roomError.message : null);
+
   return (
-    <Card className="flex flex-col justify-between border-slate-800 hover:border-slate-700 transition-colors">
+    <Card className="flex flex-col justify-between border-slate-800 hover:border-slate-700 transition-colors text-left p-6">
       <form onSubmit={handleJoin} className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="w-12 h-12 rounded-xl bg-cyan-600/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
@@ -64,11 +50,11 @@ export const JoinRoomCard: React.FC<JoinRoomCardProps> = ({ onJoinRoom }) => {
             value={inputValue}
             onChange={(e) => {
               setInputValue(e.target.value);
-              if (error) setError(null);
+              if (localError) setLocalError(null);
             }}
-            error={error || undefined}
+            error={displayError || undefined}
             rightIcon={
-              error ? (
+              displayError ? (
                 <WarningCircle size={18} className="text-red-400" weight="fill" />
               ) : null
             }
@@ -82,6 +68,7 @@ export const JoinRoomCard: React.FC<JoinRoomCardProps> = ({ onJoinRoom }) => {
           size="md"
           className="w-full"
           onClick={handleJoin}
+          isLoading={isLoading}
           icon={<ArrowRight size={18} weight="bold" />}
           iconPosition="right"
         >

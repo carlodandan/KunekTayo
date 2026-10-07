@@ -8,9 +8,9 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 
 | Phase | Title | Status | Primary Deliverables |
 | :--- | :--- | :--- | :--- |
-| **Phase 1** | **Foundation** | **COMPLETED (Pending Review)** | Tauri 2, React 19, TypeScript, Vite 8, Tailwind v4, Phosphor Icons, App Shell, Env Config, Windows + Android setup |
-| **Phase 2** | **Rooms** | Ready Next | Authoritative Durable Object room state, crypto token generator, 2-person limit, 30m solo room expiration |
-| **Phase 3** | **Invite Links & Signaling** | Planned | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
+| **Phase 1** | **Foundation** | **COMPLETED** | Tauri 2, React 19, TypeScript, Vite 8, Tailwind v4, Phosphor Icons, App Shell, Env Config, Windows + Android setup |
+| **Phase 2** | **Rooms** | **COMPLETED (Pending Review)** | Authoritative Durable Object room state, crypto token generator, 2-person limit, 30m solo room expiration, rejoin handling |
+| **Phase 3** | **Invite Links & Signaling** | Ready Next | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
 | **Phase 4** | **WebRTC** | Planned | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
 | **Phase 5** | **Ephemeral Chat** | Planned | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
 | **Phase 6** | **Call & Room UX** | Planned | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
@@ -22,7 +22,7 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 
 ## Detailed Phase Breakdown
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation (Completed)
 - [x] Tauri 2.12 project configuration with desktop & mobile capability schemes
 - [x] React 19 + TypeScript 6.0 setup with `@/*` path aliases
 - [x] Vite 8.3 bundler configuration with `@tailwindcss/vite`
@@ -35,17 +35,20 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Android target scaffolded and mapped (`pnpm tauri android init` prerequisites documented)
 - [x] Project architecture documentation created in `project/`
 
-### Phase 2: Rooms (Next)
-- [ ] Cryptographically secure room and token generator (16+ bytes)
-- [ ] Cloudflare Worker & Durable Object project scaffold (`server/` or `worker/`)
-- [ ] Authoritative room state machine (idle, waiting, active, expired)
-- [ ] Enforce strict 2-participant room ceiling
-- [ ] 30-minute solo room expiration timer with server alarm
-- [ ] Disconnection and rejoin handling
-- [ ] Client room state store and lifecycle hooks
+### Phase 2: Rooms (Completed - Pending Review)
+- [x] Cryptographically secure room and token generator (16-char ID, 32-char token, SHA-256 hash in `src/utils/crypto.ts`)
+- [x] Cloudflare Worker & Durable Object architecture (`server/src/RoomDurableObject.ts`, `server/src/index.ts`, `server/wrangler.jsonc`)
+- [x] Authoritative room state machine (idle, creating, waiting, active, expired, closed)
+- [x] Strict 2-participant room ceiling enforcement (`ROOM_FULL` code 409 rejection)
+- [x] 30-minute solo room expiration countdown with Cloudflare alarm (`ctx.storage.setAlarm`)
+- [x] Automatic alarm cancellation when 2nd participant connects
+- [x] Rejoin session persistence in client (`sessionStorage`) with instant reconnect banner
+- [x] Client room state provider (`src/context/RoomContext.tsx`) with real-time countdown timer
+- [x] Full UI states: `WaitingRoomView`, `ActiveRoomView`, `ExpiredRoomView`, and `RejoinBanner`
+- [x] Android UX considerations: >=48dp tap targets, touch-action safe areas, high contrast text
 
-### Phase 3: Invite Links & Signaling
-- [ ] Web invite URL structure (`https://kunektayo.app/join/:roomId#token`)
+### Phase 3: Invite Links & Signaling (Next)
+- [ ] Web invite URL structure (`https://kunektayo.app/#room=:roomId&token=:inviteToken`)
 - [ ] Deep link protocol registration (`kunektayo://join/...`) for Windows and Android
 - [ ] Full duplex WebSocket signaling protocol (offer, answer, ICE candidates)
 - [ ] Token validation and room access authorization

@@ -9,10 +9,12 @@ This document defines the technical data contracts, signaling schemas, and runti
 ### Room Constraints
 * **Capacity Limit**: Exactly 2 participants (`host`, `guest`).
 * **Solo Room TTL**: `1,800,000 ms` (30 minutes) from room initialization or when participant count drops to 1.
-* **Token Entropy**: Minimum 128-bit cryptographically secure random value (`crypto.getRandomValues`).
-* **Room Identifier Format**: Hexadecimal lowercase string (e.g. `a1b2c3d4e5f60718`).
+* **Token Entropy**: 128-bit cryptographically secure random value (`crypto.getRandomValues`).
+* **Room Identifier Format**: Hexadecimal lowercase string (`8 bytes` = 16 hex characters).
+* **Invite Token Format**: Hexadecimal lowercase string (`16 bytes` = 32 hex characters).
+* **Invite Token Storage**: SHA-256 hash stored on server (`inviteTokenHash`), never raw token.
 
-### Room State Representation
+### Cloudflare Durable Object Room State
 ```typescript
 interface DurableRoomState {
   roomId: string;
@@ -31,40 +33,95 @@ interface DurableRoomState {
 
 ---
 
-## 2. Signaling Protocol (WebSocket)
+## 2. Room REST API & Worker Endpoints
 
-WebSocket connections are established to `wss://<signaling-host>/rooms/:roomId/ws?token=:inviteToken`.
+### `POST /api/rooms`
+Creates an authoritative room instance within a dedicated Cloudflare Durable Object.
+* **Request Body**:
+  ```json
+  {
+    "roomId": "e8a93b48f01c456a",
+    "inviteTokenHash": "9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca7",
+    "hostParticipantId": "p_c01928374a5e"
+  }
+  ```
+* **Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "state": {
+      "roomId": "e8a93b48f01c456a",
+      "status": "waiting",
+      "participants": [{ "id": "p_c01928374a5e", "role": "host", "joinedAt": 1728300000000 }],
+      "soloExpiresAt": 1728301800000,
+      "createdAt": 1728300000000
+    }
+  }
+  ```
 
-### Client-to-Server Messages
-```typescript
-type ClientSignalingMessage =
-  | { type: "join"; participantId: string; role: "host" | "guest" }
-  | { type: "offer"; sdp: RTCSessionDescriptionInit }
-  | { type: "answer"; sdp: RTCSessionDescriptionInit }
-  | { type: "candidate"; candidate: RTCIceCandidateInit }
-  | { type: "leave" }
-  | { type: "ping" };
-```
+### `GET /api/rooms/:roomId?tokenHash=:tokenHash`
+Validates access and returns current room status.
+* **Response (200 OK)**:
+  ```json
+  {
+    "roomId": "e8a93b48f01c456a",
+    "status": "waiting",
+    "participantCount": 1,
+    "canJoin": true,
+    "soloExpiresAt": 1728301800000,
+    "createdAt": 1728300000000
+  }
+  ```
+* **Errors**: `403 INVALID_TOKEN`, `404 ROOM_EXPIRED`
 
-### Server-to-Client Messages
-```typescript
-type ServerSignalingMessage =
-  | { type: "room_state"; state: "waiting" | "active"; participantCount: number; soloExpiresAt: number | null }
-  | { type: "peer_joined"; participantId: string }
-  | { type: "peer_left"; participantId: string; soloExpiresAt: number }
-  | { type: "offer"; sdp: RTCSessionDescriptionInit }
-  | { type: "answer"; sdp: RTCSessionDescriptionInit }
-  | { type: "candidate"; candidate: RTCIceCandidateInit }
-  | { type: "error"; code: "ROOM_FULL" | "ROOM_EXPIRED" | "INVALID_TOKEN"; message: string };
+### `POST /api/rooms/:roomId/join`
+Attempts to join a room as the second participant (`guest`).
+* **Request Body**: `{ "participantId": "p_guest123", "inviteTokenHash": "..." }`
+* **Success (200 OK)**:
+  Cancels the 30-minute solo alarm, sets `status = "active"`, returns `{ role: "guest", state: ... }`.
+* **Errors**:
+  - `409 ROOM_FULL`: Third participant attempted to join.
+  - `403 INVALID_TOKEN`: Token hash does not match room.
+  - `410 ROOM_EXPIRED`: Room closed after 30 minutes of inactivity.
+
+### `POST /api/rooms/:roomId/leave`
+Notifies server that a participant has left.
+* If 1 participant remains: Restarts 30-minute solo countdown (`ctx.storage.setAlarm`).
+* If 0 participants remain: Deletes Durable Object storage (`ctx.storage.deleteAll()`).
+
+---
+
+## 3. Authoritative Alarm & Expiration Handling
+
+```mermaid
+sequenceDiagram
+    participant H as Host
+    participant DO as Durable Object
+    participant G as Guest
+
+    H->>DO: Create Room (status: waiting)
+    DO->>DO: ctx.storage.setAlarm(Date.now() + 30m)
+    Note over DO: Solo room timer running...
+
+    alt Guest joins within 30m
+        G->>DO: Join Room (role: guest)
+        DO->>DO: ctx.storage.deleteAlarm()
+        Note over DO: Timer cancelled! status: active
+    else 30m elapsed without guest
+        DO->>DO: alarm() fires
+        DO->>DO: status: expired
+        DO->>H: Broadcast error (ROOM_EXPIRED)
+        DO->>DO: ctx.storage.deleteAll()
+    end
 ```
 
 ---
 
-## 3. Ephemeral Chat DataChannel Specification
+## 4. Ephemeral Chat DataChannel Specification
 
 * **Channel Label**: `"ephemeral-chat"`
 * **Ordered**: `true`
-* **Max Packet Lifetime**: `3000 ms` (prefer fast drop over lingering retry)
+* **Max Packet Lifetime**: `3000 ms`
 
 ### Message Packet Schema
 ```typescript
@@ -77,19 +134,10 @@ interface DataChannelMessage {
 }
 ```
 
-### Client Expiration Invariants
-* Each message maintains an individual client timer: `expirationTime = timestamp + (ttlSeconds * 1000)`.
-* When the timer fires, the message is unmounted from React state and garbage-collected.
-* The message is never saved to `localStorage`, `IndexedDB`, or any server disk.
-
 ---
 
-## 4. Deep Linking Specification
+## 5. Deep Linking & URL Schemas
 
-### Windows Protocol Scheme
-* URI Scheme: `kunektayo://join?room=<ROOM_ID>&token=<TOKEN>`
-* Registered via Tauri `tauri-plugin-deep-link` or Windows Registry command association.
-
-### Android App Links
-* Scheme: `https://kunektayo.app/join/:roomId#token`
-* Intent filter for `android.intent.action.VIEW` handling `https://kunektayo.app`.
+* Web URL: `https://kunektayo.app/#room=<ROOM_ID>&token=<TOKEN>`
+* Windows Protocol: `kunektayo://join?room=<ROOM_ID>&token=<TOKEN>`
+* Android App Link: `https://kunektayo.app/join/:roomId#token`
