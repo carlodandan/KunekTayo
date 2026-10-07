@@ -28,7 +28,7 @@ export const JoinRoomCard: React.FC = () => {
   const displayError = localError || (roomError ? roomError.message : null);
 
   return (
-    <Card className="flex flex-col justify-between border-slate-800 hover:border-slate-700 transition-colors text-left p-6">
+    <Card className="flex flex-col justify-between border-slate-800 hover:border-slate-700 transition-colors text-left p-5 sm:p-6">
       <form onSubmit={handleJoin} className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="w-12 h-12 rounded-xl bg-cyan-600/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">

@@ -8,6 +8,7 @@ import {
   DotsThree,
   ShieldCheck,
   Paperclip,
+  X,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { useChat, TTL_OPTIONS, EphemeralChatMessage } from "@/context/ChatContext";
@@ -15,7 +16,10 @@ import { useFileTransfer } from "@/context/FileTransferContext";
 import { useRoom } from "@/context/RoomContext";
 import { cn } from "@/utils/cn";
 
-export const EphemeralChat: React.FC<{ className?: string }> = ({ className }) => {
+export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void }> = ({
+  className,
+  onClose,
+}) => {
   const { session } = useRoom();
   const {
     messages,
@@ -95,8 +99,19 @@ export const EphemeralChat: React.FC<{ className?: string }> = ({ className }) =
       {/* Chat Header */}
       <div className="p-3.5 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 -ml-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+              title="Close Chat"
+              aria-label="Close Chat"
+            >
+              <X size={16} weight="bold" />
+            </button>
+          )}
           <Fire size={18} className="text-amber-400" weight="fill" />
-          <h3 className="text-sm font-semibold text-slate-200">Ephemeral P2P Chat</h3>
+          <h3 className="text-sm font-semibold text-slate-200">Ephemeral Chat</h3>
         </div>
 
         {/* TTL Selector */}

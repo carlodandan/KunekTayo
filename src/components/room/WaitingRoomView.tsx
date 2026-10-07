@@ -125,9 +125,9 @@ export const WaitingRoomView: React.FC = () => {
               size="md"
               onClick={handleShare}
               icon={<ShareNetwork size={18} weight="bold" />}
-              className="shrink-0 hidden sm:inline-flex"
+              className="shrink-0 inline-flex"
             >
-              Share
+              Share Link
             </Button>
           )}
         </div>

@@ -45,6 +45,7 @@ export const ActiveRoomView: React.FC = () => {
   const [isFileShareOpen, setIsFileShareOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isLocalSwapped, setIsLocalSwapped] = useState(false);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -78,7 +79,7 @@ export const ActiveRoomView: React.FC = () => {
         setIsDraggingOver(false);
       }}
       onDrop={handleDrop}
-      className="relative w-full max-w-4xl mx-auto flex flex-col space-y-4 animate-in fade-in duration-200"
+      className="relative w-full max-w-4xl mx-auto flex flex-col space-y-3 sm:space-y-4 animate-in fade-in duration-200"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDraggingOver && (
@@ -92,8 +93,8 @@ export const ActiveRoomView: React.FC = () => {
       )}
 
       {/* Top Bar Status */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2.5 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-1">
+        <div className="flex items-center gap-2 flex-wrap">
           <ConnectionQualityBadge />
           {isScreenSharing && (
             <Badge variant="warning" dot>
@@ -106,15 +107,15 @@ export const ActiveRoomView: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-slate-400">
+        <div className="flex items-center gap-2.5 text-xs text-slate-400">
           <div className="flex items-center gap-1.5">
-            <InfinityIcon size={16} className="text-emerald-400" weight="bold" />
-            <span>Active Indefinitely (2/2)</span>
+            <InfinityIcon size={15} className="text-emerald-400" weight="bold" />
+            <span className="text-[11px] sm:text-xs">Active (2/2)</span>
           </div>
 
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             aria-label="Toggle Fullscreen"
           >
@@ -123,18 +124,15 @@ export const ActiveRoomView: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content: Video Grid and Optional Ephemeral Chat Drawer */}
-      <div className={cn("grid gap-4 w-full", isChatOpen ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1")}>
-        {/* Video Streams Container */}
-        <div className={cn("grid grid-cols-1 gap-4", isChatOpen ? "lg:col-span-2 sm:grid-cols-2" : "md:grid-cols-2")}>
-          {/* Remote Participant Video */}
+      {/* Main Content Area */}
+      <div className={cn("grid gap-4 w-full", isChatOpen ? "lg:grid-cols-3" : "grid-cols-1")}>
+        {/* Desktop Side-by-Side Split View (visible md:) */}
+        <div className={cn("hidden md:grid grid-cols-2 gap-4", isChatOpen ? "lg:col-span-2" : "col-span-1")}>
           <VideoPlayer
             stream={remoteStream}
             label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
             className="aspect-video"
           />
-
-          {/* Local Participant Video */}
           <VideoPlayer
             stream={localStream}
             label="You"
@@ -145,27 +143,76 @@ export const ActiveRoomView: React.FC = () => {
           />
         </div>
 
-        {/* Ephemeral Chat Drawer */}
+        {/* Mobile Stage: Primary Video + Floating Picture-in-Picture (visible < md) */}
+        <div className="relative w-full aspect-[4/3] sm:aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-800 md:hidden bg-slate-950">
+          {/* Mobile Main Video Feed */}
+          <VideoPlayer
+            stream={isLocalSwapped ? localStream : remoteStream}
+            label={isLocalSwapped ? "You" : session?.myRole === "host" ? "Guest" : "Host"}
+            isLocal={isLocalSwapped}
+            isMuted={isLocalSwapped ? isMuted : false}
+            isVideoOff={isLocalSwapped ? isCameraOff : false}
+            className="w-full h-full border-0 rounded-none"
+          />
+
+          {/* Mobile Floating Picture-in-Picture (Tap to swap feeds) */}
+          <div
+            className="absolute bottom-3 right-3 w-28 sm:w-36 aspect-video z-20 shadow-2xl rounded-xl overflow-hidden border border-slate-700/90 bg-slate-900 transition-transform active:scale-95 cursor-pointer ring-1 ring-white/10"
+            title="Tap to swap primary feed"
+          >
+            <VideoPlayer
+              stream={isLocalSwapped ? remoteStream : localStream}
+              label={isLocalSwapped ? (session?.myRole === "host" ? "Guest" : "Host") : "You"}
+              isLocal={!isLocalSwapped}
+              isMuted={!isLocalSwapped ? isMuted : false}
+              isVideoOff={!isLocalSwapped ? isCameraOff : false}
+              isPip
+              onClick={() => setIsLocalSwapped(!isLocalSwapped)}
+              className="w-full h-full border-0 rounded-none"
+            />
+          </div>
+        </div>
+
+        {/* Desktop Ephemeral Chat Panel (embedded when lg:) */}
         {isChatOpen && (
-          <div className="lg:col-span-1 h-full animate-in fade-in zoom-in-95 duration-150">
-            <EphemeralChat className="h-full min-h-[380px]" />
+          <div className="hidden lg:block lg:col-span-1 h-full animate-in fade-in zoom-in-95 duration-150">
+            <EphemeralChat className="h-full min-h-[380px]" onClose={() => setIsChatOpen(false)} />
           </div>
         )}
       </div>
 
+      {/* Mobile Ephemeral Chat Slide-up Drawer Modal (visible < lg) */}
+      {isChatOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col justify-end lg:hidden p-0 animate-in fade-in duration-150"
+          onClick={() => setIsChatOpen(false)}
+        >
+          <div
+            className="w-full max-h-[85vh] bg-slate-950 rounded-t-3xl border-t border-slate-800 p-3 pb-safe shadow-2xl animate-in slide-in-from-bottom duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-1.5 bg-slate-700/80 rounded-full mx-auto mb-2" />
+            <EphemeralChat
+              className="h-[65vh] border-0 shadow-none bg-transparent"
+              onClose={() => setIsChatOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* In-Call Controls Floating Bar */}
       <Card
         elevated
-        className="p-3.5 sm:p-4 bg-slate-950/80 backdrop-blur-xl border-slate-800 flex items-center justify-between flex-wrap gap-3"
+        className="p-2 sm:p-4 bg-slate-950/90 backdrop-blur-xl border-slate-800/90 flex items-center justify-between gap-1.5 sm:gap-3 sticky bottom-2 z-30"
       >
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-center sm:justify-start">
           {/* Microphone Toggle */}
           <Button
             variant={isMuted ? "danger" : "secondary"}
             size="md"
             onClick={toggleMic}
             icon={isMuted ? <MicrophoneSlash size={20} weight="bold" /> : <Microphone size={20} weight="bold" />}
-            className="rounded-full w-12 h-12 p-0 min-h-[48px]"
+            className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]"
             title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
             aria-label={isMuted ? "Unmute Microphone" : "Mute Microphone"}
           />
@@ -176,7 +223,7 @@ export const ActiveRoomView: React.FC = () => {
             size="md"
             onClick={toggleCamera}
             icon={isCameraOff ? <VideoCameraSlash size={20} weight="bold" /> : <VideoCamera size={20} weight="bold" />}
-            className="rounded-full w-12 h-12 p-0 min-h-[48px]"
+            className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]"
             title={isCameraOff ? "Turn On Camera" : "Turn Off Camera"}
             aria-label={isCameraOff ? "Turn On Camera" : "Turn Off Camera"}
           />
@@ -187,7 +234,7 @@ export const ActiveRoomView: React.FC = () => {
             size="md"
             onClick={toggleScreenShare}
             icon={<ProjectorScreen size={20} weight={isScreenSharing ? "fill" : "bold"} />}
-            className={cn("rounded-full w-12 h-12 p-0 min-h-[48px]", isScreenSharing && "ring-2 ring-blue-400")}
+            className={cn("rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]", isScreenSharing && "ring-2 ring-blue-400")}
             title={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
             aria-label={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
           />
@@ -199,7 +246,7 @@ export const ActiveRoomView: React.FC = () => {
               size="md"
               onClick={() => setIsFileShareOpen(true)}
               icon={<FileArrowUp size={20} weight="bold" />}
-              className="rounded-full w-12 h-12 p-0 min-h-[48px] text-slate-300 hover:text-white"
+              className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px] text-slate-300 hover:text-white"
               title="P2P Shared Files (Drag & Drop)"
               aria-label="P2P Shared Files"
             />
@@ -216,7 +263,7 @@ export const ActiveRoomView: React.FC = () => {
             size="md"
             onClick={() => setIsChatOpen(!isChatOpen)}
             icon={<ChatText size={20} weight="bold" />}
-            className="rounded-full w-12 h-12 p-0 min-h-[48px]"
+            className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]"
             title={isChatOpen ? "Hide Chat" : "Open Ephemeral Chat"}
             aria-label={isChatOpen ? "Hide Chat" : "Open Ephemeral Chat"}
           />
@@ -227,7 +274,7 @@ export const ActiveRoomView: React.FC = () => {
             size="md"
             onClick={() => setIsSettingsOpen(true)}
             icon={<GearSix size={20} weight="bold" />}
-            className="rounded-full w-12 h-12 p-0 min-h-[48px] text-slate-400 hover:text-white"
+            className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px] text-slate-400 hover:text-white"
             title="Audio & Video Settings"
             aria-label="Device Settings"
           />
@@ -238,10 +285,12 @@ export const ActiveRoomView: React.FC = () => {
           variant="danger"
           size="md"
           onClick={leaveRoom}
-          icon={<SignOut size={18} weight="bold" />}
-          className="min-h-[48px]"
+          icon={<SignOut size={20} weight="bold" />}
+          className="rounded-full sm:rounded-xl min-h-[44px] min-w-[44px] w-11 h-11 sm:w-auto p-0 sm:px-4 shrink-0 font-medium"
+          title="Leave Call"
+          aria-label="Leave Call"
         >
-          Leave Call
+          <span className="hidden sm:inline">Leave Call</span>
         </Button>
       </Card>
 

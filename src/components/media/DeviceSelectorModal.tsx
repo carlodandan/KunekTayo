@@ -67,7 +67,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150 select-none">
       <Card
         elevated
-        className="w-full max-w-md bg-slate-900 border-slate-700 p-6 text-left space-y-5 relative shadow-2xl"
+        className="w-full max-w-md bg-slate-900 border-slate-700 p-5 sm:p-6 text-left space-y-4 sm:space-y-5 relative shadow-2xl"
       >
         <button
           onClick={onClose}

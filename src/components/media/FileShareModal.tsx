@@ -85,7 +85,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
     >
       <Card
         elevated
-        className="w-full max-w-xl bg-slate-900 border-slate-800 p-6 space-y-5 text-left max-h-[85vh] flex flex-col overflow-hidden"
+        className="w-full max-w-xl bg-slate-900 border-slate-800 p-4 sm:p-6 space-y-3.5 sm:space-y-5 text-left max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
