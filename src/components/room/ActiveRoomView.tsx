@@ -8,13 +8,16 @@ import {
   VideoCamera,
   VideoCameraSlash,
   WifiHigh,
+  ChatText,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
 import { VideoPlayer } from "@/components/media/VideoPlayer";
+import { EphemeralChat } from "@/components/chat/EphemeralChat";
 import { useRoom } from "@/context/RoomContext";
 import { useWebRtc } from "@/context/WebRtcContext";
+import { cn } from "@/utils/cn";
 
 export const ActiveRoomView: React.FC = () => {
   const { session, leaveRoom } = useRoom();
@@ -29,6 +32,8 @@ export const ActiveRoomView: React.FC = () => {
   } = useWebRtc();
 
   const isConnected = connectionState === "connected";
+
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col space-y-5 animate-in fade-in duration-200">
@@ -56,24 +61,34 @@ export const ActiveRoomView: React.FC = () => {
         </div>
       </div>
 
-      {/* Video Streams Container (Responsive 2-Person Call Layout) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        {/* Remote Participant Video */}
-        <VideoPlayer
-          stream={remoteStream}
-          label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
-          className="aspect-video"
-        />
+      {/* Main Content: Video Grid and Optional Ephemeral Chat Drawer */}
+      <div className={cn("grid gap-4 w-full", isChatOpen ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1")}>
+        {/* Video Streams Container */}
+        <div className={cn("grid grid-cols-1 gap-4", isChatOpen ? "lg:col-span-2 sm:grid-cols-2" : "md:grid-cols-2")}>
+          {/* Remote Participant Video */}
+          <VideoPlayer
+            stream={remoteStream}
+            label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
+            className="aspect-video"
+          />
 
-        {/* Local Participant Video */}
-        <VideoPlayer
-          stream={localStream}
-          label="You"
-          isLocal
-          isMuted={isMuted}
-          isVideoOff={isCameraOff}
-          className="aspect-video"
-        />
+          {/* Local Participant Video */}
+          <VideoPlayer
+            stream={localStream}
+            label="You"
+            isLocal
+            isMuted={isMuted}
+            isVideoOff={isCameraOff}
+            className="aspect-video"
+          />
+        </div>
+
+        {/* Ephemeral Chat Panel */}
+        {isChatOpen && (
+          <div className="lg:col-span-1 h-full animate-in fade-in zoom-in-95 duration-150">
+            <EphemeralChat className="h-full min-h-[380px]" />
+          </div>
+        )}
       </div>
 
       {/* In-Call Controls Floating Bar */}
@@ -102,6 +117,17 @@ export const ActiveRoomView: React.FC = () => {
             className="rounded-full w-12 h-12 p-0 min-h-[48px]"
             title={isCameraOff ? "Turn On Camera" : "Turn Off Camera"}
             aria-label={isCameraOff ? "Turn On Camera" : "Turn Off Camera"}
+          />
+
+          {/* Ephemeral Chat Toggle */}
+          <Button
+            variant={isChatOpen ? "primary" : "secondary"}
+            size="md"
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            icon={<ChatText size={20} weight="bold" />}
+            className="rounded-full w-12 h-12 p-0 min-h-[48px]"
+            title={isChatOpen ? "Hide Chat" : "Open Ephemeral Chat"}
+            aria-label={isChatOpen ? "Hide Chat" : "Open Ephemeral Chat"}
           />
         </div>
 

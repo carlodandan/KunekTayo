@@ -8,6 +8,7 @@ export type SignalingEventType =
   | "candidate"
   | "peer_ready"
   | "peer_left"
+  | "datachannel_fallback"
   | "error";
 
 export type SignalingEventHandler = (payload: any) => void;

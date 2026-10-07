@@ -108,6 +108,8 @@ class WebRtcService {
     }
   }
 
+  private dataChannel: RTCDataChannel | null = null;
+
   /**
    * Initialize RTCPeerConnection and wire signaling handlers
    */
@@ -129,6 +131,25 @@ class WebRtcService {
       this.localStream.getTracks().forEach((track) => {
         pc.addTrack(track, this.localStream!);
       });
+    }
+
+    // Set up Ephemeral Chat DataChannel
+    if (isHost) {
+      try {
+        const dc = pc.createDataChannel("ephemeral-chat", {
+          ordered: true,
+          maxPacketLifeTime: 3000,
+        });
+        this.setupDataChannel(dc);
+      } catch (err) {
+        console.error("Failed to create RTCDataChannel:", err);
+      }
+    } else {
+      pc.ondatachannel = (event) => {
+        if (event.channel.label === "ephemeral-chat") {
+          this.setupDataChannel(event.channel);
+        }
+      };
     }
 
     // Handle incoming remote media tracks
@@ -274,7 +295,52 @@ class WebRtcService {
     return this.isCameraOff;
   }
 
+  private setupDataChannel(dc: RTCDataChannel): void {
+    this.dataChannel = dc;
+
+    dc.onopen = () => {
+      this.emit("datachannel_state", "open");
+    };
+
+    dc.onclose = () => {
+      this.emit("datachannel_state", "closed");
+    };
+
+    dc.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        this.emit("datachannel_message", payload);
+      } catch (err) {
+        console.error("Failed to parse DataChannel message:", err);
+      }
+    };
+  }
+
+  sendDataChannelMessage(payload: any): boolean {
+    const serialized = JSON.stringify(payload);
+    if (this.dataChannel && this.dataChannel.readyState === "open") {
+      try {
+        this.dataChannel.send(serialized);
+        return true;
+      } catch (err) {
+        console.error("DataChannel send failed:", err);
+      }
+    }
+
+    // Mirror to signaling / broadcast fallback if DataChannel is connecting or offline
+    signalingService.send("datachannel_fallback", payload);
+    return false;
+  }
+
   closePeerConnection(): void {
+    if (this.dataChannel) {
+      try {
+        this.dataChannel.close();
+      } catch {
+        // Ignore
+      }
+      this.dataChannel = null;
+    }
     if (this.peerConnection) {
       this.peerConnection.close();
       this.peerConnection = null;

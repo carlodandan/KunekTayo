@@ -11,9 +11,9 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | **Phase 1** | **Foundation** | **COMPLETED** | Tauri 2, React 19, TypeScript, Vite 8, Tailwind v4, Phosphor Icons, App Shell, Env Config, Windows + Android setup |
 | **Phase 2** | **Rooms** | **COMPLETED** | Authoritative Durable Object room state, crypto token generator, 2-person limit, 30m solo room expiration, rejoin handling |
 | **Phase 3** | **Invite Links & Signaling** | **COMPLETED** | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
-| **Phase 4** | **WebRTC** | **COMPLETED (Pending Review)** | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
-| **Phase 5** | **Ephemeral Chat** | Ready Next | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
-| **Phase 6** | **Call & Room UX** | Planned | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
+| **Phase 4** | **WebRTC** | **COMPLETED** | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
+| **Phase 5** | **Ephemeral Chat** | **COMPLETED (Pending Review)** | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
+| **Phase 6** | **Call & Room UX** | Ready Next | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
 | **Phase 7** | **Optional Sharing** | Planned | Screen sharing, temporary drag-and-drop file transfers via DataChannel |
 | **Phase 8** | **Security & Reliability** | Planned | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
 | **Phase 9** | **Production** | Planned | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment |
@@ -62,11 +62,13 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] STUN/TURN fallback configuration and ICE connection monitoring
 - [x] Responsive 2-person call layout with VideoPlayer and floating controls bar
 
-### Phase 5: Ephemeral Chat
-- [ ] `RTCDataChannel` setup for in-band text messaging
-- [ ] Independent message TTL timer (default 60s)
-- [ ] Client-side message auto-expiration with visual fade/burn indicator
-- [ ] Zero database persistence guarantee
+### Phase 5: Ephemeral Chat (Completed - Pending Review)
+- [x] `RTCDataChannel` setup for in-band text messaging
+- [x] Independent message TTL timer (options: 15s, 30s, 60s, 5m)
+- [x] Client-side message auto-expiration with visual burning indicator
+- [x] Typing indicator with debounce
+- [x] Basic delivery states (`sending` and `delivered`)
+- [x] Zero database persistence guarantee
 
 ### Phase 6: Call & Room UX
 - [ ] Fullscreen 1-on-1 video grid with picture-in-picture local preview
