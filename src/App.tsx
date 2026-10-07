@@ -9,6 +9,7 @@ import { RejoinBanner } from "@/components/room/RejoinBanner";
 import { RoomProvider, useRoom } from "@/context/RoomContext";
 import { WebRtcProvider } from "@/context/WebRtcContext";
 import { ChatProvider } from "@/context/ChatContext";
+import { FileTransferProvider } from "@/context/FileTransferContext";
 import { Sparkle, WarningCircle, X } from "@phosphor-icons/react";
 
 import { InviteJoinModal } from "@/components/room/InviteJoinModal";
@@ -114,9 +115,11 @@ export function App() {
     <RoomProvider>
       <WebRtcProvider>
         <ChatProvider>
-          <AppShell>
-            <RoomAppContent />
-          </AppShell>
+          <FileTransferProvider>
+            <AppShell>
+              <RoomAppContent />
+            </AppShell>
+          </FileTransferProvider>
         </ChatProvider>
       </WebRtcProvider>
     </RoomProvider>

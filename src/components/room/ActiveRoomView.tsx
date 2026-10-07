@@ -10,15 +10,20 @@ import {
   GearSix,
   ArrowsOut,
   ArrowsIn,
+  ProjectorScreen,
+  FileArrowUp,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
+import { Badge } from "@/components/common/Badge";
 import { VideoPlayer } from "@/components/media/VideoPlayer";
 import { DeviceSelectorModal } from "@/components/media/DeviceSelectorModal";
+import { FileShareModal } from "@/components/media/FileShareModal";
 import { ConnectionQualityBadge } from "@/components/room/ConnectionQualityBadge";
 import { EphemeralChat } from "@/components/chat/EphemeralChat";
 import { useRoom } from "@/context/RoomContext";
 import { useWebRtc } from "@/context/WebRtcContext";
+import { useFileTransfer } from "@/context/FileTransferContext";
 import { cn } from "@/utils/cn";
 
 export const ActiveRoomView: React.FC = () => {
@@ -28,13 +33,18 @@ export const ActiveRoomView: React.FC = () => {
     remoteStream,
     isMuted,
     isCameraOff,
+    isScreenSharing,
     toggleMic,
     toggleCamera,
+    toggleScreenShare,
   } = useWebRtc();
+  const { files, sendFile } = useFileTransfer();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFileShareOpen, setIsFileShareOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -44,12 +54,53 @@ export const ActiveRoomView: React.FC = () => {
     }
   };
 
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    if (!e.dataTransfer.files) return;
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    for (const f of droppedFiles) {
+      await sendFile(f);
+    }
+    if (droppedFiles.length > 0) {
+      setIsFileShareOpen(true);
+    }
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col space-y-4 animate-in fade-in duration-200">
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDraggingOver(true);
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        setIsDraggingOver(false);
+      }}
+      onDrop={handleDrop}
+      className="relative w-full max-w-4xl mx-auto flex flex-col space-y-4 animate-in fade-in duration-200"
+    >
+      {/* Drag & Drop Visual Overlay */}
+      {isDraggingOver && (
+        <div className="absolute inset-0 z-40 bg-blue-950/80 backdrop-blur-md rounded-3xl border-2 border-dashed border-blue-400 flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-150">
+          <FileArrowUp size={48} className="text-blue-300 mb-2 animate-bounce" weight="bold" />
+          <h3 className="text-lg font-bold text-white">Drop files to send privately</h3>
+          <p className="text-xs text-blue-200 mt-1 max-w-xs">
+            Direct WebRTC P2P in-memory transfer. Vanishes completely on exit. Zero server upload.
+          </p>
+        </div>
+      )}
+
       {/* Top Bar Status */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <ConnectionQualityBadge />
+          {isScreenSharing && (
+            <Badge variant="warning" dot>
+              <ProjectorScreen size={13} weight="fill" />
+              <span>Screen Sharing</span>
+            </Badge>
+          )}
           <span className="text-xs text-slate-400 hidden sm:inline">
             Room #{session?.roomId.substring(0, 8)}
           </span>
@@ -130,6 +181,35 @@ export const ActiveRoomView: React.FC = () => {
             aria-label={isCameraOff ? "Turn On Camera" : "Turn Off Camera"}
           />
 
+          {/* Screen Share Toggle */}
+          <Button
+            variant={isScreenSharing ? "primary" : "secondary"}
+            size="md"
+            onClick={toggleScreenShare}
+            icon={<ProjectorScreen size={20} weight={isScreenSharing ? "fill" : "bold"} />}
+            className={cn("rounded-full w-12 h-12 p-0 min-h-[48px]", isScreenSharing && "ring-2 ring-blue-400")}
+            title={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
+            aria-label={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
+          />
+
+          {/* Ephemeral File Sharing Button */}
+          <div className="relative">
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setIsFileShareOpen(true)}
+              icon={<FileArrowUp size={20} weight="bold" />}
+              className="rounded-full w-12 h-12 p-0 min-h-[48px] text-slate-300 hover:text-white"
+              title="P2P Shared Files (Drag & Drop)"
+              aria-label="P2P Shared Files"
+            />
+            {files.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center pointer-events-none shadow-md">
+                {files.length}
+              </span>
+            )}
+          </div>
+
           {/* Ephemeral Chat Toggle */}
           <Button
             variant={isChatOpen ? "primary" : "secondary"}
@@ -169,6 +249,12 @@ export const ActiveRoomView: React.FC = () => {
       <DeviceSelectorModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* Ephemeral File Sharing Modal */}
+      <FileShareModal
+        isOpen={isFileShareOpen}
+        onClose={() => setIsFileShareOpen(false)}
       />
     </div>
   );

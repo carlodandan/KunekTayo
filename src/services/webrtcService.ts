@@ -26,6 +26,8 @@ class WebRtcService {
   private candidateQueue: RTCIceCandidateInit[] = [];
   private listeners = new Map<string, Set<WebRtcEventListener>>();
   private connectionState: PeerConnectionState = "new";
+  private screenStream: MediaStream | null = null;
+  private isScreenSharing = false;
 
   on(event: string, listener: WebRtcEventListener): () => void {
     if (!this.listeners.has(event)) {
@@ -49,6 +51,7 @@ class WebRtcService {
     connectionState: PeerConnectionState;
     isMuted: boolean;
     isCameraOff: boolean;
+    isScreenSharing: boolean;
     hasLocalStream: boolean;
     hasRemoteStream: boolean;
   } {
@@ -56,6 +59,7 @@ class WebRtcService {
       connectionState: this.connectionState,
       isMuted: this.isMuted,
       isCameraOff: this.isCameraOff,
+      isScreenSharing: this.isScreenSharing,
       hasLocalStream: !!this.localStream,
       hasRemoteStream: !!this.remoteStream,
     };
@@ -67,6 +71,14 @@ class WebRtcService {
 
   getRemoteStream(): MediaStream | null {
     return this.remoteStream;
+  }
+
+  getScreenStream(): MediaStream | null {
+    return this.screenStream;
+  }
+
+  isSharingScreen(): boolean {
+    return this.isScreenSharing;
   }
 
   getPeerConnection(): RTCPeerConnection | null {
@@ -295,6 +307,78 @@ class WebRtcService {
     return this.isCameraOff;
   }
 
+  /**
+   * Start screen sharing and replace current video track with display media
+   */
+  async startScreenShare(): Promise<MediaStream | null> {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getDisplayMedia) {
+      console.warn("Screen sharing is not supported in this browser environment.");
+      return null;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
+      });
+
+      const screenTrack = stream.getVideoTracks()[0];
+      if (!screenTrack) return null;
+
+      this.screenStream = stream;
+      this.isScreenSharing = true;
+
+      // Replace track on the video sender if peer connection is active
+      if (this.peerConnection) {
+        const senders = this.peerConnection.getSenders();
+        const videoSender = senders.find((s) => s.track?.kind === "video");
+        if (videoSender) {
+          await videoSender.replaceTrack(screenTrack);
+        }
+      }
+
+      // Handle native user stop-sharing button
+      screenTrack.onended = () => {
+        this.stopScreenShare();
+      };
+
+      this.emit("screen_share_change", { isSharing: true, stream });
+      return stream;
+    } catch (err) {
+      console.warn("User cancelled or screen share failed:", err);
+      return null;
+    }
+  }
+
+  /**
+   * Stop screen sharing and restore camera video track
+   */
+  async stopScreenShare(): Promise<void> {
+    if (!this.isScreenSharing && !this.screenStream) return;
+
+    if (this.screenStream) {
+      this.screenStream.getTracks().forEach((track) => track.stop());
+      this.screenStream = null;
+    }
+    this.isScreenSharing = false;
+
+    // Restore original camera track on video sender
+    if (this.peerConnection && this.localStream) {
+      const cameraTrack = this.localStream.getVideoTracks()[0] || null;
+      const senders = this.peerConnection.getSenders();
+      const videoSender = senders.find((s) => s.track?.kind === "video" || s.track === null);
+      if (videoSender && cameraTrack) {
+        try {
+          await videoSender.replaceTrack(cameraTrack);
+        } catch (err) {
+          console.warn("Failed to restore camera track after screen share:", err);
+        }
+      }
+    }
+
+    this.emit("screen_share_change", { isSharing: false, stream: null });
+  }
+
   private setupDataChannel(dc: RTCDataChannel): void {
     this.dataChannel = dc;
 
@@ -351,6 +435,12 @@ class WebRtcService {
   }
 
   stopAllMedia(): void {
+    if (this.screenStream) {
+      this.screenStream.getTracks().forEach((t) => t.stop());
+      this.screenStream = null;
+    }
+    this.isScreenSharing = false;
+
     if (this.localStream) {
       this.localStream.getTracks().forEach((t) => t.stop());
       this.localStream = null;

@@ -13,9 +13,9 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | **Phase 3** | **Invite Links & Signaling** | **COMPLETED** | Web invite routing, deep links (Windows & Android), WebSocket signaling protocol via Cloudflare |
 | **Phase 4** | **WebRTC** | **COMPLETED** | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
 | **Phase 5** | **Ephemeral Chat** | **COMPLETED** | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
-| **Phase 6** | **Call & Room UX** | **COMPLETED (Pending Review)** | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
-| **Phase 7** | **Optional Sharing** | Ready Next | Screen sharing, temporary drag-and-drop file transfers via DataChannel |
-| **Phase 8** | **Security & Reliability** | Planned | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
+| **Phase 6** | **Call & Room UX** | **COMPLETED** | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
+| **Phase 7** | **Optional Sharing** | **COMPLETED (Pending Review)** | Screen sharing via getDisplayMedia, temporary P2P drag-and-drop file transfers via DataChannel |
+| **Phase 8** | **Security & Reliability** | Ready Next | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
 | **Phase 9** | **Production** | Planned | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment |
 
 ---
@@ -70,16 +70,21 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Basic delivery states (`sending` and `delivered`)
 - [x] Zero database persistence guarantee
 
-### Phase 6: Call & Room UX
-- [ ] Fullscreen 1-on-1 video grid with picture-in-picture local preview
-- [ ] Media device selectors (microphone, speaker, webcam)
-- [ ] Live audio waveform / volume meters
-- [ ] Connection quality and latency indicator
-- [ ] Room countdown timer indicator for solo waiting states
+### Phase 6: Call & Room UX (Completed)
+- [x] Fullscreen 1-on-1 video grid with picture-in-picture local preview
+- [x] Media device selectors (`DeviceSelectorModal.tsx` for microphone and camera switching)
+- [x] Device change listener with `navigator.mediaDevices.ondevicechange`
+- [x] Connection quality and latency indicator (`ConnectionQualityBadge.tsx` with RTT stats)
+- [x] Room countdown timer indicator for solo waiting states (`WaitingRoomView.tsx`)
+- [x] Rejoin handling and banner prompt (`RejoinBanner.tsx`)
 
-### Phase 7: Optional Sharing
-- [ ] Screen sharing track negotiation (`getDisplayMedia`)
-- [ ] Direct file transfer over RTCDataChannel with chunking
+### Phase 7: Optional Sharing (Completed - Pending Review)
+- [x] Screen sharing track negotiation (`getDisplayMedia` with automatic camera fallback on end)
+- [x] Direct ephemeral file and image transfer over `RTCDataChannel` with 32 KB chunking
+- [x] Drag-and-drop file transfer overlay across call stage
+- [x] Shared files modal (`FileShareModal.tsx`) with image lightbox preview and download
+- [x] Ephemeral in-memory Blob management with auto-revocation and zero server persistence
+- [x] Paperclip file attachment integration into Ephemeral Chat drawer
 
 ### Phase 8: Security & Reliability
 - [ ] Room token security validation and entropy check

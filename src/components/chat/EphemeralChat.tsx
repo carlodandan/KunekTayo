@@ -7,9 +7,11 @@ import {
   CheckFat,
   DotsThree,
   ShieldCheck,
+  Paperclip,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { useChat, TTL_OPTIONS, EphemeralChatMessage } from "@/context/ChatContext";
+import { useFileTransfer } from "@/context/FileTransferContext";
 import { useRoom } from "@/context/RoomContext";
 import { cn } from "@/utils/cn";
 
@@ -23,11 +25,13 @@ export const EphemeralChat: React.FC<{ className?: string }> = ({ className }) =
     sendMessage,
     sendTyping,
   } = useChat();
+  const { sendFile } = useFileTransfer();
 
   const [inputText, setInputText] = useState("");
   const [now, setNow] = useState(Date.now());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update clock every second for live TTL burn countdown
   useEffect(() => {
@@ -60,6 +64,20 @@ export const EphemeralChat: React.FC<{ className?: string }> = ({ className }) =
     setInputText("");
     sendTyping(false);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    for (const file of files) {
+      const res = await sendFile(file);
+      if (res) {
+        sendMessage(`📎 Shared file: ${file.name}`);
+      }
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const getRemainingSecs = (msg: EphemeralChatMessage) => {
@@ -181,6 +199,24 @@ export const EphemeralChat: React.FC<{ className?: string }> = ({ className }) =
         onSubmit={handleSend}
         className="p-3 border-t border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center gap-2"
       >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          multiple
+        />
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center shrink-0"
+          title="Share File / Image (Direct P2P)"
+          aria-label="Share File"
+        >
+          <Paperclip size={18} weight="bold" />
+        </button>
+
         <input
           type="text"
           value={inputText}

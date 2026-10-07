@@ -5,11 +5,14 @@ import { useRoom } from "./RoomContext";
 interface WebRtcContextValue {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
+  screenStream: MediaStream | null;
   connectionState: PeerConnectionState;
   isMuted: boolean;
   isCameraOff: boolean;
+  isScreenSharing: boolean;
   toggleMic: () => void;
   toggleCamera: () => void;
+  toggleScreenShare: () => Promise<void>;
 }
 
 const WebRtcContext = createContext<WebRtcContextValue | null>(null);
@@ -18,9 +21,11 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { session, status } = useRoom();
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [connectionState, setConnectionState] = useState<PeerConnectionState>("new");
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   useEffect(() => {
     const unsubLocal = webrtcService.on("local_stream", (stream: MediaStream) => {
@@ -40,11 +45,17 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsCameraOff(state.isCameraOff);
     });
 
+    const unsubScreenShare = webrtcService.on("screen_share_change", (data: { isSharing: boolean; stream: MediaStream | null }) => {
+      setIsScreenSharing(data.isSharing);
+      setScreenStream(data.stream);
+    });
+
     return () => {
       unsubLocal();
       unsubRemote();
       unsubConn();
       unsubMediaState();
+      unsubScreenShare();
     };
   }, []);
 
@@ -68,6 +79,8 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       webrtcService.stopAllMedia();
       setLocalStream(null);
       setRemoteStream(null);
+      setScreenStream(null);
+      setIsScreenSharing(false);
       setConnectionState("new");
     }
   }, [status, session?.roomId, session?.myRole]);
@@ -80,16 +93,27 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsCameraOff(webrtcService.toggleCamera());
   };
 
+  const toggleScreenShare = async () => {
+    if (isScreenSharing) {
+      await webrtcService.stopScreenShare();
+    } else {
+      await webrtcService.startScreenShare();
+    }
+  };
+
   return (
     <WebRtcContext.Provider
       value={{
         localStream,
         remoteStream,
+        screenStream,
         connectionState,
         isMuted,
         isCameraOff,
+        isScreenSharing,
         toggleMic,
         toggleCamera,
+        toggleScreenShare,
       }}
     >
       {children}
