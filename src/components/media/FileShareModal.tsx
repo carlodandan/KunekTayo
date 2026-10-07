@@ -80,28 +80,28 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <Card
         elevated
-        className="w-full max-w-xl bg-slate-900 border-slate-800 p-4 sm:p-6 space-y-3.5 sm:space-y-5 text-left max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden"
+        className="w-full max-w-xl bg-[#2b2d31] border-[#35373c] p-4 sm:p-6 space-y-3.5 sm:space-y-5 text-left max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+        <div className="flex items-center justify-between pb-3 border-b border-[#35373c] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <div className="w-9 h-9 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
               <FileArrowUp size={20} weight="bold" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-slate-100">P2P File & Image Sharing</h2>
-              <p className="text-xs text-slate-400">Vanishing in-memory transfer</p>
+              <h2 className="text-base font-semibold text-[#f2f3f5]">P2P File & Image Sharing</h2>
+              <p className="text-xs text-[#949ba4]">Vanishing in-memory transfer</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="p-2 text-[#949ba4] hover:text-[#f2f3f5] rounded-lg hover:bg-[#35373c] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Close"
           >
             <X size={20} />
@@ -109,8 +109,8 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
         </div>
 
         {/* Security Notice */}
-        <div className="px-3.5 py-2 rounded-xl bg-emerald-950/20 border border-emerald-900/30 text-xs text-emerald-300 flex items-center gap-2 select-none shrink-0">
-          <ShieldCheck size={18} className="shrink-0 text-emerald-400" />
+        <div className="px-3.5 py-2 rounded-xl bg-[#23a55a]/10 border border-[#23a55a]/25 text-xs text-[#23a55a] flex items-center gap-2 select-none shrink-0">
+          <ShieldCheck size={18} className="shrink-0 text-[#23a55a]" />
           <span>Direct P2P over WebRTC DataChannel. Zero server upload. Files vanish upon call exit.</span>
         </div>
 
@@ -121,10 +121,10 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className={cn(
-            "p-6 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 shrink-0",
+            "p-6 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-150 shrink-0",
             isDragging
-              ? "border-blue-500 bg-blue-500/10 scale-[1.01]"
-              : "border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-950/60"
+              ? "border-[#5865f2] bg-[#5865f2]/10"
+              : "border-[#35373c] hover:border-[#4e5058] bg-[#1e1f22] hover:bg-[#1e1f22]/80"
           )}
         >
           <input
@@ -134,13 +134,13 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
             className="hidden"
             multiple
           />
-          <div className="w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3">
+          <div className="w-12 h-12 rounded-full bg-[#2b2d31] border border-[#35373c] flex items-center justify-center text-[#5865f2] mb-3">
             <FileArrowUp size={24} weight="bold" />
           </div>
-          <p className="text-sm font-medium text-slate-200">
+          <p className="text-sm font-medium text-[#f2f3f5]">
             Click to upload or drag & drop files
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-[#80848e] mt-1">
             Max 50 MB per file (Images, Documents, Archives)
           </p>
         </div>
@@ -148,30 +148,30 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
         {/* Active Transfer Progress */}
         {transfers.length > 0 && (
           <div className="space-y-2 shrink-0">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-[#949ba4] uppercase tracking-wider">
               Transfers in Progress
             </span>
             <div className="space-y-2">
               {transfers.map((t) => (
                 <div
                   key={t.fileId}
-                  className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col space-y-1.5"
+                  className="p-3 rounded-xl bg-[#1e1f22] border border-[#35373c] flex flex-col space-y-1.5"
                 >
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-slate-200 truncate max-w-[200px]">
+                    <span className="font-medium text-[#f2f3f5] truncate max-w-[200px]">
                       {t.name}
                     </span>
-                    <span className="text-slate-400">{t.progress}%</span>
+                    <span className="text-[#949ba4]">{t.progress}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-[#2b2d31] rounded-full overflow-hidden">
                     <div
                       className={cn(
                         "h-full transition-all duration-150 rounded-full",
                         t.status === "completed"
-                          ? "bg-emerald-500"
+                          ? "bg-[#23a55a]"
                           : t.status === "error"
-                          ? "bg-red-500"
-                          : "bg-blue-500"
+                          ? "bg-[#da373c]"
+                          : "bg-[#5865f2]"
                       )}
                       style={{ width: `${t.progress}%` }}
                     />
@@ -184,26 +184,26 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
 
         {/* Shared Files List */}
         <div className="flex-1 overflow-y-auto space-y-2.5 min-h-[140px] pr-1">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+          <span className="text-xs font-semibold text-[#949ba4] uppercase tracking-wider block">
             Room Shared Files ({files.length})
           </span>
 
           {files.length === 0 ? (
-            <div className="h-28 flex flex-col items-center justify-center text-slate-500 text-xs text-center">
-              <Clock size={24} className="mb-1 text-slate-600" />
+            <div className="h-28 flex flex-col items-center justify-center text-[#80848e] text-xs text-center">
+              <Clock size={24} className="mb-1 text-[#80848e]" />
               <span>No files shared in this session yet.</span>
             </div>
           ) : (
             files.map((file) => (
               <div
                 key={file.id}
-                className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700/80 flex items-center justify-between gap-3 transition-colors"
+                className="p-3 rounded-xl bg-[#1e1f22] border border-[#35373c] hover:border-[#4e5058] flex items-center justify-between gap-3 transition-colors"
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   <div className="shrink-0">{getFileIcon(file.mimeType, file.isImage)}</div>
                   <div className="overflow-hidden">
-                    <p className="text-xs font-medium text-slate-200 truncate">{file.name}</p>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-xs font-medium text-[#f2f3f5] truncate">{file.name}</p>
+                    <p className="text-[11px] text-[#80848e]">
                       {formatBytes(file.size)} • {file.isMine ? "Sent by you" : "Received from peer"}
                     </p>
                   </div>
@@ -223,7 +223,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
                   <a
                     href={file.objectUrl}
                     download={file.name}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-medium min-h-[40px] min-w-[40px] justify-center"
+                    className="p-2 rounded-lg bg-[#383a40] hover:bg-[#4e5058] text-[#f2f3f5] transition-colors flex items-center gap-1.5 text-xs font-medium min-h-[40px] min-w-[40px] justify-center"
                     title="Download"
                   >
                     <FileArrowDown size={16} weight="bold" />

@@ -79,19 +79,19 @@ function RoomAppContent() {
 
       {/* Hero Section */}
       <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
-          <Sparkle size={13} weight="fill" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2b2d31] border border-[#35373c] text-[#dbdee1] text-xs font-semibold">
+          <Sparkle size={13} weight="fill" className="text-[#5865f2]" />
           <span>Lightweight • Temporary • 1-to-1</span>
         </div>
 
-        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#f2f3f5] tracking-tight leading-tight">
           Connect directly. <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
+          <span className="text-[#5865f2]">
             Ephemeral by design.
           </span>
         </h2>
 
-        <p className="text-xs sm:text-base text-slate-400 max-w-lg mx-auto leading-relaxed px-2">
+        <p className="text-xs sm:text-base text-[#949ba4] max-w-lg mx-auto leading-relaxed px-2">
           Create a private room. Send the link to one person. Direct peer-to-peer
           audio, video, and vanishing chat with zero accounts and zero footprints.
         </p>

@@ -37,15 +37,15 @@ export const FoundationInfoCard: React.FC = () => {
   };
 
   return (
-    <div className="w-full rounded-2xl border border-slate-800/80 bg-slate-950/40 backdrop-blur-md p-4 sm:p-5 text-left transition-all">
+    <div className="w-full rounded-2xl border border-[#35373c] bg-[#2b2d31] p-4 sm:p-5 text-left transition-colors">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between gap-2 text-left cursor-pointer group select-none"
         aria-expanded={isExpanded}
       >
         <div className="flex items-center gap-2">
-          <GearSix size={18} className="text-slate-400 group-hover:text-blue-400 transition-colors" weight="bold" />
-          <h3 className="text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider group-hover:text-white transition-colors">
+          <GearSix size={18} className="text-[#949ba4] group-hover:text-[#5865f2] transition-colors" weight="bold" />
+          <h3 className="text-xs sm:text-sm font-semibold text-[#dbdee1] uppercase tracking-wider group-hover:text-[#f2f3f5] transition-colors">
             System & Foundation Diagnostics
           </h3>
         </div>
@@ -54,7 +54,7 @@ export const FoundationInfoCard: React.FC = () => {
             <CheckCircle size={13} weight="fill" />
             Tauri 2 • React 19 • Tailwind v4
           </Badge>
-          <div className="p-1 rounded-lg text-slate-400 group-hover:text-white group-hover:bg-slate-800 transition-colors">
+          <div className="p-1 rounded-lg text-[#949ba4] group-hover:text-[#f2f3f5] group-hover:bg-[#35373c] transition-colors">
             <CaretDown
               size={16}
               weight="bold"
@@ -65,41 +65,41 @@ export const FoundationInfoCard: React.FC = () => {
       </button>
 
       {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-slate-800 space-y-4 animate-in fade-in duration-150">
+        <div className="mt-4 pt-4 border-t border-[#35373c] space-y-4 animate-in fade-in duration-150">
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-          <span className="text-slate-400">Runtime Target</span>
-          <p className="font-semibold text-slate-200">
+        <div className="p-3 rounded-xl bg-[#1e1f22] border border-[#35373c] space-y-1">
+          <span className="text-[#949ba4]">Runtime Target</span>
+          <p className="font-semibold text-[#f2f3f5]">
             {getTargetLabel()}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-          <span className="text-slate-400">Signaling Endpoint</span>
-          <p className="font-mono text-slate-200 truncate" title={env.signalingUrl}>
+        <div className="p-3 rounded-xl bg-[#1e1f22] border border-[#35373c] space-y-1">
+          <span className="text-[#949ba4]">Signaling Endpoint</span>
+          <p className="font-mono text-[#f2f3f5] truncate" title={env.signalingUrl}>
             {env.signalingUrl}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-          <span className="text-slate-400">Room Expiration</span>
-          <p className="font-semibold text-amber-400">
+        <div className="p-3 rounded-xl bg-[#1e1f22] border border-[#35373c] space-y-1">
+          <span className="text-[#949ba4]">Room Expiration</span>
+          <p className="font-semibold text-[#f0b232]">
             {env.roomSoloTimeoutMinutes} mins solo countdown
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-          <span className="text-slate-400">Ephemeral Chat TTL</span>
-          <p className="font-semibold text-cyan-400">
+        <div className="p-3 rounded-xl bg-[#1e1f22] border border-[#35373c] space-y-1">
+          <span className="text-[#949ba4]">Ephemeral Chat TTL</span>
+          <p className="font-semibold text-[#5865f2]">
             {env.messageDefaultTtlSeconds}s auto-purge
           </p>
         </div>
       </div>
 
-      <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/60">
-        <div className="flex items-center gap-2.5 text-xs text-slate-300">
-          <TerminalWindow size={16} className="text-blue-400" />
+      <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#1e1f22] p-3.5 rounded-xl border border-[#35373c]">
+        <div className="flex items-center gap-2.5 text-xs text-[#dbdee1]">
+          <TerminalWindow size={16} className="text-[#5865f2]" />
           <span>
             {rustResponse ? (
-              <span className="font-mono text-emerald-300">{rustResponse}</span>
+              <span className="font-mono text-[#23a55a]">{rustResponse}</span>
             ) : (
               "Test Tauri Rust Core Command Bridge:"
             )}

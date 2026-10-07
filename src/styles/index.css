@@ -12,8 +12,8 @@
     padding: 0;
     height: 100%;
     width: 100%;
-    background-color: #090d16;
-    color: #f8fafc;
+    background-color: #1e1f22;
+    color: #f2f3f5;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -42,7 +42,7 @@
   padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* Custom scrollbars */
+/* Custom Discord-styled dark scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -51,9 +51,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #2b2d31;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #35373c;
 }

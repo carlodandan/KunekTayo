@@ -26,19 +26,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-xl cursor-pointer transition-all duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
+      "inline-flex items-center justify-center font-medium rounded-xl cursor-pointer transition-all duration-150 select-none outline-none focus-visible:ring-2 focus-visible:ring-[#5865f2] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1e1f22] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
 
     const variantStyles = {
       primary:
-        "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 active:bg-blue-700",
+        "bg-[#5865f2] hover:bg-[#4752c4] active:bg-[#3c45a5] text-white shadow-none",
       secondary:
-        "bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 active:bg-slate-800",
+        "bg-[#4e5058] hover:bg-[#3f4147] active:bg-[#35373c] text-[#f2f3f5] border border-[#4e5058] shadow-none",
       outline:
-        "border border-slate-700 hover:border-slate-600 bg-transparent text-slate-200 hover:bg-slate-800/60 active:bg-slate-800",
+        "border border-[#3f4147] hover:border-[#4e5058] bg-transparent text-[#dbdee1] hover:bg-[#35373c] active:bg-[#2b2d31]",
       ghost:
-        "bg-transparent hover:bg-slate-800 text-slate-300 hover:text-white active:bg-slate-800/80",
+        "bg-transparent hover:bg-[#35373c] text-[#949ba4] hover:text-[#f2f3f5] active:bg-[#2b2d31]",
       danger:
-        "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20 active:bg-red-700",
+        "bg-[#da373c] hover:bg-[#c23136] active:bg-[#a1282c] text-white shadow-none",
     };
 
     // Meeting touch target guidance: >=44px desktop / 48px mobile

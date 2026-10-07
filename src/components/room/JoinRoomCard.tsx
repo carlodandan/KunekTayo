@@ -28,18 +28,18 @@ export const JoinRoomCard: React.FC = () => {
   const displayError = localError || (roomError ? roomError.message : null);
 
   return (
-    <Card className="flex flex-col justify-between border-slate-800 hover:border-slate-700 transition-colors text-left p-5 sm:p-6">
+    <Card className="flex flex-col justify-between border-[#35373c] bg-[#2b2d31] hover:border-[#4e5058] transition-colors text-left p-5 sm:p-6">
       <form onSubmit={handleJoin} className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="w-12 h-12 rounded-xl bg-cyan-600/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
             <SignIn size={26} weight="duotone" />
           </div>
           <Badge variant="neutral">2-Person Max</Badge>
         </div>
 
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">Join Existing Room</h2>
-          <p className="text-sm text-slate-400 mt-1.5 leading-relaxed">
+          <h2 className="text-xl font-bold text-[#f2f3f5] tracking-tight">Join Existing Room</h2>
+          <p className="text-sm text-[#949ba4] mt-1.5 leading-relaxed">
             Have an invite from someone? Paste the invite link or 16-character room code below.
           </p>
         </div>

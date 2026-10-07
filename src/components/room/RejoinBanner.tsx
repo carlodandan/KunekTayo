@@ -19,16 +19,16 @@ export const RejoinBanner: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 rounded-xl bg-blue-950/40 border border-blue-800/60 text-left flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+    <div className="w-full max-w-2xl mx-auto p-4 rounded-xl bg-[#2b2d31] border border-[#35373c] text-left flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 animate-in fade-in duration-200">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-[#1e1f22] text-[#5865f2] flex items-center justify-center shrink-0">
           <PlugsConnected size={18} weight="bold" />
         </div>
         <div>
-          <p className="text-xs sm:text-sm font-semibold text-white">
+          <p className="text-xs sm:text-sm font-semibold text-[#f2f3f5]">
             Active session detected (Room #{cached.roomId.substring(0, 8)})
           </p>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-[#949ba4]">
             Rejoin your recent room session as {cached.role}.
           </p>
         </div>

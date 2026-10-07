@@ -92,32 +92,32 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
   return (
     <div
       className={cn(
-        "flex flex-col h-[400px] sm:h-[460px] bg-slate-950/90 rounded-2xl border border-slate-800 overflow-hidden shadow-xl text-left",
+        "flex flex-col h-[400px] sm:h-[460px] bg-[#2b2d31] rounded-2xl border border-[#35373c] overflow-hidden text-left",
         className
       )}
     >
       {/* Chat Header */}
-      <div className="p-3.5 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
+      <div className="p-3.5 border-b border-[#35373c] bg-[#1e1f22] flex items-center justify-between">
         <div className="flex items-center gap-2">
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 -ml-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+              className="p-1.5 -ml-1 text-[#949ba4] hover:text-[#f2f3f5] rounded-lg hover:bg-[#35373c] transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
               title="Close Chat"
               aria-label="Close Chat"
             >
               <X size={16} weight="bold" />
             </button>
           )}
-          <Fire size={18} className="text-amber-400" weight="fill" />
-          <h3 className="text-sm font-semibold text-slate-200">Ephemeral Chat</h3>
+          <Fire size={18} className="text-[#f0b232]" weight="fill" />
+          <h3 className="text-sm font-semibold text-[#f2f3f5]">Ephemeral Chat</h3>
         </div>
 
         {/* TTL Selector */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-slate-400 font-medium">TTL:</span>
-          <div className="flex items-center bg-slate-950 rounded-lg p-0.5 border border-slate-800">
+          <span className="text-[11px] text-[#949ba4] font-medium">TTL:</span>
+          <div className="flex items-center bg-[#2b2d31] rounded-lg p-0.5 border border-[#35373c]">
             {TTL_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -125,8 +125,8 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
                 className={cn(
                   "px-2 py-0.5 text-[10px] font-semibold rounded-md transition-colors cursor-pointer",
                   selectedTtl === opt.value
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-[#5865f2] text-white"
+                    : "text-[#949ba4] hover:text-[#f2f3f5]"
                 )}
               >
                 {opt.label}
@@ -137,7 +137,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
       </div>
 
       {/* Ephemeral Notice */}
-      <div className="px-3.5 py-1.5 bg-amber-950/20 border-b border-amber-900/30 text-[11px] text-amber-300 flex items-center gap-1.5 select-none">
+      <div className="px-3.5 py-1.5 bg-[#f0b232]/10 border-b border-[#f0b232]/20 text-[11px] text-[#f0b232] flex items-center gap-1.5 select-none">
         <ShieldCheck size={14} className="shrink-0" />
         <span>Messages vanish locally on both devices once TTL expires. Zero server logging.</span>
       </div>
@@ -145,10 +145,10 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
       {/* Messages Scroll Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 space-y-1 select-none">
-            <Clock size={28} className="text-slate-600" />
+          <div className="h-full flex flex-col items-center justify-center text-center text-[#80848e] space-y-1 select-none">
+            <Clock size={28} className="text-[#80848e]" />
             <p className="text-xs">No active messages.</p>
-            <p className="text-[11px] text-slate-600">Send a self-destructing message.</p>
+            <p className="text-[11px] text-[#80848e]">Send a self-destructing message.</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -166,27 +166,27 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
               >
                 <div
                   className={cn(
-                    "max-w-[85%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm leading-relaxed break-words shadow-sm",
+                    "max-w-[85%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm leading-relaxed break-words",
                     isMine
-                      ? "bg-blue-600 text-white rounded-br-xs"
-                      : "bg-slate-800 text-slate-100 rounded-bl-xs border border-slate-700/60"
+                      ? "bg-[#5865f2] text-white rounded-br-xs"
+                      : "bg-[#383a40] text-[#f2f3f5] rounded-bl-xs border border-[#3f4147]"
                   )}
                 >
                   <p>{msg.text}</p>
                 </div>
 
                 {/* Message Meta (TTL Burn + Timestamp + Delivery status) */}
-                <div className="flex items-center gap-1.5 px-1 text-[10px] text-slate-400 select-none">
+                <div className="flex items-center gap-1.5 px-1 text-[10px] text-[#949ba4] select-none">
                   <span>{timeStr}</span>
                   <span>•</span>
-                  <span className="flex items-center gap-0.5 text-amber-400 font-mono font-medium">
+                  <span className="flex items-center gap-0.5 text-[#f0b232] font-mono font-medium">
                     <Fire size={12} weight="fill" />
                     {remaining}s
                   </span>
                   {isMine && (
-                    <span className="ml-0.5 text-blue-300" title={msg.status}>
+                    <span className="ml-0.5 text-[#dbdee1]" title={msg.status}>
                       {msg.status === "delivered" ? (
-                        <CheckFat size={12} weight="fill" className="text-emerald-400" />
+                        <CheckFat size={12} weight="fill" className="text-[#23a55a]" />
                       ) : (
                         <Check size={12} />
                       )}
@@ -200,8 +200,8 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
 
         {/* Peer Typing Indicator */}
         {isPeerTyping && (
-          <div className="flex items-center gap-2 text-xs text-slate-400 animate-pulse pt-1">
-            <DotsThree size={20} weight="bold" className="text-blue-400" />
+          <div className="flex items-center gap-2 text-xs text-[#949ba4] animate-pulse pt-1">
+            <DotsThree size={20} weight="bold" className="text-[#5865f2]" />
             <span>Peer is typing...</span>
           </div>
         )}
@@ -212,7 +212,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
       {/* Input Area */}
       <form
         onSubmit={handleSend}
-        className="p-3 border-t border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center gap-2"
+        className="p-3 border-t border-[#35373c] bg-[#1e1f22] flex items-center gap-2"
       >
         <input
           type="file"
@@ -225,7 +225,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center shrink-0"
+          className="p-2 text-[#949ba4] hover:text-[#f2f3f5] rounded-xl hover:bg-[#35373c] transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center shrink-0"
           title="Share File / Image (Direct P2P)"
           aria-label="Share File"
         >
@@ -237,7 +237,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
           value={inputText}
           onChange={handleInputChange}
           placeholder={`Type message (${selectedTtl}s auto-purge)...`}
-          className="flex-1 bg-slate-950 text-slate-100 placeholder:text-slate-500 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm border border-slate-800 focus:border-blue-500 focus:outline-none transition-colors"
+          className="flex-1 bg-[#383a40] text-[#f2f3f5] placeholder:text-[#80848e] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm border border-[#3f4147] focus:border-[#5865f2] focus:outline-none transition-colors"
         />
 
         <Button

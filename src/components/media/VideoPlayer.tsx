@@ -41,9 +41,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     <div
       onClick={onClick}
       className={cn(
-        "relative w-full h-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center select-none shadow-lg transition-all duration-200",
+        "relative w-full h-full bg-[#1e1f22] rounded-2xl overflow-hidden border border-[#35373c] flex items-center justify-center select-none transition-colors duration-200",
         !isPip && "min-h-[200px] sm:min-h-[280px]",
-        isPip && "min-h-0 cursor-pointer hover:border-blue-500/80 shadow-2xl",
+        isPip && "min-h-0 cursor-pointer hover:border-[#5865f2]",
         className
       )}
     >
@@ -62,18 +62,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       {/* Avatar Placeholder when video is off or absent */}
       {!hasVideoTrack && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center space-y-1.5 bg-gradient-to-b from-slate-900 to-slate-950">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center space-y-1.5 bg-[#2b2d31]">
           <div
             className={cn(
-              "rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400",
+              "rounded-full bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#949ba4]",
               isPip ? "w-8 h-8 sm:w-10 sm:h-10" : "w-16 h-16 sm:w-20 sm:h-20"
             )}
           >
             <User size={isPip ? 18 : 36} weight="bold" />
           </div>
           {!isPip && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-400">
-              <VideoCameraSlash size={14} className="text-red-400" />
+            <div className="flex items-center gap-1.5 text-xs text-[#949ba4]">
+              <VideoCameraSlash size={14} className="text-[#da373c]" />
               <span>Camera Off</span>
             </div>
           )}
@@ -84,7 +84,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       <div className={cn("absolute flex items-center gap-1.5 z-10", isPip ? "top-1.5 left-1.5" : "top-3 left-3")}>
         <span
           className={cn(
-            "rounded-md bg-black/60 backdrop-blur-md font-semibold text-white border border-white/10",
+            "rounded-md bg-[#1e1f22]/90 font-medium text-[#f2f3f5] border border-[#35373c]",
             isPip ? "text-[9px] px-1.5 py-0.5" : "text-xs px-2.5 py-1"
           )}
         >
@@ -96,7 +96,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         {isMuted && (
           <span
             className={cn(
-              "rounded-md bg-red-600/80 backdrop-blur-md text-white border border-red-500/30 flex items-center justify-center",
+              "rounded-md bg-[#da373c] text-white flex items-center justify-center",
               isPip ? "p-1" : "p-1.5"
             )}
           >

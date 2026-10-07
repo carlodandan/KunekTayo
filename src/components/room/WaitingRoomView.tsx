@@ -52,69 +52,69 @@ export const WaitingRoomView: React.FC = () => {
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col space-y-6 animate-in fade-in duration-200">
       {/* Status banner */}
-      <Card className="border-amber-500/30 bg-amber-950/20 p-5 sm:p-6 text-left space-y-4">
+      <Card className="border-[#35373c] bg-[#2b2d31] p-5 sm:p-6 text-left space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="w-10 h-10 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#f0b232]">
               <Broadcast size={22} weight="duotone" className="animate-pulse" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              <h2 className="text-base sm:text-lg font-bold text-[#f2f3f5] tracking-tight">
                 Waiting for 2nd Participant
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#949ba4]">
                 1 of 2 participant slots filled
               </p>
             </div>
           </div>
 
           {/* 30-minute solo room countdown */}
-          <div className="flex items-center gap-2 bg-slate-950/70 border border-amber-500/30 px-3.5 py-1.5 rounded-xl">
-            <Clock size={16} className="text-amber-400 animate-spin" weight="bold" />
+          <div className="flex items-center gap-2 bg-[#1e1f22] border border-[#35373c] px-3.5 py-1.5 rounded-xl">
+            <Clock size={16} className="text-[#f0b232] animate-spin" weight="bold" />
             <div className="flex flex-col text-right">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">
+              <span className="text-[10px] text-[#949ba4] uppercase font-semibold tracking-wider">
                 Solo Room TTL
               </span>
-              <span className="font-mono text-sm sm:text-base font-bold text-amber-300">
+              <span className="font-mono text-sm sm:text-base font-bold text-[#f0b232]">
                 {timeRemaining?.formatted || "30:00"}
               </span>
             </div>
           </div>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#dbdee1] leading-relaxed">
           This room will automatically expire if a second person doesn’t join within{" "}
-          <strong className="text-amber-300">30 minutes</strong>. Once your guest joins,
+          <strong className="text-[#f0b232]">30 minutes</strong>. Once your guest joins,
           this timer cancels and the room remains alive indefinitely.
         </p>
       </Card>
 
       {/* Shareable Invite Card */}
-      <Card elevated className="space-y-4 text-left p-5 sm:p-6">
+      <Card elevated className="space-y-4 text-left p-5 sm:p-6 bg-[#2b2d31] border-[#35373c]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShareNetwork size={20} className="text-blue-400" weight="bold" />
-            <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">
+            <ShareNetwork size={20} className="text-[#5865f2]" weight="bold" />
+            <h3 className="text-sm font-semibold text-[#dbdee1] uppercase tracking-wider">
               Shareable Invite Link
             </h3>
           </div>
           <Badge variant="info">Room #{session?.roomId.substring(0, 8)}</Badge>
         </div>
 
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[#949ba4]">
           Send this one-time link to the person you want to talk with. Only 1 person can join.
         </p>
 
         {/* Link display & copy input */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-          <div className="flex-1 min-w-0 bg-slate-950/90 border border-slate-800 rounded-xl px-3.5 py-3 text-xs sm:text-sm text-blue-300 font-mono truncate select-all">
+          <div className="flex-1 min-w-0 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3.5 py-3 text-xs sm:text-sm text-[#dbdee1] font-mono truncate select-all">
             {inviteUrl || "Generating invite link..."}
           </div>
           <Button
             variant="primary"
             size="md"
             onClick={handleCopyLink}
-            icon={copied ? <Check size={18} className="text-emerald-300" weight="bold" /> : <Copy size={18} weight="bold" />}
+            icon={copied ? <Check size={18} className="text-[#23a55a]" weight="bold" /> : <Copy size={18} weight="bold" />}
             className="shrink-0"
           >
             {copied ? "Link Copied!" : "Copy Link"}
@@ -135,22 +135,22 @@ export const WaitingRoomView: React.FC = () => {
 
       {/* Participant Slots (Strict 2-Person Limit) */}
       <div className="space-y-2 text-left">
-        <div className="flex items-center justify-between px-1 text-xs text-slate-400">
+        <div className="flex items-center justify-between px-1 text-xs text-[#949ba4]">
           <span>Room Slots (Max 2 Participants)</span>
-          <span className="text-blue-400 font-semibold">1 / 2 Occupied</span>
+          <span className="text-[#5865f2] font-semibold">1 / 2 Occupied</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Host Slot */}
-          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-700/80 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#2b2d31] border border-[#35373c] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+              <div className="w-10 h-10 rounded-full bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
                 <User size={20} weight="bold" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">You (Host)</p>
-                <p className="text-xs text-emerald-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                <p className="text-sm font-semibold text-[#f2f3f5]">You (Host)</p>
+                <p className="text-xs text-[#23a55a] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#23a55a] inline-block" />
                   Connected
                 </p>
               </div>
@@ -159,14 +159,14 @@ export const WaitingRoomView: React.FC = () => {
           </div>
 
           {/* Guest Slot */}
-          <div className="p-4 rounded-xl bg-slate-950/40 border border-dashed border-slate-800 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-[#1e1f22] border border-dashed border-[#35373c] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-800/40 border border-slate-700/40 flex items-center justify-center text-slate-500">
+              <div className="w-10 h-10 rounded-full bg-[#2b2d31] border border-[#35373c] flex items-center justify-center text-[#80848e]">
                 <UserPlus size={20} weight="bold" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-400">Awaiting Guest</p>
-                <p className="text-xs text-slate-500">Empty slot</p>
+                <p className="text-sm font-medium text-[#949ba4]">Awaiting Guest</p>
+                <p className="text-xs text-[#80848e]">Empty slot</p>
               </div>
             </div>
             <Badge variant="neutral">Slot 2</Badge>

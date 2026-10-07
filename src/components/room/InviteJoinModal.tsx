@@ -46,40 +46,40 @@ export const InviteJoinModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-      <Card elevated className="w-full max-w-md bg-slate-900 border-slate-700 p-6 text-left space-y-5 relative">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-150">
+      <Card elevated className="w-full max-w-md bg-[#2b2d31] border-[#35373c] p-6 text-left space-y-5 relative">
         <button
           onClick={handleDismiss}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-[#949ba4] hover:text-[#f2f3f5] p-1 rounded-lg hover:bg-[#35373c] transition-colors cursor-pointer"
           aria-label="Close"
         >
           <X size={18} />
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
             <Link size={24} weight="bold" />
           </div>
           <div>
             <Badge variant="info">Direct Invite Detected</Badge>
-            <h3 className="text-lg font-bold text-white mt-1">Join Private Room</h3>
+            <h3 className="text-lg font-bold text-[#f2f3f5] mt-1">Join Private Room</h3>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 space-y-2">
+        <div className="p-3.5 rounded-xl bg-[#1e1f22] border border-[#35373c] text-xs text-[#dbdee1] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-slate-400">Target Room:</span>
-            <span className="font-mono text-blue-300 font-semibold">
+            <span className="text-[#949ba4]">Target Room:</span>
+            <span className="font-mono text-[#5865f2] font-semibold">
               #{pendingInvite.roomId.substring(0, 8)}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-emerald-400">
+          <div className="flex items-center gap-1.5 text-[#23a55a]">
             <ShieldCheck size={14} weight="fill" />
             <span>Cryptographic invite token verified</span>
           </div>
         </div>
 
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="text-xs text-[#949ba4] leading-relaxed">
           You are connecting as the 2nd participant. As soon as you join, the room becomes
           active indefinitely and WebRTC P2P negotiation begins.
         </p>
