@@ -28,6 +28,9 @@ class WebRtcService {
   private connectionState: PeerConnectionState = "new";
   private screenStream: MediaStream | null = null;
   private isScreenSharing = false;
+  private iceRestartAttempts = 0;
+  private readonly maxIceRestarts = 3;
+  private iceDisconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   on(event: string, listener: WebRtcEventListener): () => void {
     if (!this.listeners.has(event)) {
@@ -191,6 +194,26 @@ class WebRtcService {
       }
     };
 
+    pc.oniceconnectionstatechange = () => {
+      const iceState = pc.iceConnectionState;
+      if (iceState === "failed") {
+        this.restartIce();
+      } else if (iceState === "disconnected") {
+        if (this.iceDisconnectTimer) clearTimeout(this.iceDisconnectTimer);
+        this.iceDisconnectTimer = setTimeout(() => {
+          if (pc.iceConnectionState === "disconnected") {
+            this.restartIce();
+          }
+        }, 5000);
+      } else if (iceState === "connected" || iceState === "completed") {
+        if (this.iceDisconnectTimer) {
+          clearTimeout(this.iceDisconnectTimer);
+          this.iceDisconnectTimer = null;
+        }
+        this.iceRestartAttempts = 0;
+      }
+    };
+
     // Attach signaling listeners
     this.wireSignaling();
   }
@@ -271,10 +294,20 @@ class WebRtcService {
   }
 
   /**
-   * ICE Restart
+   * ICE Restart with retry limit
    */
   async restartIce(): Promise<void> {
     if (!this.peerConnection || !this.isOfferer) return;
+
+    if (this.iceRestartAttempts >= this.maxIceRestarts) {
+      console.warn("Max ICE restart attempts reached, declaring connection failed.");
+      this.connectionState = "failed";
+      this.emit("connection_state", "failed");
+      return;
+    }
+
+    this.iceRestartAttempts++;
+    console.log(`Initiating ICE restart (Attempt ${this.iceRestartAttempts}/${this.maxIceRestarts})...`);
 
     try {
       const offer = await this.peerConnection.createOffer({ iceRestart: true });
@@ -429,6 +462,11 @@ class WebRtcService {
       this.peerConnection.close();
       this.peerConnection = null;
     }
+    if (this.iceDisconnectTimer) {
+      clearTimeout(this.iceDisconnectTimer);
+      this.iceDisconnectTimer = null;
+    }
+    this.iceRestartAttempts = 0;
     this.candidateQueue = [];
     this.connectionState = "closed";
     this.emit("connection_state", "closed");

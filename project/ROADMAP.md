@@ -14,9 +14,9 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | **Phase 4** | **WebRTC** | **COMPLETED** | RTCPeerConnection mesh, audio/video media tracks, mute/camera toggle, STUN/TURN traversal |
 | **Phase 5** | **Ephemeral Chat** | **COMPLETED** | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
 | **Phase 6** | **Call & Room UX** | **COMPLETED** | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
-| **Phase 7** | **Optional Sharing** | **COMPLETED (Pending Review)** | Screen sharing via getDisplayMedia, temporary P2P drag-and-drop file transfers via DataChannel |
-| **Phase 8** | **Security & Reliability** | Ready Next | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
-| **Phase 9** | **Production** | Planned | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment |
+| **Phase 7** | **Optional Sharing** | **COMPLETED** | Screen sharing via getDisplayMedia, temporary P2P drag-and-drop file transfers via DataChannel |
+| **Phase 8** | **Security & Reliability** | **COMPLETED (Pending Review)** | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
+| **Phase 9** | **Production** | Ready Next | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment |
 
 ---
 
@@ -86,11 +86,16 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Ephemeral in-memory Blob management with auto-revocation and zero server persistence
 - [x] Paperclip file attachment integration into Ephemeral Chat drawer
 
-### Phase 8: Security & Reliability
-- [ ] Room token security validation and entropy check
-- [ ] WebSocket rate limiting on Cloudflare Worker
-- [ ] Network interruption reconnection handler with ICE restart
-- [ ] Memory leak checks for long-running calls
+### Phase 8: Security & Reliability (Completed - Pending Review)
+- [x] Room token security validation and entropy check (128-bit/256-bit crypto randomness)
+- [x] Constant-time comparison (`timingSafeEqual`) to prevent side-channel timing attacks
+- [x] IP sliding window rate limiting (15 creates/min, 30 joins/min) on Cloudflare Worker
+- [x] Payload size cap (64 KB) on HTTP requests and WebSocket signaling frames
+- [x] WebSocket message rate limiting (max 30 msgs/s) to prevent flood attacks
+- [x] Exponential backoff automatic reconnection on unexpected signaling drop
+- [x] Automatic ICE restart negotiation on disconnect or ICE state failure (max 3 retries)
+- [x] Zero data retention architecture with instant storage destruction on room completion
+- [x] Detailed security architecture documented in `project/SECURITY.md`
 
 ### Phase 9: Production
 - [ ] Windows NSIS bundle installer and portable executable

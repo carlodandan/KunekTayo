@@ -18,8 +18,18 @@ export interface DurableRoomState {
 
 const SOLO_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 export class RoomDurableObject extends DurableObject {
   private stateCache: DurableRoomState | null = null;
+  private wsMessageCounters = new Map<WebSocket, { count: number; windowStart: number }>();
 
   private async getState(): Promise<DurableRoomState | null> {
     if (!this.stateCache) {
@@ -128,7 +138,7 @@ export class RoomDurableObject extends DurableObject {
 
     const url = new URL(request.url);
     const tokenHash = url.searchParams.get("tokenHash");
-    if (tokenHash && tokenHash !== state.inviteTokenHash) {
+    if (tokenHash && !timingSafeEqual(tokenHash, state.inviteTokenHash)) {
       return new Response(
         JSON.stringify({ error: "Invalid invite token", code: "INVALID_TOKEN" }),
         { status: 403, headers: { "Content-Type": "application/json" } }
@@ -165,7 +175,7 @@ export class RoomDurableObject extends DurableObject {
       inviteTokenHash: string;
     };
 
-    if (body.inviteTokenHash !== state.inviteTokenHash) {
+    if (!timingSafeEqual(body.inviteTokenHash, state.inviteTokenHash)) {
       return new Response(
         JSON.stringify({ error: "Invalid invite token", code: "INVALID_TOKEN" }),
         { status: 403, headers: { "Content-Type": "application/json" } }
@@ -320,7 +330,7 @@ export class RoomDurableObject extends DurableObject {
       return new Response("Room expired", { status: 410 });
     }
 
-    if (tokenHash !== state.inviteTokenHash) {
+    if (!tokenHash || !timingSafeEqual(tokenHash, state.inviteTokenHash)) {
       return new Response("Invalid token", { status: 403 });
     }
 
@@ -343,6 +353,25 @@ export class RoomDurableObject extends DurableObject {
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    // 1. Message size check (max 64 KB)
+    if (typeof message === "string" && message.length > 65536) {
+      return;
+    }
+
+    // 2. Per-connection rate limiting (max 30 msgs per second)
+    const now = Date.now();
+    let counter = this.wsMessageCounters.get(ws);
+    if (!counter || now - counter.windowStart >= 1000) {
+      counter = { count: 1, windowStart: now };
+      this.wsMessageCounters.set(ws, counter);
+    } else {
+      counter.count++;
+      if (counter.count > 30) {
+        // Drop message when flooding
+        return;
+      }
+    }
+
     try {
       const data = JSON.parse(message.toString());
       if (data.type === "ping") {
@@ -350,12 +379,13 @@ export class RoomDurableObject extends DurableObject {
         return;
       }
 
-      // Forward WebRTC signaling (offer, answer, candidate, peer_ready) to peer
+      // Forward WebRTC signaling (offer, answer, candidate, peer_ready, datachannel_fallback) to peer
       if (
         data.type === "offer" ||
         data.type === "answer" ||
         data.type === "candidate" ||
-        data.type === "peer_ready"
+        data.type === "peer_ready" ||
+        data.type === "datachannel_fallback"
       ) {
         this.forwardToPeer(ws, data);
       }
@@ -378,6 +408,7 @@ export class RoomDurableObject extends DurableObject {
   }
 
   async webSocketClose(ws: WebSocket): Promise<void> {
+    this.wsMessageCounters.delete(ws);
     const tags = this.ctx.getTags(ws);
     const participantId = tags[0];
     if (participantId) {

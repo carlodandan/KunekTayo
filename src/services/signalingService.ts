@@ -20,6 +20,10 @@ class SignalingService {
   private broadcastChannel: BroadcastChannel | null = null;
   private currentRoomId: string | null = null;
   private currentParticipantId: string | null = null;
+  private currentToken: string | null = null;
+  private reconnectAttempts = 0;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private intentionalClose = false;
 
   get roomId(): string | null {
     return this.currentRoomId;
@@ -48,30 +52,43 @@ class SignalingService {
   }
 
   async connect(roomId: string, token: string, participantId: string): Promise<void> {
-    this.disconnect();
+    this.intentionalClose = false;
     this.currentRoomId = roomId;
+    this.currentToken = token;
     this.currentParticipantId = participantId;
+
+    if (this.ws) {
+      try {
+        this.ws.close();
+      } catch {
+        // Ignore
+      }
+      this.ws = null;
+    }
 
     const tokenHash = token ? await hashToken(token) : "";
     const wsUrl = `${env.signalingUrl}/api/rooms/${roomId}/ws?tokenHash=${tokenHash}&participantId=${participantId}`;
 
     // Set up BroadcastChannel fallback for multi-tab local dev/offline
-    try {
-      this.broadcastChannel = new BroadcastChannel(`kunektayo_room_${roomId}`);
-      this.broadcastChannel.onmessage = (e) => {
-        const msg = e.data;
-        if (msg && msg.senderId !== this.currentParticipantId) {
-          this.emit(msg.type, msg);
-        }
-      };
-    } catch {
-      // BroadcastChannel not available in all webviews
+    if (!this.broadcastChannel) {
+      try {
+        this.broadcastChannel = new BroadcastChannel(`kunektayo_room_${roomId}`);
+        this.broadcastChannel.onmessage = (e) => {
+          const msg = e.data;
+          if (msg && msg.senderId !== this.currentParticipantId) {
+            this.emit(msg.type, msg);
+          }
+        };
+      } catch {
+        // BroadcastChannel not available in all webviews
+      }
     }
 
     try {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
+        this.reconnectAttempts = 0;
         this.startHeartbeat();
       };
 
@@ -91,6 +108,19 @@ class SignalingService {
 
       this.ws.onclose = () => {
         this.stopHeartbeat();
+        // Exponential backoff reconnect if not intentionally disconnected
+        if (!this.intentionalClose && this.currentRoomId && this.currentToken) {
+          if (this.reconnectAttempts < 5) {
+            const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 16000);
+            this.reconnectAttempts++;
+            if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = setTimeout(() => {
+              if (!this.intentionalClose && this.currentRoomId) {
+                this.connect(this.currentRoomId, this.currentToken!, this.currentParticipantId!);
+              }
+            }, delay);
+          }
+        }
       };
     } catch {
       // Local fallback active
@@ -157,16 +187,31 @@ class SignalingService {
   }
 
   disconnect(): void {
+    this.intentionalClose = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    this.reconnectAttempts = 0;
     this.stopHeartbeat();
     if (this.ws) {
-      this.ws.close();
+      try {
+        this.ws.close();
+      } catch {
+        // Ignore
+      }
       this.ws = null;
     }
     if (this.broadcastChannel) {
-      this.broadcastChannel.close();
+      try {
+        this.broadcastChannel.close();
+      } catch {
+        // Ignore
+      }
       this.broadcastChannel = null;
     }
     this.currentRoomId = null;
+    this.currentToken = null;
     this.currentParticipantId = null;
   }
 }
