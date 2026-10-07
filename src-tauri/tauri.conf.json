@@ -14,11 +14,12 @@
       {
         "label": "main",
         "title": "KunekTayo",
-        "width": 960,
-        "height": 720,
+        "width": 1024,
+        "height": 768,
         "minWidth": 380,
         "minHeight": 600,
-        "center": true
+        "center": true,
+        "resizable": true
       }
     ],
     "security": {
@@ -34,6 +35,12 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    }
   }
 }

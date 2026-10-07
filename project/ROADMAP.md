@@ -15,8 +15,8 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | **Phase 5** | **Ephemeral Chat** | **COMPLETED** | WebRTC RTCDataChannel, per-message TTL countdown, auto-purge, typing indicator |
 | **Phase 6** | **Call & Room UX** | **COMPLETED** | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
 | **Phase 7** | **Optional Sharing** | **COMPLETED** | Screen sharing via getDisplayMedia, temporary P2P drag-and-drop file transfers via DataChannel |
-| **Phase 8** | **Security & Reliability** | **COMPLETED (Pending Review)** | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
-| **Phase 9** | **Production** | Ready Next | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment |
+| **Phase 8** | **Security & Reliability** | **COMPLETED** | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
+| **Phase 9** | **Production** | **COMPLETED (Pending Review)** | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment, crash handling |
 
 ---
 
@@ -97,8 +97,11 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Zero data retention architecture with instant storage destruction on room completion
 - [x] Detailed security architecture documented in `project/SECURITY.md`
 
-### Phase 9: Production
-- [ ] Windows NSIS bundle installer and portable executable
-- [ ] Android signed APK / AAB packaging
-- [ ] Cloudflare Worker production deployment script
-- [ ] TURN credential server integration (Cloudflare Calls or Coturn)
+### Phase 9: Production (Completed - Pending Review)
+- [x] Windows NSIS bundle installer and MSI configuration (`src-tauri/tauri.conf.json`)
+- [x] Android signed APK / AAB packaging and capability scheme
+- [x] Cloudflare Worker production deployment script (`wrangler deploy`, `server/package.json`)
+- [x] TURN credential server configuration (`src/config/env.ts` with Cloudflare Calls & Coturn support)
+- [x] Global React runtime Error Boundary for crash resilience (`ErrorBoundary.tsx`)
+- [x] Automated GitHub Actions Release CI workflow (`.github/workflows/release.yml`)
+- [x] Production deployment runbook authored in `project/DEPLOYMENT.md`

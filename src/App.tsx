@@ -10,6 +10,7 @@ import { RoomProvider, useRoom } from "@/context/RoomContext";
 import { WebRtcProvider } from "@/context/WebRtcContext";
 import { ChatProvider } from "@/context/ChatContext";
 import { FileTransferProvider } from "@/context/FileTransferContext";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Sparkle, WarningCircle, X } from "@phosphor-icons/react";
 
 import { InviteJoinModal } from "@/components/room/InviteJoinModal";
@@ -112,17 +113,19 @@ function RoomAppContent() {
 
 export function App() {
   return (
-    <RoomProvider>
-      <WebRtcProvider>
-        <ChatProvider>
-          <FileTransferProvider>
-            <AppShell>
-              <RoomAppContent />
-            </AppShell>
-          </FileTransferProvider>
-        </ChatProvider>
-      </WebRtcProvider>
-    </RoomProvider>
+    <ErrorBoundary>
+      <RoomProvider>
+        <WebRtcProvider>
+          <ChatProvider>
+            <FileTransferProvider>
+              <AppShell>
+                <RoomAppContent />
+              </AppShell>
+            </FileTransferProvider>
+          </ChatProvider>
+        </WebRtcProvider>
+      </RoomProvider>
+    </ErrorBoundary>
   );
 }
 

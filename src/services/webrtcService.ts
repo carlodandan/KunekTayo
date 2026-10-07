@@ -134,7 +134,10 @@ class WebRtcService {
     this.remoteStream = new MediaStream();
 
     const config: RTCConfiguration = {
-      iceServers: env.defaultStunServers.map((url) => ({ urls: url })),
+      iceServers: [
+        ...env.defaultStunServers.map((url) => ({ urls: url })),
+        ...env.turnServers,
+      ],
       iceCandidatePoolSize: 2,
     };
 
