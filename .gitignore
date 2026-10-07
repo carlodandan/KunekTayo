@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Context Files
+APP.md
+
+# Agentic Skills
+.agents/
+.claude/

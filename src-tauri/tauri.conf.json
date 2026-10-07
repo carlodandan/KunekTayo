@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "kunektayo",
+  "productName": "KunekTayo",
   "version": "0.1.0",
-  "identifier": "com.administrator.kunektayo",
+  "identifier": "com.kunektayo.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,9 +12,13 @@
   "app": {
     "windows": [
       {
-        "title": "kunektayo",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "KunekTayo",
+        "width": 960,
+        "height": 720,
+        "minWidth": 380,
+        "minHeight": 600,
+        "center": true
       }
     ],
     "security": {
