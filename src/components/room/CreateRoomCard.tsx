@@ -1,5 +1,5 @@
 import React from "react";
-import { PlusCircle, Link, ShieldCheck } from "@phosphor-icons/react";
+import { PlusCircleIcon, LinkIcon, ShieldCheckIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
@@ -17,10 +17,10 @@ export const CreateRoomCard: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
-            <PlusCircle size={26} weight="duotone" />
+            <PlusCircleIcon size={26} weight="duotone" />
           </div>
           <Badge variant="info">
-            <ShieldCheck size={13} weight="fill" />
+            <ShieldCheckIcon size={13} weight="fill" />
             Direct P2P
           </Badge>
         </div>
@@ -52,7 +52,7 @@ export const CreateRoomCard: React.FC = () => {
           className="w-full"
           onClick={handleCreate}
           isLoading={isLoading}
-          icon={<Link size={18} weight="bold" />}
+          icon={<LinkIcon size={18} weight="bold" />}
         >
           Create Private Room
         </Button>

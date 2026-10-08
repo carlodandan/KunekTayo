@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { CheckCircle, GearSix, TerminalWindow, PlugsConnected, CaretDown } from "@phosphor-icons/react";
+import { CheckCircleIcon, GearSixIcon, TerminalWindow, PlugsConnectedIcon, CaretDownIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Badge } from "@/components/common/Badge";
 import { env } from "@/config/env";
@@ -25,7 +25,7 @@ export const FoundationInfoCard: React.FC = () => {
         const res = await invoke<string>("greet", { name: "KunekTayo Developer" });
         setRustResponse(res);
       } else {
-        setRustResponse("Web fallback: Tauri IPC is active when running inside Tauri Desktop or Android container.");
+        setRustResponse("Web fallback: Tauri IPC is active when running inside Tauri DesktopIcon or Android container.");
       }
     } catch (err) {
       setRustResponse(`IPC test error: ${String(err)}`);
@@ -35,10 +35,10 @@ export const FoundationInfoCard: React.FC = () => {
   };
 
   const getTargetLabel = () => {
-    if (isWindows) return "Windows Desktop (Tauri 2)";
+    if (isWindows) return "Windows DesktopIcon (Tauri 2)";
     if (isAndroid) return "Android (Tauri 2)";
     if (isWeb) return "Web / Vite Preview";
-    return "Tauri Desktop";
+    return "Tauri DesktopIcon";
   };
 
   return (
@@ -49,18 +49,18 @@ export const FoundationInfoCard: React.FC = () => {
         aria-expanded={isExpanded}
       >
         <div className="flex items-center gap-2">
-          <GearSix size={18} className="text-[#949ba4] group-hover:text-[#9098C8] transition-colors" weight="bold" />
+          <GearSixIcon size={18} className="text-[#949ba4] group-hover:text-[#9098C8] transition-colors" weight="bold" />
           <h3 className="text-xs sm:text-sm font-semibold text-[#dbdee1] uppercase tracking-wider group-hover:text-[#f2f3f5] transition-colors">
             System & Foundation Diagnostics
           </h3>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="info" className="hidden sm:inline-flex">
-            <CheckCircle size={13} weight="fill" />
+            <CheckCircleIcon size={13} weight="fill" />
             Tauri 2 • React 19 • Tailwind v4
           </Badge>
           <div className="p-1 rounded-lg text-[#949ba4] group-hover:text-[#f2f3f5] group-hover:bg-[#35373c] transition-colors">
-            <CaretDown
+            <CaretDownIcon
               size={16}
               weight="bold"
               className={cn("transition-transform duration-200", isExpanded && "rotate-180")}
@@ -115,7 +115,7 @@ export const FoundationInfoCard: React.FC = () => {
           size="sm"
           onClick={testTauriIpc}
           isLoading={isTestingIpc}
-          icon={<PlugsConnected size={14} />}
+          icon={<PlugsConnectedIcon size={14} />}
         >
           Verify IPC Bridge
         </Button>

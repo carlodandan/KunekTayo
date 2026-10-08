@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowClockwise, X, PlugsConnected } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, XIcon, PlugsConnectedIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { useRoom } from "@/context/RoomContext";
 import { roomService } from "@/services/roomService";
@@ -22,7 +22,7 @@ export const RejoinBanner: React.FC = () => {
     <div className="w-full max-w-2xl mx-auto p-4 rounded-xl bg-[#2b2d31] border border-[#35373c] text-left flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 animate-in fade-in duration-200">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-[#1e1f22] text-[#9098C8] flex items-center justify-center shrink-0">
-          <PlugsConnected size={18} weight="bold" />
+          <PlugsConnectedIcon size={18} weight="bold" />
         </div>
         <div>
           <p className="text-xs sm:text-sm font-semibold text-[#f2f3f5]">
@@ -39,7 +39,7 @@ export const RejoinBanner: React.FC = () => {
           variant="primary"
           size="sm"
           onClick={rejoinLastRoom}
-          icon={<ArrowClockwise size={14} weight="bold" />}
+          icon={<ArrowClockwiseIcon size={14} weight="bold" />}
         >
           Rejoin
         </Button>
@@ -48,7 +48,7 @@ export const RejoinBanner: React.FC = () => {
           className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
           aria-label="Dismiss rejoin prompt"
         >
-          <X size={16} />
+          <XIcon size={16} />
         </button>
       </div>
     </div>

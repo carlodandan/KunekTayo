@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SignIn, ArrowRight, WarningCircle } from "@phosphor-icons/react";
+import { SignInIcon, ArrowRightIcon, WarningCircleIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Input } from "@/components/common/Input";
@@ -32,7 +32,7 @@ export const JoinRoomCard: React.FC = () => {
       <form onSubmit={handleJoin} className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
-            <SignIn size={26} weight="duotone" />
+            <SignInIcon size={26} weight="duotone" />
           </div>
           <Badge variant="neutral">2-Person Max</Badge>
         </div>
@@ -55,7 +55,7 @@ export const JoinRoomCard: React.FC = () => {
             error={displayError || undefined}
             rightIcon={
               displayError ? (
-                <WarningCircle size={18} className="text-[#da373c]" weight="fill" />
+                <WarningCircleIcon size={18} className="text-[#da373c]" weight="fill" />
               ) : null
             }
           />
@@ -69,7 +69,7 @@ export const JoinRoomCard: React.FC = () => {
           className="w-full"
           onClick={handleJoin}
           isLoading={isLoading}
-          icon={<ArrowRight size={18} weight="bold" />}
+          icon={<ArrowRightIcon size={18} weight="bold" />}
           iconPosition="right"
         >
           Join Room

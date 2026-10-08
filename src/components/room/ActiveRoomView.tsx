@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  SignOut,
-  Infinity as InfinityIcon,
-  Microphone,
-  MicrophoneSlash,
-  VideoCamera,
-  VideoCameraSlash,
-  ChatText,
-  GearSix,
-  ArrowsOut,
-  ArrowsIn,
-  ProjectorScreen,
-  FileArrowUp,
-  PictureInPicture,
+  SignOutIcon,
+  InfinityIcon,
+  MicrophoneIcon,
+  MicrophoneSlashIcon,
+  VideoCameraIcon,
+  VideoCameraSlashIcon,
+  ChatTextIcon,
+  GearSixIcon,
+  ArrowsOutIcon,
+  ArrowsInIcon,
+  ProjectorScreenIcon,
+  FileArrowUpIcon,
+  PictureInPictureIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -56,7 +56,7 @@ export const ActiveRoomView: React.FC = () => {
   const [isPiPActive, setIsPiPActive] = useState(false);
   const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
 
-  // Check Picture-in-Picture browser support
+  // CheckIcon Picture-in-Picture browser support
   useEffect(() => {
     const supported =
       typeof document !== "undefined" &&
@@ -227,7 +227,7 @@ export const ActiveRoomView: React.FC = () => {
       {/* Drag & Drop Visual Overlay */}
       {isDraggingOver && (
         <div className="absolute inset-0 z-40 bg-[#1e1f22]/95 rounded-3xl border-2 border-dashed border-[#283E7C] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-150">
-          <FileArrowUp size={48} className="text-[#9098C8] mb-2 animate-bounce" weight="bold" />
+          <FileArrowUpIcon size={48} className="text-[#9098C8] mb-2 animate-bounce" weight="bold" />
           <h3 className="text-lg font-bold text-[#f2f3f5]">Drop files to send privately</h3>
           <p className="text-xs text-[#949ba4] mt-1 max-w-xs">
             Direct WebRTC P2P in-memory transfer. Vanishes completely on exit. Zero server upload.
@@ -241,7 +241,7 @@ export const ActiveRoomView: React.FC = () => {
           <ConnectionQualityBadge />
           {isScreenSharing && (
             <Badge variant="warning" dot>
-              <ProjectorScreen size={13} weight="fill" />
+              <ProjectorScreenIcon size={13} weight="fill" />
               <span>Screen Sharing</span>
             </Badge>
           )}
@@ -262,14 +262,14 @@ export const ActiveRoomView: React.FC = () => {
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             aria-label="Toggle Fullscreen"
           >
-            {isFullscreen ? <ArrowsIn size={16} /> : <ArrowsOut size={16} />}
+            {isFullscreen ? <ArrowsInIcon size={16} /> : <ArrowsOutIcon size={16} />}
           </button>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className={cn("grid gap-4 w-full", isChatOpen ? "lg:grid-cols-3" : "grid-cols-1")}>
-        {/* Desktop Side-by-Side Split View (visible md:) */}
+        {/* DesktopIcon Side-by-Side Split View (visible md:) */}
         <div className={cn("hidden md:grid grid-cols-2 gap-4", isChatOpen ? "lg:col-span-2" : "col-span-1")}>
           <VideoPlayer
             ref={desktopRemoteVideoRef}
@@ -319,7 +319,7 @@ export const ActiveRoomView: React.FC = () => {
           </div>
         </div>
 
-        {/* Desktop Ephemeral Chat Panel (embedded when lg:) */}
+        {/* DesktopIcon Ephemeral Chat Panel (embedded when lg:) */}
         {isChatOpen && (
           <div className="hidden lg:block lg:col-span-1 h-full animate-in fade-in duration-150">
             <EphemeralChat className="h-full min-h-[380px]" onClose={() => setIsChatOpen(false)} />
@@ -352,15 +352,15 @@ export const ActiveRoomView: React.FC = () => {
         className="p-2 sm:p-4 bg-[#2b2d31] border-[#35373c] flex items-center justify-between gap-1.5 sm:gap-3 sticky bottom-2 z-30"
       >
         <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-center sm:justify-start">
-          {/* Microphone Toggle */}
+          {/* MicrophoneIcon Toggle */}
           <Button
             variant={isMuted ? "danger" : "secondary"}
             size="md"
             onClick={toggleMic}
-            icon={isMuted ? <MicrophoneSlash size={20} weight="bold" /> : <Microphone size={20} weight="bold" />}
+            icon={isMuted ? <MicrophoneSlashIcon size={20} weight="bold" /> : <MicrophoneIcon size={20} weight="bold" />}
             className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]"
-            title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
-            aria-label={isMuted ? "Unmute Microphone" : "Mute Microphone"}
+            title={isMuted ? "Unmute MicrophoneIcon" : "Mute MicrophoneIcon"}
+            aria-label={isMuted ? "Unmute MicrophoneIcon" : "Mute MicrophoneIcon"}
           />
 
           {/* Camera Toggle */}
@@ -368,7 +368,7 @@ export const ActiveRoomView: React.FC = () => {
             variant={isCameraOff ? "danger" : "secondary"}
             size="md"
             onClick={toggleCamera}
-            icon={isCameraOff ? <VideoCameraSlash size={20} weight="bold" /> : <VideoCamera size={20} weight="bold" />}
+            icon={isCameraOff ? <VideoCameraSlashIcon size={20} weight="bold" /> : <VideoCameraIcon size={20} weight="bold" />}
             className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]"
             title={isCameraOff ? "Turn On Camera" : "Turn Off Camera"}
             aria-label={isCameraOff ? "Turn On Camera" : "Turn Off Camera"}
@@ -379,7 +379,7 @@ export const ActiveRoomView: React.FC = () => {
             variant={isScreenSharing ? "primary" : "secondary"}
             size="md"
             onClick={toggleScreenShare}
-            icon={<ProjectorScreen size={20} weight={isScreenSharing ? "fill" : "bold"} />}
+            icon={<ProjectorScreenIcon size={20} weight={isScreenSharing ? "fill" : "bold"} />}
             className={cn("rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]", isScreenSharing && "border-2 border-[#283E7C]")}
             title={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
             aria-label={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
@@ -393,7 +393,7 @@ export const ActiveRoomView: React.FC = () => {
               onClick={togglePiP}
               disabled={!hasRemoteVideo && !isPiPActive}
               icon={
-                <PictureInPicture
+                <PictureInPictureIcon
                   size={20}
                   weight={isPiPActive ? "fill" : "bold"}
                 />
@@ -413,7 +413,7 @@ export const ActiveRoomView: React.FC = () => {
               variant="secondary"
               size="md"
               onClick={() => setIsFileShareOpen(true)}
-              icon={<FileArrowUp size={20} weight="bold" />}
+              icon={<FileArrowUpIcon size={20} weight="bold" />}
               className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px] text-[#dbdee1] hover:text-white"
               title="P2P Shared Files (Drag & Drop)"
               aria-label="P2P Shared Files"
@@ -430,7 +430,7 @@ export const ActiveRoomView: React.FC = () => {
             variant={isChatOpen ? "primary" : "secondary"}
             size="md"
             onClick={() => setIsChatOpen(!isChatOpen)}
-            icon={<ChatText size={20} weight="bold" />}
+            icon={<ChatTextIcon size={20} weight="bold" />}
             className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]"
             title={isChatOpen ? "Hide Chat" : "Open Ephemeral Chat"}
             aria-label={isChatOpen ? "Hide Chat" : "Open Ephemeral Chat"}
@@ -441,7 +441,7 @@ export const ActiveRoomView: React.FC = () => {
             variant="ghost"
             size="md"
             onClick={() => setIsSettingsOpen(true)}
-            icon={<GearSix size={20} weight="bold" />}
+            icon={<GearSixIcon size={20} weight="bold" />}
             className="rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px] text-slate-400 hover:text-white"
             title="Audio & Video Settings"
             aria-label="Device Settings"
@@ -453,7 +453,7 @@ export const ActiveRoomView: React.FC = () => {
           variant="danger"
           size="md"
           onClick={leaveRoom}
-          icon={<SignOut size={20} weight="bold" />}
+          icon={<SignOutIcon size={20} weight="bold" />}
           className="rounded-full sm:rounded-xl min-h-[44px] min-w-[44px] w-11 h-11 sm:w-auto p-0 sm:px-4 shrink-0 font-medium"
           title="Leave Call"
           aria-label="Leave Call"

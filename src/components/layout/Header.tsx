@@ -1,5 +1,5 @@
 import React from "react";
-import { Desktop, DeviceMobile, Globe, ShieldCheck } from "@phosphor-icons/react";
+import { DesktopIcon, DeviceMobileIcon, GlobeIcon, ShieldCheckIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/common/Badge";
 import { usePlatform } from "@/hooks/usePlatform";
 import { APP_NAME, APP_VERSION } from "@/constants/app";
@@ -21,7 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (isAndroid) {
       return (
         <Badge variant="info">
-          <DeviceMobile size={13} weight="bold" />
+          <DeviceMobileIcon size={13} weight="bold" />
           Android
         </Badge>
       );
@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (isWindows) {
       return (
         <Badge variant="info">
-          <Desktop size={13} weight="bold" />
+          <DesktopIcon size={13} weight="bold" />
           Windows
         </Badge>
       );
@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (isWeb) {
       return (
         <Badge variant="neutral">
-          <Globe size={13} weight="bold" />
+          <GlobeIcon size={13} weight="bold" />
           Web Preview
         </Badge>
       );
@@ -113,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           <Badge variant="info" dot className="hidden xs:inline-flex">
-            <ShieldCheck size={14} weight="fill" className="text-[#9098C8]" />
+            <ShieldCheckIcon size={14} weight="fill" className="text-[#9098C8]" />
             <span>P2P Ready</span>
           </Badge>
           {getPlatformBadge()}

@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 import {
-  VideoCamera,
-  Microphone,
-  ShieldCheck,
-  ChatText,
-  Fire,
-  CheckFat,
-  SignOut,
-  ProjectorScreen,
-  FileArrowUp,
-  GearSix,
-  Infinity as InfinityIcon,
-  WifiHigh,
-  ArrowsOut,
-  Paperclip,
-  PaperPlaneRight,
-  User,
+  VideoCameraIcon,
+  MicrophoneIcon,
+  ShieldCheckIcon,
+  ChatTextIcon,
+  FireIcon,
+  CheckFatIcon,
+  SignOutIcon,
+  ProjectorScreenIcon,
+  FileArrowUpIcon,
+  GearSixIcon,
+  InfinityIcon,
+  WifiHighIcon,
+  ArrowsOutIcon,
+  PaperclipIcon,
+  PaperPlaneRightIcon,
+  UserIcon,
 } from "@phosphor-icons/react";
 
 export const LandingPreview: React.FC = () => {
@@ -50,7 +50,7 @@ export const LandingPreview: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-2.5 px-1 select-none">
             <div className="flex items-center gap-2 flex-wrap">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#1F332B] text-white border border-[#1F332B]">
-                <WifiHigh size={14} weight="bold" />
+                <WifiHighIcon size={14} weight="bold" />
                 <span className="font-mono text-[11px]">18ms</span>
                 <span className="hidden sm:inline text-[10px] uppercase font-bold text-white/80">(excellent)</span>
               </div>
@@ -69,14 +69,14 @@ export const LandingPreview: React.FC = () => {
                 className="p-1.5 rounded-lg text-[#949ba4] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer flex items-center justify-center min-h-[32px] min-w-[32px]"
                 title="Fullscreen"
               >
-                <ArrowsOut size={16} />
+                <ArrowsOutIcon size={16} />
               </div>
             </div>
           </div>
 
           {/* Main Content Area (Video Stage + Ephemeral Chat) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
-            {/* Desktop Side-by-Side Split View */}
+            {/* DesktopIcon Side-by-Side Split View */}
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Remote Participant Box */}
               <div className="relative w-full aspect-video bg-[#1e1f22] rounded-2xl overflow-hidden border border-[#35373c] flex items-center justify-center select-none min-h-[220px] sm:min-h-[260px] bg-gradient-to-br from-[#1e1f22] to-[#25282e]">
@@ -90,7 +90,7 @@ export const LandingPreview: React.FC = () => {
                 {/* Simulated live video stream display */}
                 <div className="flex flex-col items-center justify-center space-y-2 text-center p-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#2b2d31] border border-[#35373c] flex items-center justify-center text-[#9098C8] shadow-inner">
-                    <User size={36} weight="bold" />
+                    <UserIcon size={36} weight="bold" />
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-[#9098C8] font-medium">
                     <span className="w-2 h-2 rounded-full bg-[#9098C8] animate-pulse" />
@@ -101,7 +101,7 @@ export const LandingPreview: React.FC = () => {
                 {/* Audio Status bottom-right */}
                 <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-10">
                   <span className="rounded-md bg-[#1e1f22]/90 text-[#9098C8] border border-[#35373c] text-[11px] font-mono px-2 py-0.5 flex items-center gap-1">
-                    <Microphone size={12} weight="fill" />
+                    <MicrophoneIcon size={12} weight="fill" />
                     <span>Opus HD</span>
                   </span>
                 </div>
@@ -119,10 +119,10 @@ export const LandingPreview: React.FC = () => {
                 {/* Simulated webcam video preview */}
                 <div className="flex flex-col items-center justify-center space-y-2 text-center p-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#949ba4] shadow-inner">
-                    <User size={36} weight="bold" />
+                    <UserIcon size={36} weight="bold" />
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-[#949ba4] font-medium">
-                    <VideoCamera size={13} className="text-[#9098C8]" weight="fill" />
+                    <VideoCameraIcon size={13} className="text-[#9098C8]" weight="fill" />
                     <span>Camera Active (Mirrored)</span>
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export const LandingPreview: React.FC = () => {
                 {/* Audio Status bottom-right */}
                 <div className="absolute bottom-3 right-3 flex items-center gap-1.5 z-10">
                   <span className="rounded-md bg-[#1e1f22]/90 text-[#949ba4] border border-[#35373c] text-[11px] font-mono px-2 py-0.5 flex items-center gap-1">
-                    <Microphone size={12} weight="fill" className="text-[#9098C8]" />
+                    <MicrophoneIcon size={12} weight="fill" className="text-[#9098C8]" />
                     <span>Noise Filtered</span>
                   </span>
                 </div>
@@ -142,7 +142,7 @@ export const LandingPreview: React.FC = () => {
               {/* Chat Header */}
               <div className="px-4 py-3 border-b border-[#35373c] flex items-center justify-between bg-[#232428]">
                 <div className="flex items-center gap-2">
-                  <Fire size={18} className="text-[#f0b232]" weight="fill" />
+                  <FireIcon size={18} className="text-[#f0b232]" weight="fill" />
                   <h3 className="text-sm font-semibold text-[#f2f3f5]">Ephemeral Chat</h3>
                 </div>
 
@@ -159,7 +159,7 @@ export const LandingPreview: React.FC = () => {
 
               {/* Ephemeral Notice Banner */}
               <div className="px-3.5 py-1.5 bg-[#f0b232]/10 border-b border-[#f0b232]/20 text-[11px] text-[#f0b232] flex items-center gap-1.5">
-                <ShieldCheck size={14} className="shrink-0" />
+                <ShieldCheckIcon size={14} className="shrink-0" />
                 <span className="truncate">Messages vanish locally once TTL expires. Zero logging.</span>
               </div>
 
@@ -173,7 +173,7 @@ export const LandingPreview: React.FC = () => {
                   <div className="flex items-center gap-1.5 px-1 text-[10px] text-[#949ba4]">
                     <span>10:42 AM</span>
                     <span className="flex items-center gap-1 text-[#f0b232] font-mono">
-                      <Fire size={11} weight="fill" />
+                      <FireIcon size={11} weight="fill" />
                       <span>{countdown}s</span>
                     </span>
                   </div>
@@ -187,10 +187,10 @@ export const LandingPreview: React.FC = () => {
                   <div className="flex items-center gap-1.5 px-1 text-[10px] text-[#949ba4]">
                     <span>10:43 AM</span>
                     <span className="text-[#9098C8] flex items-center">
-                      <CheckFat size={11} weight="fill" />
+                      <CheckFatIcon size={11} weight="fill" />
                     </span>
                     <span className="flex items-center gap-1 text-[#f0b232] font-mono">
-                      <Fire size={11} weight="fill" />
+                      <FireIcon size={11} weight="fill" />
                       <span>54s</span>
                     </span>
                   </div>
@@ -200,13 +200,13 @@ export const LandingPreview: React.FC = () => {
               {/* Chat Input */}
               <div className="p-3 bg-[#232428] border-t border-[#35373c] flex items-center gap-2">
                 <div className="p-2 text-[#949ba4] hover:text-[#f2f3f5] rounded-xl hover:bg-[#35373c] transition-colors cursor-pointer">
-                  <Paperclip size={18} />
+                  <PaperclipIcon size={18} />
                 </div>
                 <div className="flex-1 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 py-2 text-xs text-[#949ba4] flex items-center justify-between">
                   <span>Type a vanishing message...</span>
                 </div>
                 <div className="w-8 h-8 rounded-xl bg-[#283E7C] flex items-center justify-center text-white cursor-pointer hover:bg-[#283E7C]/85 transition-colors">
-                  <PaperPlaneRight size={15} weight="fill" />
+                  <PaperPlaneRightIcon size={15} weight="fill" />
                 </div>
               </div>
             </div>
@@ -219,10 +219,10 @@ export const LandingPreview: React.FC = () => {
               <button
                 type="button"
                 className="rounded-full w-11 h-11 sm:w-12 sm:h-12 bg-[#35373c] hover:bg-[#404249] text-[#f2f3f5] flex items-center justify-center transition-colors shadow-sm cursor-pointer"
-                title="Mute Microphone"
-                aria-label="Mute Microphone"
+                title="Mute MicrophoneIcon"
+                aria-label="Mute MicrophoneIcon"
               >
-                <Microphone size={20} weight="bold" />
+                <MicrophoneIcon size={20} weight="bold" />
               </button>
 
               {/* Camera Toggle */}
@@ -232,7 +232,7 @@ export const LandingPreview: React.FC = () => {
                 title="Turn Off Camera"
                 aria-label="Turn Off Camera"
               >
-                <VideoCamera size={20} weight="bold" />
+                <VideoCameraIcon size={20} weight="bold" />
               </button>
 
               {/* Screen Share Toggle */}
@@ -242,7 +242,7 @@ export const LandingPreview: React.FC = () => {
                 title="Share Screen"
                 aria-label="Share Screen"
               >
-                <ProjectorScreen size={20} weight="bold" />
+                <ProjectorScreenIcon size={20} weight="bold" />
               </button>
 
               {/* Ephemeral File Sharing Button */}
@@ -253,7 +253,7 @@ export const LandingPreview: React.FC = () => {
                   title="P2P Shared Files (Drag & Drop)"
                   aria-label="P2P Shared Files"
                 >
-                  <FileArrowUp size={20} weight="bold" />
+                  <FileArrowUpIcon size={20} weight="bold" />
                 </button>
                 <span className="absolute -top-1 -right-1 bg-[#283E7C] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center pointer-events-none">
                   1
@@ -267,7 +267,7 @@ export const LandingPreview: React.FC = () => {
                 title="Ephemeral Chat"
                 aria-label="Ephemeral Chat"
               >
-                <ChatText size={20} weight="bold" />
+                <ChatTextIcon size={20} weight="bold" />
               </button>
 
               {/* Device Settings Modal */}
@@ -277,7 +277,7 @@ export const LandingPreview: React.FC = () => {
                 title="Audio & Video Settings"
                 aria-label="Device Settings"
               >
-                <GearSix size={20} weight="bold" />
+                <GearSixIcon size={20} weight="bold" />
               </button>
             </div>
 
@@ -288,7 +288,7 @@ export const LandingPreview: React.FC = () => {
               title="Leave Call"
               aria-label="Leave Call"
             >
-              <SignOut size={20} weight="bold" />
+              <SignOutIcon size={20} weight="bold" />
               <span className="hidden sm:inline">Leave Call</span>
             </button>
           </div>

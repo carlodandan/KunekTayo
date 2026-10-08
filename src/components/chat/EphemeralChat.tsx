@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  PaperPlaneRight,
-  Clock,
-  Fire,
-  Check,
-  CheckFat,
-  DotsThree,
-  ShieldCheck,
-  Paperclip,
-  X,
+  PaperPlaneRightIcon,
+  ClockIcon,
+  FireIcon,
+  CheckIcon,
+  CheckFatIcon,
+  DotsThreeIcon,
+  ShieldCheckIcon,
+  PaperclipIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { useChat, TTL_OPTIONS, EphemeralChatMessage } from "@/context/ChatContext";
@@ -127,10 +127,10 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
               title="Close Chat"
               aria-label="Close Chat"
             >
-              <X size={16} weight="bold" />
+              <XIcon size={16} weight="bold" />
             </button>
           )}
-          <Fire size={18} className="text-[#f0b232]" weight="fill" />
+          <FireIcon size={18} className="text-[#f0b232]" weight="fill" />
           <h3 className="text-sm font-semibold text-[#f2f3f5]">Ephemeral Chat</h3>
         </div>
 
@@ -158,7 +158,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
 
       {/* Ephemeral Notice */}
       <div className="px-3.5 py-1.5 bg-[#f0b232]/10 border-b border-[#f0b232]/20 text-[11px] text-[#f0b232] flex items-center gap-1.5 select-none">
-        <ShieldCheck size={14} className="shrink-0" />
+        <ShieldCheckIcon size={14} className="shrink-0" />
         <span>Messages vanish locally on both devices once TTL expires. Zero server logging.</span>
       </div>
 
@@ -166,7 +166,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-[#80848e] space-y-1 select-none">
-            <Clock size={28} className="text-[#80848e]" />
+            <ClockIcon size={28} className="text-[#80848e]" />
             <p className="text-xs">No active messages.</p>
             <p className="text-[11px] text-[#80848e]">Send a self-destructing message.</p>
           </div>
@@ -200,15 +200,15 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
                   <span>{timeStr}</span>
                   <span>•</span>
                   <span className="flex items-center gap-0.5 text-[#f0b232] font-mono font-medium">
-                    <Fire size={12} weight="fill" />
+                    <FireIcon size={12} weight="fill" />
                     {remaining}s
                   </span>
                   {isMine && (
                     <span className="ml-0.5 text-[#dbdee1]" title={msg.status}>
                       {msg.status === "delivered" ? (
-                        <CheckFat size={12} weight="fill" className="text-[#9098C8]" />
+                        <CheckFatIcon size={12} weight="fill" className="text-[#9098C8]" />
                       ) : (
-                        <Check size={12} />
+                        <CheckIcon size={12} />
                       )}
                     </span>
                   )}
@@ -221,7 +221,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
         {/* Peer Typing Indicator */}
         {isPeerTyping && (
           <div className="flex items-center gap-2 text-xs text-[#949ba4] animate-pulse pt-1">
-            <DotsThree size={20} weight="bold" className="text-[#9098C8]" />
+            <DotsThreeIcon size={20} weight="bold" className="text-[#9098C8]" />
             <span>Peer is typing...</span>
           </div>
         )}
@@ -249,7 +249,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
           title="Share File / Image (Direct P2P)"
           aria-label="Share File"
         >
-          <Paperclip size={18} weight="bold" />
+          <PaperclipIcon size={18} weight="bold" />
         </button>
 
         <textarea
@@ -268,7 +268,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
             variant="primary"
             size="sm"
             disabled={!inputText.trim()}
-            icon={<PaperPlaneRight size={16} weight="bold" />}
+            icon={<PaperPlaneRightIcon size={16} weight="bold" />}
             className="h-10 min-h-[40px] min-w-[40px] sm:min-w-[76px] px-3.5 rounded-xl shrink-0 cursor-pointer flex items-center justify-center mb-0.5"
           >
             <span>Send</span>

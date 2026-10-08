@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CaretDown, CaretUp, Question } from "@phosphor-icons/react";
+import { CaretDownIcon, CaretUpIcon, QuestionIcon } from "@phosphor-icons/react";
 
 interface FaqItem {
   question: string;
@@ -76,11 +76,11 @@ export const LandingFaq: React.FC = () => {
                   aria-expanded={isOpen}
                 >
                   <div className="flex items-center gap-3">
-                    <Question size={18} className="text-[#9098C8] shrink-0" weight="bold" />
+                    <QuestionIcon size={18} className="text-[#9098C8] shrink-0" weight="bold" />
                     <span>{faq.question}</span>
                   </div>
                   <span className="text-[#949ba4] shrink-0">
-                    {isOpen ? <CaretUp size={16} weight="bold" /> : <CaretDown size={16} weight="bold" />}
+                    {isOpen ? <CaretUpIcon size={16} weight="bold" /> : <CaretDownIcon size={16} weight="bold" />}
                   </span>
                 </button>
 

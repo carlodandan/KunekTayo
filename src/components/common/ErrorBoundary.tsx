@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from "react";
-import { WarningCircle, ArrowClockwise, House } from "@phosphor-icons/react";
+import { WarningCircleIcon, ArrowClockwiseIcon, HouseIcon } from "@phosphor-icons/react";
 import { Button } from "./Button";
 import { Card } from "./Card";
 
@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
             className="w-full max-w-md bg-slate-900 border-red-900/40 p-6 text-center space-y-4"
           >
             <div className="w-14 h-14 rounded-2xl bg-red-950/50 border border-red-800/60 mx-auto flex items-center justify-center text-red-400">
-              <WarningCircle size={32} weight="bold" />
+              <WarningCircleIcon size={32} weight="bold" />
             </div>
 
             <div className="space-y-1">
@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 variant="secondary"
                 size="md"
                 onClick={this.handleReset}
-                icon={<House size={18} weight="bold" />}
+                icon={<HouseIcon size={18} weight="bold" />}
                 className="flex-1 min-h-[44px]"
               >
                 Home
@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 variant="primary"
                 size="md"
                 onClick={this.handleReload}
-                icon={<ArrowClockwise size={18} weight="bold" />}
+                icon={<ArrowClockwiseIcon size={18} weight="bold" />}
                 className="flex-1 min-h-[44px]"
               >
                 Reload

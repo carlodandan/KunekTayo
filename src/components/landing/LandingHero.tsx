@@ -1,13 +1,13 @@
 import React from "react";
 import {
-  PlusCircle,
-  SignIn,
-  WindowsLogo,
-  AndroidLogo,
-  ShieldCheck,
-  Clock,
-  Users,
-  LockKey,
+  PlusCircleIcon,
+  SignInIcon,
+  WindowsLogoIcon,
+  AndroidLogoIcon,
+  ShieldCheckIcon,
+  ClockIcon,
+  UsersIcon,
+  LockKeyIcon,
 } from "@phosphor-icons/react";
 
 interface LandingHeroProps {
@@ -44,7 +44,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             onClick={onCreateRoom}
             className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283E7C]"
           >
-            <PlusCircle size={20} weight="bold" />
+            <PlusCircleIcon size={20} weight="bold" />
             <span>Create Instant Room</span>
           </button>
 
@@ -53,7 +53,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             onClick={onJoinRoom}
             className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#2b2d31] hover:bg-[#35373c] active:scale-[0.98] border border-[#35373c] text-[#f2f3f5] text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283E7C]"
           >
-            <SignIn size={20} weight="bold" />
+            <SignInIcon size={20} weight="bold" />
             <span>Join with Code / Link</span>
           </button>
         </div>
@@ -67,7 +67,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2b2d31] border border-[#35373c] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer"
           >
-            <WindowsLogo size={14} weight="fill" className="text-[#9098C8]" />
+            <WindowsLogoIcon size={14} weight="fill" className="text-[#9098C8]" />
             <span>Windows (.exe / .msi)</span>
           </a>
           <a
@@ -76,7 +76,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2b2d31] border border-[#35373c] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer"
           >
-            <AndroidLogo size={14} weight="fill" className="text-[#9098C8]" />
+            <AndroidLogoIcon size={14} weight="fill" className="text-[#9098C8]" />
             <span>Android (.apk)</span>
           </a>
         </div>
@@ -85,7 +85,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         <div className="pt-8 sm:pt-12 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto text-left">
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
             <div className="flex items-center gap-2 text-[#9098C8] mb-1">
-              <Users size={18} weight="bold" />
+              <UsersIcon size={18} weight="bold" />
               <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">Strict 1-to-1</span>
             </div>
             <p className="text-[11px] sm:text-xs text-[#949ba4] leading-normal">
@@ -95,7 +95,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
             <div className="flex items-center gap-2 text-[#f0b232] mb-1">
-              <Clock size={18} weight="bold" />
+              <ClockIcon size={18} weight="bold" />
               <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">30m Expiration</span>
             </div>
             <p className="text-[11px] sm:text-xs text-[#949ba4] leading-normal">
@@ -105,7 +105,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
             <div className="flex items-center gap-2 text-[#9098C8] mb-1">
-              <LockKey size={18} weight="bold" />
+              <LockKeyIcon size={18} weight="bold" />
               <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">Direct P2P</span>
             </div>
             <p className="text-[11px] sm:text-xs text-[#949ba4] leading-normal">
@@ -115,7 +115,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
             <div className="flex items-center gap-2 text-[#9098C8] mb-1">
-              <ShieldCheck size={18} weight="bold" />
+              <ShieldCheckIcon size={18} weight="bold" />
               <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">Zero Footprint</span>
             </div>
             <p className="text-[11px] sm:text-xs text-[#949ba4] leading-normal">
