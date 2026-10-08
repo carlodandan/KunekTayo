@@ -34,3 +34,6 @@ APP.md
 .env
 .env.*
 !.env.example
+
+# Tauri Sign Key
+signkey/
