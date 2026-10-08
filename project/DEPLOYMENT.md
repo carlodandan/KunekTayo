@@ -4,11 +4,11 @@
 
 KunekTayo consists of two coordinated tiers:
 1. **Frontend / Native Shell (Tauri 2 & Cloudflare Pages)**:
-   - Native targets: Windows (`.exe` NSIS installer, `.msi`) and Android (`.apk`, `.aab`).
-   - Web target: Hosted on **Cloudflare Pages** serving both the **Landing Page** and the **Instant Web Client** from a unified bundle (`dist/`).
+   - **Native targets**: Windows (`.exe` NSIS installer, `.msi`) and Android (`.apk`, `.aab`). Native apps boot straight into the in-call/room workspace, completely omitting the landing page.
+   - **Web target**: Hosted on **Cloudflare Pages** serving both the **Landing Page** and the **Instant Web Client** from a unified bundle (`dist/`).
 2. **Signaling & Room State Backend (Cloudflare Workers & Durable Objects)**:
    - Private serverless Worker with Durable Objects for authoritative 1-on-1 room state and WebSockets.
-   - **Internal Service Binding**: The Worker is connected privately to Cloudflare Pages via the `SIGNALING` Service Binding. The public `workers.dev` route is disabled, exposing zero backend URLs to the public.
+   - **Internal Service Binding**: Connected privately to Cloudflare Pages via the `SIGNALING` Service Binding. The public `workers.dev` route is disabled, exposing zero backend URLs to external scrapers.
 
 ---
 
@@ -46,7 +46,7 @@ Upon initial deployment, Wrangler registers the worker named `kunektayo-signalin
 2. Navigate to **Settings** &rarr; **Domains & Routes**.
 3. Under **workers.dev**, toggle it **OFF** (or delete the public route).
 
-Now, the Worker has **zero public web address**. It cannot be accessed via curl or foreign sites, only via your own Cloudflare Pages domain (`https://kunektayo.app/api/...` or `https://kunektayo.pages.dev/api/...`).
+The Worker now has **zero public web address**. It cannot be accessed via curl or foreign sites, only via your own Cloudflare Pages domain (`https://kunektayo.pages.dev/api/...`).
 
 ### 2.4 Deploy Cloudflare Pages
 
@@ -60,6 +60,9 @@ Now, the Worker has **zero public web address**. It cannot be accessed via curl 
 
 #### Method B: Direct Wrangler CLI Deployment
 ```bash
+# Run unit test suites
+pnpm test
+
 # Build frontend bundle
 pnpm build
 
@@ -71,11 +74,11 @@ npx wrangler pages deploy dist --project-name kunektayo
 
 ## 3. Environment Variable Configuration
 
-Because the web client automatically resolves to the current window origin when deployed, **`VITE_SIGNALING_URL` is completely optional for Cloudflare Pages**. The frontend will automatically route requests to `/api/rooms` and `/api/rooms/:id/ws` on the same domain.
+Because the web client automatically resolves to the current window origin when deployed, **`VITE_SIGNALING_URL` is completely optional for Cloudflare Pages**. The frontend automatically routes requests to `/api/rooms` and `/api/rooms/:id/ws` on the same domain.
 
 For native desktop (Windows) and mobile (Android) builds, set your production domain:
 ```env
-VITE_SIGNALING_URL=https://kunektayo.app
+VITE_SIGNALING_URL=https://kunektayo.pages.dev
 ```
 
 ---
@@ -100,7 +103,7 @@ Run a Coturn container with ephemeral credentials:
 docker run -d --net=host coturn/coturn \
   -n --log-file=stdout \
   --min-port=49160 --max-port=49200 \
-  --realm=turn.kunektayo.app \
+  --realm=turn.kunektayo.pages.dev \
   --user=kunektayo:secure_turn_password \
   --fingerprint --lt-cred-mech
 ```
@@ -116,6 +119,9 @@ docker run -d --net=host coturn/coturn \
 
 ### Build Commands
 ```bash
+# Run unit tests
+pnpm test
+
 # Verify code and compile frontend
 pnpm build
 
@@ -124,8 +130,8 @@ pnpm tauri build
 ```
 
 ### Output Artifacts
-- **NSIS Setup Installer**: `src-tauri/target/release/bundle/nsis/KunekTayo_0.1.0_x64-setup.exe`
-- **MSI Installer**: `src-tauri/target/release/bundle/msi/KunekTayo_0.1.0_x64_en-US.msi`
+- **NSIS Setup Installer**: `src-tauri/target/release/bundle/nsis/KunekTayo_1.0.0_x64-setup.exe`
+- **MSI Installer**: `src-tauri/target/release/bundle/msi/KunekTayo_1.0.0_x64_en-US.msi`
 
 ---
 
@@ -161,7 +167,7 @@ pnpm tauri android build --aab
 ## 7. Operational Health & Error Recovery
 
 - **Health Check Endpoint**:
-  `GET https://kunektayo.app/api/health`
+  `GET https://kunektayo.pages.dev/api/health`
   Returns `{"status": "healthy", "service": "KunekTayo Signaling & Room State"}`.
 - **Client Error Boundary**:
   Unhandled JavaScript exceptions are caught by `ErrorBoundary.tsx`, offering users one-click reload or return to home without UI death.

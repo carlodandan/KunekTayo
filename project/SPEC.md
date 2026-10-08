@@ -1,6 +1,6 @@
 # KunekTayo — Technical Specifications
 
-This document defines the technical data contracts, signaling schemas, and runtime specifications for KunekTayo.
+This document defines the technical data contracts, signaling schemas, runtime constraints, and platform specifications for KunekTayo.
 
 ---
 
@@ -9,7 +9,7 @@ This document defines the technical data contracts, signaling schemas, and runti
 ### Room Constraints
 * **Capacity Limit**: Exactly 2 participants (`host`, `guest`).
 * **Solo Room TTL**: `1,800,000 ms` (30 minutes) from room initialization or when participant count drops to 1.
-* **Token Entropy**: 128-bit cryptographically secure random value (`crypto.getRandomValues`).
+* **Token Entropy**: 128-bit cryptographically secure pseudorandom value (`crypto.getRandomValues`).
 * **Room Identifier Format**: Hexadecimal lowercase string (`8 bytes` = 16 hex characters).
 * **Invite Token Format**: Hexadecimal lowercase string (`16 bytes` = 32 hex characters).
 * **Invite Token Storage**: SHA-256 hash stored on server (`inviteTokenHash`), never raw token.
@@ -93,36 +93,49 @@ Notifies server that a participant has left.
 
 ---
 
-## 3. Authoritative Alarm & Expiration Handling
+## 3. Audio & Media Track Contracts
 
-```mermaid
-sequenceDiagram
-    participant H as Host
-    participant DO as Durable Object
-    participant G as Guest
-
-    H->>DO: Create Room (status: waiting)
-    DO->>DO: ctx.storage.setAlarm(Date.now() + 30m)
-    Note over DO: Solo room timer running...
-
-    alt Guest joins within 30m
-        G->>DO: Join Room (role: guest)
-        DO->>DO: ctx.storage.deleteAlarm()
-        Note over DO: Timer cancelled! status: active
-    else 30m elapsed without guest
-        DO->>DO: alarm() fires
-        DO->>DO: status: expired
-        DO->>H: Broadcast error (ROOM_EXPIRED)
-        DO->>DO: ctx.storage.deleteAll()
-    end
+### 3.1 Web Audio DSP Parameters
+```typescript
+interface AudioProcessingConfig {
+  highPassCutoffHz: 85;           // High-pass filter for HVAC and desk thump suppression
+  presenceCenterHz: 3000;         // Peaking EQ for vocal consonant clarity
+  presenceGainDb: 2.5;            // Consonant boost (+2.5 dB)
+  presenceQ: 1.2;                 // Bandwidth factor
+  compressorThresholdDb: -24;     // Dynamic range compression threshold
+  compressorRatio: 4;             // Compression ratio (4:1)
+  compressorAttackMs: 0.003;      // Fast attack for transient peaks
+  compressorReleaseMs: 0.25;      // Smooth release
+}
 ```
+
+### 3.2 Media Device Track Replacement
+```typescript
+interface DeviceSwitchingContracts {
+  replaceAudioTrack(newTrack: MediaStreamTrack): Promise<boolean>;
+  replaceVideoTrack(newTrack: MediaStreamTrack): Promise<boolean>;
+}
+```
+* **Atomicity Guarantee**: If `replaceTrack` rejects or fails, the existing track remains running and in-place. The failed new track is immediately stopped.
 
 ---
 
-## 4. Ephemeral Chat DataChannel Specification
+## 4. Platform Routing & Environment Boundaries
+
+| Capability | Tauri Windows (.exe / .msi) | Tauri Android (.apk) | Web Client (Pages SPA) |
+| :--- | :--- | :--- | :--- |
+| **Initial Screen** | App Workspace (Create / Join) | App Workspace (Create / Join) | Marketing Landing Page |
+| **Landing Page Access** | Completely Hidden | Completely Hidden | Visible (with App toggle) |
+| **Overview/App Switcher** | Hidden | Hidden | Visible in header/nav |
+| **System Diagnostics** | Gated by `env.isDev` | Gated by `env.isDev` | Gated by `env.isDev` |
+| **Deep Link Scheme** | `kunektayo://join` | `kunektayo://join` | Hash & search query param |
+
+---
+
+## 5. Ephemeral Chat DataChannel Specification
 
 * **Channel Label**: `"ephemeral-chat"`
-* **Ordered**: `true`
+* **Ordered Delivery**: `true`
 * **Max Packet Lifetime**: `3000 ms`
 
 ### Message Packet Schema
@@ -132,14 +145,14 @@ interface DataChannelMessage {
   senderId: string;       // Participant ID
   text: string;           // UTF-8 encoded text (max 2000 chars)
   timestamp: number;      // Unix epoch (milliseconds)
-  ttlSeconds: number;     // Configured TTL (e.g. 60s)
+  ttlSeconds: number;     // Configured TTL (15s, 30s, 60s, 300s)
 }
 ```
 
 ---
 
-## 5. Deep Linking & URL Schemas
+## 6. Deep Linking & URL Schemas
 
-* Web URL: `https://kunektayo.app/#room=<ROOM_ID>&token=<TOKEN>`
+* Web URL: `https://kunektayo.pages.dev/#room=<ROOM_ID>&token=<TOKEN>`
 * Windows Protocol: `kunektayo://join?room=<ROOM_ID>&token=<TOKEN>`
-* Android App Link: `https://kunektayo.app/join/:roomId#token`
+* Android App Link: `https://kunektayo.pages.dev/join/:roomId#token`

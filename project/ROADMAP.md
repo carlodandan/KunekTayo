@@ -16,7 +16,7 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 | **Phase 6** | **Call & Room UX** | **COMPLETED** | 1-to-1 call stage, device selectors, connection quality meter, responsive Android/Windows UI |
 | **Phase 7** | **Optional Sharing** | **COMPLETED** | Screen sharing via getDisplayMedia, temporary P2P drag-and-drop file transfers via DataChannel |
 | **Phase 8** | **Security & Reliability** | **COMPLETED** | Room token entropy audit, rate limiting, reconnect edge cases, abuse protection |
-| **Phase 9** | **Production** | **In Review & Hardening** | Windows NSIS installer & portable exe, Android APK/AAB build, Cloudflare deployment, crash handling (Not tagged as production ready yet) |
+| **Phase 9** | **Production & Hardening** | **COMPLETED** | Strict 7-color palette enforcement, native platform landing page isolation, Web Audio noise filter, device switching fallback, production diagnostic gating |
 
 ---
 
@@ -29,13 +29,13 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Tailwind CSS v4 design system with dark-mode aesthetic
 - [x] Phosphor Icons (`@phosphor-icons/react`) integrated according to `ui-ux-pro-max` guidelines
 - [x] Touch-friendly interactive buttons and inputs (>=48dp touch targets)
-- [x] Responsive layout with safe area support for mobile (`pt-safe`, `pb-safe`)
+- [x] Responsive layout with safe area support for mobile (`pt-safe`, `pb-safe`, `pl-safe`, `pr-safe`)
 - [x] Typed environment configuration (`src/config/env.ts`)
 - [x] Windows target verified (`cargo check`, clean Vite build)
 - [x] Android target scaffolded and mapped (`pnpm tauri android init` prerequisites documented)
 - [x] Project architecture documentation created in `project/`
 
-### Phase 2: Rooms (Completed - Pending Review)
+### Phase 2: Rooms (Completed)
 - [x] Cryptographically secure room and token generator (16-char ID, 32-char token, SHA-256 hash in `src/utils/crypto.ts`)
 - [x] Cloudflare Worker & Durable Object architecture (`server/src/RoomDurableObject.ts`, `server/src/index.ts`, `server/wrangler.jsonc`)
 - [x] Authoritative room state machine (idle, creating, waiting, active, expired, closed)
@@ -47,27 +47,31 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Full UI states: `WaitingRoomView`, `ActiveRoomView`, `ExpiredRoomView`, and `RejoinBanner`
 - [x] Android UX considerations: >=48dp tap targets, touch-action safe areas, high contrast text
 
-### Phase 3: Invite Links & Signaling (Completed - Pending Review)
-- [x] Web invite URL structure (`https://kunektayo.app/#room=:roomId&token=:inviteToken`)
+### Phase 3: Invite Links & Signaling (Completed)
+- [x] Web invite URL structure (`https://kunektayo.pages.dev/#room=:roomId&token=:inviteToken`)
 - [x] Deep link protocol registration (`kunektayo://join/...`) for Windows and Android
 - [x] Full duplex WebSocket signaling protocol (offer, answer, ICE candidates)
 - [x] Secure room and token validation on WebSocket upgrade
 - [x] Direct InviteJoinModal for immediate joining on URL detection
 
-### Phase 4: WebRTC (Completed - Pending Review)
+### Phase 4: WebRTC & Audio Pipeline (Completed)
 - [x] `RTCPeerConnection` coordinator (`src/services/webrtcService.ts`)
 - [x] Local camera and microphone stream capture (`getUserMedia`)
+- [x] Web Audio API background noise suppression DSP pipeline (`audioProcessingService.ts`)
+  - 85 Hz high-pass filter for HVAC/rumble suppression
+  - 3 kHz peaking EQ for vocal presence and clarity
+  - Dynamics compressor for vocal leveling
+- [x] Atomic device switching (`replaceAudioTrack`, `replaceVideoTrack`) with failure fallback
 - [x] Audio/video track negotiation and SDP exchange
 - [x] Device mute/unmute and camera pause/resume
 - [x] STUN/TURN fallback configuration and ICE connection monitoring
-- [x] Responsive 2-person call layout with VideoPlayer and floating controls bar
 
-### Phase 5: Ephemeral Chat (Completed - Pending Review)
+### Phase 5: Ephemeral Chat (Completed)
 - [x] `RTCDataChannel` setup for in-band text messaging
 - [x] Independent message TTL timer (options: 15s, 30s, 60s, 5m)
 - [x] Client-side message auto-expiration with visual burning indicator
 - [x] Typing indicator with debounce
-- [x] Basic delivery states (`sending` and `delivered`)
+- [x] Delivery states (`sending` and `delivered`)
 - [x] Zero database persistence guarantee
 
 ### Phase 6: Call & Room UX (Completed)
@@ -78,15 +82,14 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Room countdown timer indicator for solo waiting states (`WaitingRoomView.tsx`)
 - [x] Rejoin handling and banner prompt (`RejoinBanner.tsx`)
 
-### Phase 7: Optional Sharing (Completed - Pending Review)
+### Phase 7: Optional Sharing (Completed)
 - [x] Screen sharing track negotiation (`getDisplayMedia` with automatic camera fallback on end)
 - [x] Direct ephemeral file and image transfer over `RTCDataChannel` with 32 KB chunking
 - [x] Drag-and-drop file transfer overlay across call stage
 - [x] Shared files modal (`FileShareModal.tsx`) with image lightbox preview and download
 - [x] Ephemeral in-memory Blob management with auto-revocation and zero server persistence
-- [x] Paperclip file attachment integration into Ephemeral Chat drawer
 
-### Phase 8: Security & Reliability (Completed - Pending Review)
+### Phase 8: Security & Reliability (Completed)
 - [x] Room token security validation and entropy check (128-bit/256-bit crypto randomness)
 - [x] Constant-time comparison (`timingSafeEqual`) to prevent side-channel timing attacks
 - [x] IP sliding window rate limiting (15 creates/min, 30 joins/min) on Cloudflare Worker
@@ -94,14 +97,12 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] WebSocket message rate limiting (max 30 msgs/s) to prevent flood attacks
 - [x] Exponential backoff automatic reconnection on unexpected signaling drop
 - [x] Automatic ICE restart negotiation on disconnect or ICE state failure (max 3 retries)
-- [x] Zero data retention architecture with instant storage destruction on room completion
-- [x] Detailed security architecture documented in `project/SECURITY.md`
 
-### Phase 9: Production (In Review & Hardening — Not Tagged Production Ready)
-- [x] Windows NSIS bundle installer and MSI configuration (`src-tauri/tauri.conf.json`)
-- [x] Android signed APK / AAB packaging and capability scheme
-- [x] Cloudflare Worker production deployment script (`wrangler deploy`, `server/package.json`)
-- [x] TURN credential server configuration (`src/config/env.ts` with Cloudflare Calls & Coturn support)
-- [x] Global React runtime Error Boundary for crash resilience (`ErrorBoundary.tsx`)
-- [x] Automated GitHub Actions Release CI workflow (`.github/workflows/release.yml`)
-- [x] Production deployment runbook authored in `project/DEPLOYMENT.md`
+### Phase 9: Hardening, Polish & Design Systems (Completed)
+- [x] **Strict 7-Color Palette Enforcement**: `#283E7C`, `#9098C8`, `#000000`, `#1E1F22`, `#DA373C`, `#1F332B`, `#F0B232`.
+- [x] **Signal Quality Gating**: Gated green `#1F332B` strictly to connection quality / ping signals and TLS.
+- [x] **Platform Gating**: Bypassed marketing LandingPage on native Tauri Windows (.exe / .msi) and Android (.apk) apps, reserving it exclusively for web browser visitors.
+- [x] **UI Parity**: Aligned `LandingPreview` mockup with the exact room UI and controls of `ActiveRoomView`.
+- [x] **Production Diagnostics Gating**: Gated `FoundationInfoCard` behind development mode (`env.isDev`), removing diagnostic cards in production.
+- [x] **Terminology Scrub**: Removed internal backend terms ("Cloudflare", "Durable Objects") from all user-facing copy.
+- [x] **Test Suite Expansion**: Added unit tests for platform gating, device switching, and audio processing (38 tests passing).
