@@ -29,17 +29,25 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "Carlo Dandan",
+    "copyright": "Copyright © Carlo Dandan",
+    "category": "Social Networking",
+    "shortDescription": "Privacy-first, zero-footprint communication tool designed for direct 1-to-1 conversations.",
+    "longDescription": "KunekTayo is a privacy-first, zero-footprint communication tool designed for direct 1-to-1 conversations. It creates disposable rooms protected by cryptographic tokens, establishes direct peer-to-peer WebRTC connections, and leaves zero data on servers.",
     "icon": [
       "icons/32x32.png",
+      "icons/64x64.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
-      "icons/icon.ico"
+      "icons/icon.ico",
+      "icons/icon.png"
     ],
     "windows": {
       "nsis": {
+        "installerIcon": "icons/icon.ico",
         "installMode": "currentUser",
-        "displayLanguageSelector": false
+        "languages": ["English"]
       }
     }
   }
