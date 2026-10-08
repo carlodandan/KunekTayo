@@ -25,6 +25,7 @@ import { EphemeralChat } from "@/components/chat/EphemeralChat";
 import { useRoom } from "@/context/RoomContext";
 import { useWebRtc } from "@/context/WebRtcContext";
 import { useFileTransfer } from "@/context/FileTransferContext";
+import { isNativePipSupported, requestNativePip } from "@/services/androidPipService";
 import { cn } from "@/utils/cn";
 
 export const ActiveRoomView: React.FC = () => {
@@ -56,14 +57,27 @@ export const ActiveRoomView: React.FC = () => {
   const [isPiPActive, setIsPiPActive] = useState(false);
   const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
 
-  // CheckIcon Picture-in-Picture browser support
+  // Check Picture-in-Picture support (Android native Activity PiP or browser HTML5 PiP)
   useEffect(() => {
     const supported =
-      typeof document !== "undefined" &&
-      Boolean(document.pictureInPictureEnabled) &&
-      typeof HTMLVideoElement !== "undefined" &&
-      typeof HTMLVideoElement.prototype.requestPictureInPicture === "function";
+      isNativePipSupported() ||
+      (typeof document !== "undefined" &&
+        Boolean(document.pictureInPictureEnabled) &&
+        typeof HTMLVideoElement !== "undefined" &&
+        typeof HTMLVideoElement.prototype.requestPictureInPicture === "function");
     setIsPiPSupported(supported);
+  }, []);
+
+  // Listen to native Android Activity PiP mode transitions
+  useEffect(() => {
+    const handleAndroidPip = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isPip?: boolean }>;
+      if (customEvent.detail?.isPip !== undefined) {
+        setIsPiPActive(Boolean(customEvent.detail.isPip));
+      }
+    };
+    window.addEventListener("android:pip-changed", handleAndroidPip);
+    return () => window.removeEventListener("android:pip-changed", handleAndroidPip);
   }, []);
 
   // Monitor active video tracks on remote stream
@@ -172,6 +186,15 @@ export const ActiveRoomView: React.FC = () => {
   };
 
   const togglePiP = async () => {
+    // If Android native Activity PiP bridge is available, trigger native OS PiP
+    if (isNativePipSupported()) {
+      const entered = requestNativePip();
+      if (entered) {
+        setIsPiPActive(true);
+        return;
+      }
+    }
+
     if (!isPiPSupported) return;
 
     try {
@@ -222,7 +245,10 @@ export const ActiveRoomView: React.FC = () => {
         setIsDraggingOver(false);
       }}
       onDrop={handleDrop}
-      className="relative w-full max-w-4xl mx-auto flex flex-col space-y-3 sm:space-y-4 animate-in fade-in duration-200"
+      className={cn(
+        "relative w-full max-w-4xl mx-auto flex flex-col space-y-3 sm:space-y-4 animate-in fade-in duration-200",
+        isPiPActive && "fixed inset-0 z-50 h-screen w-screen p-0 m-0 space-y-0 bg-black justify-center items-center max-w-none rounded-none"
+      )}
     >
       {/* Drag & Drop Visual Overlay */}
       {isDraggingOver && (
@@ -236,7 +262,7 @@ export const ActiveRoomView: React.FC = () => {
       )}
 
       {/* Top Bar Status */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 px-1">
+      <div className={cn("flex flex-wrap items-center justify-between gap-2.5 px-1", isPiPActive && "hidden")}>
         <div className="flex items-center gap-2 flex-wrap">
           <ConnectionQualityBadge />
           {isScreenSharing && (
@@ -288,7 +314,12 @@ export const ActiveRoomView: React.FC = () => {
         </div>
 
         {/* Mobile Stage: Primary Video + Floating Picture-in-Picture (visible < md) */}
-        <div className="relative w-full aspect-[4/3] sm:aspect-video rounded-2xl overflow-hidden border border-[#35373c] md:hidden bg-[#1e1f22]">
+        <div
+          className={cn(
+            "relative w-full aspect-[4/3] sm:aspect-video rounded-2xl overflow-hidden border border-[#35373c] md:hidden bg-[#1e1f22]",
+            isPiPActive && "fixed inset-0 z-50 h-screen w-screen aspect-auto rounded-none border-0"
+          )}
+        >
           {/* Mobile Main Video Feed */}
           <VideoPlayer
             ref={mobileMainVideoRef}
@@ -302,7 +333,10 @@ export const ActiveRoomView: React.FC = () => {
 
           {/* Mobile Floating Picture-in-Picture (Tap to swap feeds) */}
           <div
-            className="absolute bottom-3 right-3 w-28 sm:w-36 aspect-video z-20 rounded-xl overflow-hidden border border-[#35373c] bg-[#2b2d31] transition-transform active:scale-95 cursor-pointer"
+            className={cn(
+              "absolute bottom-3 right-3 w-28 sm:w-36 aspect-video z-20 rounded-xl overflow-hidden border border-[#35373c] bg-[#2b2d31] transition-transform active:scale-95 cursor-pointer",
+              isPiPActive && "hidden"
+            )}
             title="Tap to swap primary feed"
           >
             <VideoPlayer
@@ -349,7 +383,10 @@ export const ActiveRoomView: React.FC = () => {
       {/* In-Call Controls Floating Bar */}
       <Card
         elevated
-        className="p-2 sm:p-4 bg-[#2b2d31] border-[#35373c] flex items-center justify-between gap-1.5 sm:gap-3 sticky bottom-2 z-30"
+        className={cn(
+          "p-2 sm:p-4 bg-[#2b2d31] border-[#35373c] flex items-center justify-between gap-1.5 sm:gap-3 sticky bottom-2 z-30",
+          isPiPActive && "hidden"
+        )}
       >
         <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-center sm:justify-start">
           {/* MicrophoneIcon Toggle */}

@@ -3,11 +3,18 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Audio/Video calling -->
+    <!-- Audio/Video calling & Foreground Service -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_TYPE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_TYPE_CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Camera hardware support -->
     <uses-feature
@@ -30,6 +37,7 @@
             android:launchMode="singleTask"
             android:label="@string/main_activity_title"
             android:name=".MainActivity"
+            android:supportsPictureInPicture="true"
             android:exported="true">
 
             <intent-filter>
@@ -41,6 +49,13 @@
             </intent-filter>
 
         </activity>
+
+        <!-- Foreground Service to keep WebRTC voice/video active when app is minimized or in PiP -->
+        <service
+            android:name=".CallNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
