@@ -1,6 +1,6 @@
 [package]
 name = "kunektayo"
-version = "1.0.0"
+version = "1.1.0"
 description = "Privacy-first, zero-footprint communication tool designed for direct 1-to-1 conversations."
 authors = ["Carlo Dandan"]
 edition = "2024"
