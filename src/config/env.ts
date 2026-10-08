@@ -3,6 +3,8 @@
  * Validates and exposes environment variables with type safety and fallback defaults.
  */
 
+import { APP_NAME, APP_VERSION } from "@/constants/app";
+
 export interface AppConfig {
   readonly appName: string;
   readonly appVersion: string;
@@ -59,8 +61,8 @@ function getSignalingUrl(): string {
 }
 
 export const env: AppConfig = {
-  appName: "KunekTayo",
-  appVersion: "0.1.0",
+  appName: APP_NAME,
+  appVersion: APP_VERSION,
   signalingUrl: getSignalingUrl(),
   defaultStunServers: [
     "stun:stun.l.google.com:19302",

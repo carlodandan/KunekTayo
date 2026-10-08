@@ -2,7 +2,7 @@ import React from "react";
 import { Desktop, DeviceMobile, Globe, ShieldCheck } from "@phosphor-icons/react";
 import { Badge } from "@/components/common/Badge";
 import { usePlatform } from "@/hooks/usePlatform";
-import { APP_NAME } from "@/constants/app";
+import { APP_NAME, APP_VERSION } from "@/constants/app";
 
 export interface HeaderProps {
   activeView?: "landing" | "app";
@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {APP_NAME}
               </h1>
               <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-[#2b2d31] text-[#949ba4] border border-[#35373c]">
-                v0.1
+                v{APP_VERSION}
               </span>
             </div>
             <p className="text-xs text-[#949ba4] hidden sm:block">
