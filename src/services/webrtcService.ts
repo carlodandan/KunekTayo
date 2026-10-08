@@ -23,6 +23,7 @@ class WebRtcService {
   private isOfferer = false;
   private isMuted = false;
   private isCameraOff = false;
+  private noiseSuppressionEnabled = true;
   private candidateQueue: RTCIceCandidateInit[] = [];
   private listeners = new Map<string, Set<WebRtcEventListener>>();
   private connectionState: PeerConnectionState = "new";
@@ -55,6 +56,7 @@ class WebRtcService {
     isMuted: boolean;
     isCameraOff: boolean;
     isScreenSharing: boolean;
+    isNoiseSuppressionEnabled: boolean;
     hasLocalStream: boolean;
     hasRemoteStream: boolean;
   } {
@@ -63,6 +65,7 @@ class WebRtcService {
       isMuted: this.isMuted,
       isCameraOff: this.isCameraOff,
       isScreenSharing: this.isScreenSharing,
+      isNoiseSuppressionEnabled: this.noiseSuppressionEnabled,
       hasLocalStream: !!this.localStream,
       hasRemoteStream: !!this.remoteStream,
     };
@@ -101,8 +104,9 @@ class WebRtcService {
         audio: audio
           ? {
               echoCancellation: true,
-              noiseSuppression: true,
+              noiseSuppression: this.noiseSuppressionEnabled,
               autoGainControl: true,
+              channelCount: 1,
             }
           : false,
         video: video
@@ -341,6 +345,66 @@ class WebRtcService {
       this.emit("media_state", { isMuted: this.isMuted, isCameraOff: this.isCameraOff });
     }
     return this.isCameraOff;
+  }
+
+  isNoiseSuppressionEnabled(): boolean {
+    return this.noiseSuppressionEnabled;
+  }
+
+  /**
+   * Toggle or update software noise suppression and echo cancellation constraints
+   */
+  async setNoiseSuppression(enabled: boolean): Promise<boolean> {
+    this.noiseSuppressionEnabled = enabled;
+    if (this.localStream) {
+      const audioTrack = this.localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        try {
+          await audioTrack.applyConstraints({
+            noiseSuppression: enabled,
+            echoCancellation: true,
+            autoGainControl: true,
+            channelCount: 1,
+          });
+        } catch (err) {
+          console.warn("Failed to apply noise suppression constraint on active track:", err);
+        }
+      }
+    }
+    this.emit("audio_processing_change", { noiseSuppression: this.noiseSuppressionEnabled });
+    return this.noiseSuppressionEnabled;
+  }
+
+  /**
+   * Replace audio track on active peer connection
+   */
+  async replaceAudioTrack(newTrack: MediaStreamTrack): Promise<void> {
+    if (this.peerConnection) {
+      const audioSender = this.peerConnection.getSenders().find((s) => s.track?.kind === "audio");
+      if (audioSender) {
+        try {
+          await audioSender.replaceTrack(newTrack);
+        } catch (err) {
+          console.warn("Failed to replace audio track on peer connection:", err);
+        }
+      }
+    }
+  }
+
+  /**
+   * Replace video track on active peer connection
+   */
+  async replaceVideoTrack(newTrack: MediaStreamTrack): Promise<void> {
+    if (this.peerConnection) {
+      const videoSender = this.peerConnection.getSenders().find((s) => s.track?.kind === "video");
+      if (videoSender) {
+        try {
+          await videoSender.replaceTrack(newTrack);
+        } catch (err) {
+          console.warn("Failed to replace video track on peer connection:", err);
+        }
+      }
+    }
   }
 
   /**

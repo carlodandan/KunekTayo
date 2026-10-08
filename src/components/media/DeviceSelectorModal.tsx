@@ -6,11 +6,14 @@ import {
   SpeakerHigh,
   GearSix,
   Check,
+  Waveform,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { deviceService, AvailableDevices } from "@/services/deviceService";
+import { webrtcService } from "@/services/webrtcService";
 import { useWebRtc } from "@/context/WebRtcContext";
+import { cn } from "@/utils/cn";
 
 export interface DeviceSelectorModalProps {
   isOpen: boolean;
@@ -21,7 +24,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { localStream } = useWebRtc();
+  const { localStream, isNoiseSuppressionEnabled, setNoiseSuppression } = useWebRtc();
   const [devices, setDevices] = useState<AvailableDevices>({
     audioInputs: [],
     audioOutputs: [],
@@ -29,10 +32,13 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
   });
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>("");
   const [selectedVideoInput, setSelectedVideoInput] = useState<string>("");
+  const [noiseSuppression, setNoiseSuppressionLocal] = useState(isNoiseSuppressionEnabled);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
+
+    setNoiseSuppressionLocal(isNoiseSuppressionEnabled);
 
     deviceService.getAvailableDevices().then((res) => {
       setDevices(res);
@@ -43,17 +49,30 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         setSelectedVideoInput(res.videoInputs[0].deviceId);
       }
     });
-  }, [isOpen]);
+  }, [isOpen, isNoiseSuppressionEnabled]);
 
   if (!isOpen) return null;
 
   const handleApply = async () => {
+    if (noiseSuppression !== isNoiseSuppressionEnabled) {
+      await setNoiseSuppression(noiseSuppression);
+    }
     if (localStream) {
       if (selectedVideoInput) {
-        await deviceService.switchVideoDevice(localStream, selectedVideoInput);
+        const newVideoTrack = await deviceService.switchVideoDevice(localStream, selectedVideoInput);
+        if (newVideoTrack) {
+          await webrtcService.replaceVideoTrack(newVideoTrack);
+        }
       }
       if (selectedAudioInput) {
-        await deviceService.switchAudioDevice(localStream, selectedAudioInput);
+        const newAudioTrack = await deviceService.switchAudioDevice(
+          localStream,
+          selectedAudioInput,
+          noiseSuppression
+        );
+        if (newAudioTrack) {
+          await webrtcService.replaceAudioTrack(newAudioTrack);
+        }
       }
     }
     setSavedSuccess(true);
@@ -112,6 +131,40 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
               ))
             )}
           </select>
+        </div>
+
+        {/* Noise Suppression Toggle */}
+        <div className="bg-[#1e1f22] border border-[#35373c] rounded-xl p-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#2b2d31] flex items-center justify-center text-[#5865f2] shrink-0">
+              <Waveform size={18} weight="bold" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-[#f2f3f5]">
+                Noise Suppression
+              </p>
+              <p className="text-[11px] text-[#949ba4]">
+                Filter background keyboard, fan, and room echo
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={noiseSuppression}
+            onClick={() => setNoiseSuppressionLocal(!noiseSuppression)}
+            className={cn(
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#5865f2]",
+              noiseSuppression ? "bg-[#5865f2]" : "bg-[#4e5058]"
+            )}
+          >
+            <span
+              className={cn(
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                noiseSuppression ? "translate-x-5" : "translate-x-0"
+              )}
+            />
+          </button>
         </div>
 
         {/* Camera Selection */}
