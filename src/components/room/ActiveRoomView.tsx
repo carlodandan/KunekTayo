@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SignOut,
   Infinity as InfinityIcon,
@@ -12,6 +12,7 @@ import {
   ArrowsIn,
   ProjectorScreen,
   FileArrowUp,
+  PictureInPicture,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -46,6 +47,148 @@ export const ActiveRoomView: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isLocalSwapped, setIsLocalSwapped] = useState(false);
+
+  const desktopRemoteVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileMainVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileFloatingVideoRef = useRef<HTMLVideoElement>(null);
+
+  const [isPiPSupported, setIsPiPSupported] = useState(false);
+  const [isPiPActive, setIsPiPActive] = useState(false);
+  const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
+
+  // Check Picture-in-Picture browser support
+  useEffect(() => {
+    const supported =
+      typeof document !== "undefined" &&
+      Boolean(document.pictureInPictureEnabled) &&
+      typeof HTMLVideoElement !== "undefined" &&
+      typeof HTMLVideoElement.prototype.requestPictureInPicture === "function";
+    setIsPiPSupported(supported);
+  }, []);
+
+  // Monitor active video tracks on remote stream
+  useEffect(() => {
+    if (!remoteStream) {
+      setHasRemoteVideo(false);
+      return;
+    }
+
+    const updateTrackState = () => {
+      const videoTracks = remoteStream.getVideoTracks();
+      const hasActiveVideo =
+        videoTracks.length > 0 &&
+        videoTracks.some((t) => t.readyState === "live" && t.enabled);
+      setHasRemoteVideo(hasActiveVideo);
+    };
+
+    updateTrackState();
+
+    remoteStream.addEventListener("addtrack", updateTrackState);
+    remoteStream.addEventListener("removetrack", updateTrackState);
+
+    const tracks = remoteStream.getVideoTracks();
+    tracks.forEach((track) => {
+      track.addEventListener("ended", updateTrackState);
+      track.addEventListener("mute", updateTrackState);
+      track.addEventListener("unmute", updateTrackState);
+    });
+
+    return () => {
+      remoteStream.removeEventListener("addtrack", updateTrackState);
+      remoteStream.removeEventListener("removetrack", updateTrackState);
+      tracks.forEach((track) => {
+        track.removeEventListener("ended", updateTrackState);
+        track.removeEventListener("mute", updateTrackState);
+        track.removeEventListener("unmute", updateTrackState);
+      });
+    };
+  }, [remoteStream]);
+
+  // Synchronize Picture-in-Picture events across candidate video elements
+  useEffect(() => {
+    const onEnter = () => setIsPiPActive(true);
+    const onLeave = () => setIsPiPActive(false);
+
+    const elements = [
+      desktopRemoteVideoRef.current,
+      mobileMainVideoRef.current,
+      mobileFloatingVideoRef.current,
+    ].filter(Boolean) as HTMLVideoElement[];
+
+    elements.forEach((el) => {
+      el.addEventListener("enterpictureinpicture", onEnter);
+      el.addEventListener("leavepictureinpicture", onLeave);
+    });
+
+    if (typeof document !== "undefined") {
+      setIsPiPActive(
+        Boolean(
+          document.pictureInPictureElement &&
+            elements.includes(document.pictureInPictureElement as HTMLVideoElement)
+        )
+      );
+    }
+
+    return () => {
+      elements.forEach((el) => {
+        el.removeEventListener("enterpictureinpicture", onEnter);
+        el.removeEventListener("leavepictureinpicture", onLeave);
+      });
+    };
+  }, [remoteStream, isLocalSwapped]);
+
+  // Ensure Picture-in-Picture is exited if component unmounts
+  useEffect(() => {
+    return () => {
+      if (typeof document !== "undefined" && document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(() => {});
+      }
+    };
+  }, []);
+
+  const getActiveRemoteVideoElement = (): HTMLVideoElement | null => {
+    const desktopEl = desktopRemoteVideoRef.current;
+    if (desktopEl && (desktopEl.offsetWidth > 0 || desktopEl.getClientRects().length > 0)) {
+      return desktopEl;
+    }
+
+    if (isLocalSwapped) {
+      const floatingEl = mobileFloatingVideoRef.current;
+      if (floatingEl && (floatingEl.offsetWidth > 0 || floatingEl.getClientRects().length > 0)) {
+        return floatingEl;
+      }
+    } else {
+      const mainEl = mobileMainVideoRef.current;
+      if (mainEl && (mainEl.offsetWidth > 0 || mainEl.getClientRects().length > 0)) {
+        return mainEl;
+      }
+    }
+
+    return (
+      (isLocalSwapped ? mobileFloatingVideoRef.current : mobileMainVideoRef.current) ||
+      desktopRemoteVideoRef.current ||
+      null
+    );
+  };
+
+  const togglePiP = async () => {
+    if (!isPiPSupported) return;
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiPActive(false);
+      } else {
+        const videoEl = getActiveRemoteVideoElement();
+        if (videoEl) {
+          await videoEl.requestPictureInPicture();
+          setIsPiPActive(true);
+        }
+      }
+    } catch (err) {
+      console.warn("Picture-in-Picture toggle failed:", err);
+    }
+  };
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -129,6 +272,7 @@ export const ActiveRoomView: React.FC = () => {
         {/* Desktop Side-by-Side Split View (visible md:) */}
         <div className={cn("hidden md:grid grid-cols-2 gap-4", isChatOpen ? "lg:col-span-2" : "col-span-1")}>
           <VideoPlayer
+            ref={desktopRemoteVideoRef}
             stream={remoteStream}
             label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
             className="aspect-video"
@@ -147,6 +291,7 @@ export const ActiveRoomView: React.FC = () => {
         <div className="relative w-full aspect-[4/3] sm:aspect-video rounded-2xl overflow-hidden border border-[#35373c] md:hidden bg-[#1e1f22]">
           {/* Mobile Main Video Feed */}
           <VideoPlayer
+            ref={mobileMainVideoRef}
             stream={isLocalSwapped ? localStream : remoteStream}
             label={isLocalSwapped ? "You" : session?.myRole === "host" ? "Guest" : "Host"}
             isLocal={isLocalSwapped}
@@ -161,6 +306,7 @@ export const ActiveRoomView: React.FC = () => {
             title="Tap to swap primary feed"
           >
             <VideoPlayer
+              ref={mobileFloatingVideoRef}
               stream={isLocalSwapped ? remoteStream : localStream}
               label={isLocalSwapped ? (session?.myRole === "host" ? "Guest" : "Host") : "You"}
               isLocal={!isLocalSwapped}
@@ -238,6 +384,28 @@ export const ActiveRoomView: React.FC = () => {
             title={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
             aria-label={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
           />
+
+          {/* Picture-in-Picture Toggle */}
+          {isPiPSupported && (hasRemoteVideo || isPiPActive) && (
+            <Button
+              variant={isPiPActive ? "primary" : "secondary"}
+              size="md"
+              onClick={togglePiP}
+              disabled={!hasRemoteVideo && !isPiPActive}
+              icon={
+                <PictureInPicture
+                  size={20}
+                  weight={isPiPActive ? "fill" : "bold"}
+                />
+              }
+              className={cn(
+                "rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]",
+                isPiPActive && "border-2 border-[#5865f2]"
+              )}
+              title={isPiPActive ? "Exit Picture-in-Picture" : "Picture-in-Picture"}
+              aria-label={isPiPActive ? "Exit Picture-in-Picture" : "Picture-in-Picture"}
+            />
+          )}
 
           {/* Ephemeral File Sharing Button */}
           <div className="relative">

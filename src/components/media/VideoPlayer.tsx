@@ -11,29 +11,51 @@ export interface VideoPlayerProps {
   isPip?: boolean;
   className?: string;
   onClick?: () => void;
+  videoRef?: React.Ref<HTMLVideoElement>;
 }
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({
-  stream,
-  label,
-  isMuted = false,
-  isVideoOff = false,
-  isLocal = false,
-  isPip = false,
-  className,
-  onClick,
-}) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
+  (
+    {
+      stream,
+      label,
+      isMuted = false,
+      isVideoOff = false,
+      isLocal = false,
+      isPip = false,
+      className,
+      onClick,
+      videoRef: customVideoRef,
+    },
+    ref
+  ) => {
+    const internalVideoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      if (stream) {
-        videoRef.current.srcObject = stream;
-      } else {
-        videoRef.current.srcObject = null;
+    const setVideoRef = (node: HTMLVideoElement | null) => {
+      internalVideoRef.current = node;
+
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref && "current" in ref) {
+        (ref as React.MutableRefObject<HTMLVideoElement | null>).current = node;
       }
-    }
-  }, [stream]);
+
+      if (typeof customVideoRef === "function") {
+        customVideoRef(node);
+      } else if (customVideoRef && "current" in customVideoRef) {
+        (customVideoRef as React.MutableRefObject<HTMLVideoElement | null>).current = node;
+      }
+    };
+
+    useEffect(() => {
+      if (internalVideoRef.current) {
+        if (stream) {
+          internalVideoRef.current.srcObject = stream;
+        } else {
+          internalVideoRef.current.srcObject = null;
+        }
+      }
+    }, [stream]);
 
   const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && !isVideoOff;
 
@@ -49,7 +71,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     >
       {/* Video Element */}
       <video
-        ref={videoRef}
+        ref={setVideoRef}
         autoPlay
         playsInline
         muted={isLocal} // Local video must always be muted to prevent acoustic feedback
@@ -106,4 +128,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       </div>
     </div>
   );
-};
+});
+
+VideoPlayer.displayName = "VideoPlayer";
