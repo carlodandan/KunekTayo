@@ -30,7 +30,7 @@ export const LandingSecurity: React.FC = () => {
     {
       feature: "Room Lifespan",
       traditional: "Permanent channels & link persistence",
-      kunektayo: "30-Min Solo Auto-Destruction via Cloudflare Alarm",
+      kunektayo: "30-Min Solo Auto-Destruction via Secure Countdown",
       isPositive: true,
     },
     {
@@ -45,7 +45,7 @@ export const LandingSecurity: React.FC = () => {
     <section id="security" className="w-full py-12 sm:py-20 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
         <div className="text-center space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5865f2]">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#9098C8]">
             Security & Privacy
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-[#f2f3f5] tracking-tight">
@@ -65,7 +65,7 @@ export const LandingSecurity: React.FC = () => {
                 <tr className="border-b border-[#35373c] bg-[#1e1f22]/70">
                   <th className="p-4 sm:p-5 font-bold text-[#dbdee1]">Architecture Feature</th>
                   <th className="p-4 sm:p-5 font-semibold text-[#949ba4]">Traditional Services</th>
-                  <th className="p-4 sm:p-5 font-bold text-[#5865f2]">KunekTayo</th>
+                  <th className="p-4 sm:p-5 font-bold text-[#9098C8]">KunekTayo</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#35373c]">
@@ -80,7 +80,7 @@ export const LandingSecurity: React.FC = () => {
                     </td>
                     <td className="p-4 sm:p-5 font-semibold text-[#f2f3f5]">
                       <div className="flex items-center gap-2">
-                        <Check size={16} className="text-[#23a55a] shrink-0" weight="bold" />
+                        <Check size={16} className="text-[#9098C8] shrink-0" weight="bold" />
                         <span>{row.kunektayo}</span>
                       </div>
                     </td>
@@ -94,7 +94,7 @@ export const LandingSecurity: React.FC = () => {
         {/* Cryptographic Primitives Highlight Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 pt-4">
           <div className="p-5 rounded-xl bg-[#2b2d31] border border-[#35373c] space-y-2">
-            <div className="flex items-center gap-2 text-[#5865f2]">
+            <div className="flex items-center gap-2 text-[#9098C8]">
               <LockKey size={18} weight="bold" />
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">
                 128-Bit Token Entropy
@@ -102,19 +102,19 @@ export const LandingSecurity: React.FC = () => {
             </div>
             <p className="text-xs text-[#949ba4] leading-relaxed">
               Tokens are generated using cryptographically secure pseudo-random values. Plaintext
-              tokens never touch the signaling server; only SHA-256 hashes are verified.
+              tokens never touch any server; only SHA-256 hashes are verified.
             </p>
           </div>
 
           <div className="p-5 rounded-xl bg-[#2b2d31] border border-[#35373c] space-y-2">
-            <div className="flex items-center gap-2 text-[#23a55a]">
+            <div className="flex items-center gap-2 text-[#9098C8]">
               <ShieldCheck size={18} weight="bold" />
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">
                 Constant-Time Verification
               </h4>
             </div>
             <p className="text-xs text-[#949ba4] leading-relaxed">
-              Hash checks use constant-time comparison (<code className="text-[#5865f2]">timingSafeEqual</code>)
+              Hash checks use constant-time cryptographic comparison
               to neutralize side-channel timing attacks attempting to deduce token digests.
             </p>
           </div>
@@ -127,8 +127,8 @@ export const LandingSecurity: React.FC = () => {
               </h4>
             </div>
             <p className="text-xs text-[#949ba4] leading-relaxed">
-              Cloudflare Durable Objects coordinate the room in volatile memory. When participants
-              leave, <code className="text-[#5865f2]">storage.deleteAll()</code> wipes every record instantly.
+              Transient coordination operates strictly in volatile memory. When participants
+              leave, all session data and tokens dissolve instantly.
             </p>
           </div>
         </div>

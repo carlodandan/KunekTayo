@@ -14,19 +14,19 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   const variantStyles = {
-    neutral: "bg-[#1e1f22] text-[#dbdee1] border-[#35373c]",
-    success: "bg-[#23a55a]/15 text-[#23a55a] border-[#23a55a]/30",
-    warning: "bg-[#f0b232]/15 text-[#f0b232] border-[#f0b232]/30",
-    danger: "bg-[#da373c]/15 text-[#da373c] border-[#da373c]/30",
-    info: "bg-[#5865f2]/15 text-[#5865f2] border-[#5865f2]/30",
+    neutral: "bg-[#1e1f22] text-[#9098C8] border-[#35373c]",
+    success: "bg-[#1F332B] text-white border-[#1F332B]",
+    warning: "bg-[#f0b232]/20 text-[#f0b232] border-[#f0b232]/40",
+    danger: "bg-[#da373c]/20 text-[#da373c] border-[#da373c]/40",
+    info: "bg-[#283E7C]/25 text-[#9098C8] border-[#283E7C]/40",
   };
 
   const dotColors = {
-    neutral: "bg-[#80848e]",
-    success: "bg-[#23a55a]",
+    neutral: "bg-[#9098C8]",
+    success: "bg-[#1F332B]",
     warning: "bg-[#f0b232]",
     danger: "bg-[#da373c]",
-    info: "bg-[#5865f2]",
+    info: "bg-[#9098C8]",
   };
 
   return (

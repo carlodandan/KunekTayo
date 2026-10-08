@@ -1,6 +1,6 @@
 import React from "react";
 import { Clock, Users, LockKey, WifiHigh } from "@phosphor-icons/react";
-import { ROOM_CONSTRAINTS, CHAT_CONSTRAINTS } from "@/constants/app";
+import { ROOM_CONSTRAINTS } from "@/constants/app";
 
 export const StatusBar: React.FC = () => {
   return (
@@ -8,11 +8,11 @@ export const StatusBar: React.FC = () => {
       <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-[#949ba4]">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-1.5 text-[#dbdee1]">
-            <LockKey size={14} className="text-[#5865f2]" weight="bold" />
+            <LockKey size={14} className="text-[#9098C8]" weight="bold" />
             <span>End-to-end P2P Media</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Users size={14} className="text-[#5865f2]" weight="bold" />
+            <Users size={14} className="text-[#9098C8]" weight="bold" />
             <span>Max {ROOM_CONSTRAINTS.MAX_PARTICIPANTS} participants</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -22,8 +22,8 @@ export const StatusBar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 text-[#949ba4]">
-          <WifiHigh size={14} className="text-[#23a55a]" weight="bold" />
-          <span>Chat TTL: {CHAT_CONSTRAINTS.DEFAULT_TTL_SECONDS}s</span>
+          <WifiHigh size={14} className="text-[#1C8051]" weight="bold" />
+          <span>P2P Direct • 60s TTL</span>
         </div>
       </div>
     </footer>

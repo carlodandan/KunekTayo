@@ -26,7 +26,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onToggleView,
 }) => {
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#1e1f22] text-[#dbdee1] selection:bg-[#5865f2]/40 selection:text-white">
+    <div className="min-h-screen w-full flex flex-col bg-[#1e1f22] text-[#dbdee1] selection:bg-[#283E7C]/40 selection:text-white">
       {/* Top Navigation */}
       <LandingNav
         onLaunchApp={onLaunchApp}

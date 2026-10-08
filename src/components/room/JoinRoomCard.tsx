@@ -31,7 +31,7 @@ export const JoinRoomCard: React.FC = () => {
     <Card className="flex flex-col justify-between border-[#35373c] bg-[#2b2d31] hover:border-[#4e5058] transition-colors text-left p-5 sm:p-6">
       <form onSubmit={handleJoin} className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
+          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
             <SignIn size={26} weight="duotone" />
           </div>
           <Badge variant="neutral">2-Person Max</Badge>
@@ -55,7 +55,7 @@ export const JoinRoomCard: React.FC = () => {
             error={displayError || undefined}
             rightIcon={
               displayError ? (
-                <WarningCircle size={18} className="text-red-400" weight="fill" />
+                <WarningCircle size={18} className="text-[#da373c]" weight="fill" />
               ) : null
             }
           />

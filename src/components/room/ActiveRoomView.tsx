@@ -226,8 +226,8 @@ export const ActiveRoomView: React.FC = () => {
     >
       {/* Drag & Drop Visual Overlay */}
       {isDraggingOver && (
-        <div className="absolute inset-0 z-40 bg-[#1e1f22]/95 rounded-3xl border-2 border-dashed border-[#5865f2] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-150">
-          <FileArrowUp size={48} className="text-[#5865f2] mb-2 animate-bounce" weight="bold" />
+        <div className="absolute inset-0 z-40 bg-[#1e1f22]/95 rounded-3xl border-2 border-dashed border-[#283E7C] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-150">
+          <FileArrowUp size={48} className="text-[#9098C8] mb-2 animate-bounce" weight="bold" />
           <h3 className="text-lg font-bold text-[#f2f3f5]">Drop files to send privately</h3>
           <p className="text-xs text-[#949ba4] mt-1 max-w-xs">
             Direct WebRTC P2P in-memory transfer. Vanishes completely on exit. Zero server upload.
@@ -252,7 +252,7 @@ export const ActiveRoomView: React.FC = () => {
 
         <div className="flex items-center gap-2.5 text-xs text-[#949ba4]">
           <div className="flex items-center gap-1.5">
-            <InfinityIcon size={15} className="text-[#23a55a]" weight="bold" />
+            <InfinityIcon size={15} className="text-[#9098C8]" weight="bold" />
             <span className="text-[11px] sm:text-xs">Active (2/2)</span>
           </div>
 
@@ -380,7 +380,7 @@ export const ActiveRoomView: React.FC = () => {
             size="md"
             onClick={toggleScreenShare}
             icon={<ProjectorScreen size={20} weight={isScreenSharing ? "fill" : "bold"} />}
-            className={cn("rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]", isScreenSharing && "border-2 border-[#5865f2]")}
+            className={cn("rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]", isScreenSharing && "border-2 border-[#283E7C]")}
             title={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
             aria-label={isScreenSharing ? "Stop Screen Sharing" : "Share Screen"}
           />
@@ -400,7 +400,7 @@ export const ActiveRoomView: React.FC = () => {
               }
               className={cn(
                 "rounded-full w-11 h-11 sm:w-12 sm:h-12 p-0 min-h-[44px] min-w-[44px]",
-                isPiPActive && "border-2 border-[#5865f2]"
+                isPiPActive && "border-2 border-[#283E7C]"
               )}
               title={isPiPActive ? "Exit Picture-in-Picture" : "Picture-in-Picture"}
               aria-label={isPiPActive ? "Exit Picture-in-Picture" : "Picture-in-Picture"}
@@ -419,7 +419,7 @@ export const ActiveRoomView: React.FC = () => {
               aria-label="P2P Shared Files"
             />
             {files.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#5865f2] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center pointer-events-none">
+              <span className="absolute -top-1 -right-1 bg-[#283E7C] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center pointer-events-none">
                 {files.length}
               </span>
             )}

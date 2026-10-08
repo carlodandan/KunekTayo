@@ -8,6 +8,11 @@ import { usePlatform } from "@/hooks/usePlatform";
 import { cn } from "@/utils/cn";
 
 export const FoundationInfoCard: React.FC = () => {
+  // Diagnostic card is only visible in development environments
+  if (!env.isDev) {
+    return null;
+  }
+
   const { isTauriApp, isWindows, isAndroid, isWeb } = usePlatform();
   const [rustResponse, setRustResponse] = useState<string | null>(null);
   const [isTestingIpc, setIsTestingIpc] = useState(false);
@@ -44,13 +49,13 @@ export const FoundationInfoCard: React.FC = () => {
         aria-expanded={isExpanded}
       >
         <div className="flex items-center gap-2">
-          <GearSix size={18} className="text-[#949ba4] group-hover:text-[#5865f2] transition-colors" weight="bold" />
+          <GearSix size={18} className="text-[#949ba4] group-hover:text-[#9098C8] transition-colors" weight="bold" />
           <h3 className="text-xs sm:text-sm font-semibold text-[#dbdee1] uppercase tracking-wider group-hover:text-[#f2f3f5] transition-colors">
             System & Foundation Diagnostics
           </h3>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="success" className="hidden sm:inline-flex">
+          <Badge variant="info" className="hidden sm:inline-flex">
             <CheckCircle size={13} weight="fill" />
             Tauri 2 • React 19 • Tailwind v4
           </Badge>
@@ -88,7 +93,7 @@ export const FoundationInfoCard: React.FC = () => {
         </div>
         <div className="p-3 rounded-xl bg-[#1e1f22] border border-[#35373c] space-y-1">
           <span className="text-[#949ba4]">Ephemeral Chat TTL</span>
-          <p className="font-semibold text-[#5865f2]">
+          <p className="font-semibold text-[#9098C8]">
             {env.messageDefaultTtlSeconds}s auto-purge
           </p>
         </div>
@@ -96,10 +101,10 @@ export const FoundationInfoCard: React.FC = () => {
 
       <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#1e1f22] p-3.5 rounded-xl border border-[#35373c]">
         <div className="flex items-center gap-2.5 text-xs text-[#dbdee1]">
-          <TerminalWindow size={16} className="text-[#5865f2]" />
+          <TerminalWindow size={16} className="text-[#9098C8]" />
           <span>
             {rustResponse ? (
-              <span className="font-mono text-[#23a55a]">{rustResponse}</span>
+              <span className="font-mono text-[#9098C8]">{rustResponse}</span>
             ) : (
               "Test Tauri Rust Core Command Bridge:"
             )}

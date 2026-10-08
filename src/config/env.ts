@@ -56,7 +56,7 @@ function getSignalingUrl(): string {
   }
 
   // Fallback for native Tauri app (Windows / Android) when VITE_SIGNALING_URL is omitted:
-  // Points to the live Cloudflare Pages Service Binding endpoint
+  // Points to the live production signaling endpoint
   return "wss://kunektayo.pages.dev";
 }
 

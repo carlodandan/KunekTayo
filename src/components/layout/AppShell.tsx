@@ -16,7 +16,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   showViewToggle,
 }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#1e1f22] text-[#dbdee1] selection:bg-[#5865f2]/40 selection:text-white pt-safe pb-safe pl-safe pr-safe">
+    <div className="min-h-screen flex flex-col bg-[#1e1f22] text-[#dbdee1] selection:bg-[#283E7C]/40 selection:text-white pt-safe pb-safe pl-safe pr-safe">
       <Header
         activeView={activeView}
         onToggleView={onToggleView}

@@ -16,12 +16,12 @@ export const CreateRoomCard: React.FC = () => {
     <Card className="flex flex-col justify-between border-[#35373c] bg-[#2b2d31] hover:border-[#4e5058] transition-colors text-left p-5 sm:p-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
+          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
             <PlusCircle size={26} weight="duotone" />
           </div>
-          <Badge variant="success">
+          <Badge variant="info">
             <ShieldCheck size={13} weight="fill" />
-            Durable Objects
+            Direct P2P
           </Badge>
         </div>
 
@@ -35,8 +35,8 @@ export const CreateRoomCard: React.FC = () => {
 
         <div className="p-3.5 rounded-xl bg-[#1e1f22] border border-[#35373c] text-xs space-y-1.5 text-[#949ba4]">
           <div className="flex items-center justify-between">
-            <span>Authoritative State:</span>
-            <span className="text-[#dbdee1] font-medium">Cloudflare Durable Object</span>
+            <span>Connection Architecture:</span>
+            <span className="text-[#dbdee1] font-medium">Volatile In-Memory P2P</span>
           </div>
           <div className="flex items-center justify-between">
             <span>Solo Expiration:</span>

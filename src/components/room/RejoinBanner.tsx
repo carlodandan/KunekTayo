@@ -21,7 +21,7 @@ export const RejoinBanner: React.FC = () => {
   return (
     <div className="w-full max-w-2xl mx-auto p-4 rounded-xl bg-[#2b2d31] border border-[#35373c] text-left flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 animate-in fade-in duration-200">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-[#1e1f22] text-[#5865f2] flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-[#1e1f22] text-[#9098C8] flex items-center justify-center shrink-0">
           <PlugsConnected size={18} weight="bold" />
         </div>
         <div>

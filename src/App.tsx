@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { CreateRoomCard } from "@/components/room/CreateRoomCard";
 import { JoinRoomCard } from "@/components/room/JoinRoomCard";
 import { FoundationInfoCard } from "@/components/room/FoundationInfoCard";
+import { env } from "@/config/env";
 import { WaitingRoomView } from "@/components/room/WaitingRoomView";
 import { ActiveRoomView } from "@/components/room/ActiveRoomView";
 import { ExpiredRoomView } from "@/components/room/ExpiredRoomView";
@@ -14,16 +15,18 @@ import { ChatProvider } from "@/context/ChatContext";
 import { FileTransferProvider } from "@/context/FileTransferContext";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { usePlatform } from "@/hooks/usePlatform";
-import { Sparkle, WarningCircle, X } from "@phosphor-icons/react";
+import { WarningCircle, X } from "@phosphor-icons/react";
 import { InviteJoinModal } from "@/components/room/InviteJoinModal";
 
 function RoomAppContent() {
   const { status, error, clearError, createRoom } = useRoom();
   const { isWeb } = usePlatform();
 
-  // On web, start on the sleek landing page; on native desktop/mobile apps, start in workspace
-  // If an invite link is detected in URL, always show app workspace with the join modal
+  // On web, start on the sleek landing page; on native desktop/mobile apps (Windows / Android),
+  // completely bypass the landing page and go directly into the app workspace.
+  // If an invite link is detected in URL, always show app workspace with the join modal.
   const [currentView, setCurrentView] = useState<"landing" | "app">(() => {
+    if (!isWeb) return "app";
     if (typeof window !== "undefined") {
       const hash = window.location.hash || "";
       const search = window.location.search || "";
@@ -31,7 +34,7 @@ function RoomAppContent() {
         return "app";
       }
     }
-    return isWeb ? "landing" : "app";
+    return "landing";
   });
 
   // Render Waiting room (1 participant, 30m countdown running)
@@ -64,8 +67,9 @@ function RoomAppContent() {
     );
   }
 
-  // If in idle state and landing view is active
-  if (currentView === "landing") {
+  // If in idle state and on the web, render landing page
+  // On native desktop (Windows) and mobile (Android) apps, LandingPage is completely hidden.
+  if (isWeb && currentView === "landing") {
     return (
       <>
         <InviteJoinModal />
@@ -87,8 +91,8 @@ function RoomAppContent() {
   return (
     <AppShell
       activeView="app"
-      onToggleView={(view) => setCurrentView(view)}
-      showViewToggle={true}
+      onToggleView={isWeb ? (view) => setCurrentView(view) : undefined}
+      showViewToggle={isWeb}
     >
       <div className="w-full flex flex-col items-center text-center space-y-5 sm:space-y-8 my-auto py-2 sm:py-6">
         {/* Direct Invite Link Detection Modal */}
@@ -119,14 +123,10 @@ function RoomAppContent() {
 
         {/* Hero Section */}
         <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2b2d31] border border-[#35373c] text-[#dbdee1] text-xs font-semibold">
-            <Sparkle size={13} weight="fill" className="text-[#5865f2]" />
-            <span>Lightweight • Temporary • 1-to-1</span>
-          </div>
 
           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#f2f3f5] tracking-tight leading-tight">
             Connect directly. <br className="hidden sm:inline" />
-            <span className="text-[#5865f2]">
+            <span className="text-[#9098C8]">
               Ephemeral by design.
             </span>
           </h2>
@@ -143,10 +143,12 @@ function RoomAppContent() {
           <JoinRoomCard />
         </div>
 
-        {/* Foundation & Architecture Diagnostics */}
-        <div className="w-full max-w-4xl">
-          <FoundationInfoCard />
-        </div>
+        {/* Foundation & Architecture Diagnostics (Development only) */}
+        {env.isDev && (
+          <div className="w-full max-w-4xl">
+            <FoundationInfoCard />
+          </div>
+        )}
       </div>
     </AppShell>
   );

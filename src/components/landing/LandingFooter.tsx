@@ -21,7 +21,7 @@ export const LandingFooter: React.FC = () => {
               Lightweight, temporary 1-to-1 communication desktop, mobile, and web app.
               Connect directly. Talk privately. Leave with zero trace.
             </p>
-            <div className="flex items-center gap-2 text-xs text-[#23a55a]">
+            <div className="flex items-center gap-2 text-xs text-[#9098C8]">
               <ShieldCheck size={16} weight="fill" />
               <span>Zero server database • Zero user tracking</span>
             </div>

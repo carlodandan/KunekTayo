@@ -83,7 +83,7 @@ export const LandingNav: React.FC<LandingNavProps> = ({
         <div className="flex items-center gap-2.5">
           {/* Platform indicator badge */}
           <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2b2d31] border border-[#35373c] text-[#dbdee1] text-xs">
-            <span className="text-[#5865f2]">{platform.icon}</span>
+            <span className="text-[#9098C8]">{platform.icon}</span>
             <span>{platform.label}</span>
           </div>
 
@@ -106,7 +106,7 @@ export const LandingNav: React.FC<LandingNavProps> = ({
                 onClick={() => onToggleView("app")}
                 className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                   activeView === "app"
-                    ? "bg-[#5865f2] text-white"
+                    ? "bg-[#283E7C] text-white"
                     : "text-[#949ba4] hover:text-[#f2f3f5]"
                 }`}
               >
@@ -119,7 +119,7 @@ export const LandingNav: React.FC<LandingNavProps> = ({
           <button
             type="button"
             onClick={onLaunchApp}
-            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-lg bg-[#5865f2] hover:bg-[#4752c4] active:scale-[0.98] text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865f2] min-h-[40px]"
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-lg bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283E7C] min-h-[40px]"
           >
             <span>Launch App</span>
             <ArrowRight size={14} weight="bold" />

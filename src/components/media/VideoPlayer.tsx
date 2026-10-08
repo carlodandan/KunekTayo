@@ -65,7 +65,7 @@ export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
       className={cn(
         "relative w-full h-full bg-[#1e1f22] rounded-2xl overflow-hidden border border-[#35373c] flex items-center justify-center select-none transition-colors duration-200",
         !isPip && "min-h-[200px] sm:min-h-[280px]",
-        isPip && "min-h-0 cursor-pointer hover:border-[#5865f2]",
+        isPip && "min-h-0 cursor-pointer hover:border-[#283E7C]",
         className
       )}
     >

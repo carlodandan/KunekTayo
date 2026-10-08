@@ -91,7 +91,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#35373c] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
+            <div className="w-9 h-9 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
               <FileArrowUp size={20} weight="bold" />
             </div>
             <div>
@@ -109,8 +109,8 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
         </div>
 
         {/* Security Notice */}
-        <div className="px-3.5 py-2 rounded-xl bg-[#23a55a]/10 border border-[#23a55a]/25 text-xs text-[#23a55a] flex items-center gap-2 select-none shrink-0">
-          <ShieldCheck size={18} className="shrink-0 text-[#23a55a]" />
+        <div className="px-3.5 py-2 rounded-xl bg-[#283E7C]/15 border border-[#283E7C]/30 text-xs text-[#9098C8] flex items-center gap-2 select-none shrink-0">
+          <ShieldCheck size={18} className="shrink-0 text-[#9098C8]" />
           <span>Direct P2P over WebRTC DataChannel. Zero server upload. Files vanish upon call exit.</span>
         </div>
 
@@ -123,7 +123,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
           className={cn(
             "p-6 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-150 shrink-0",
             isDragging
-              ? "border-[#5865f2] bg-[#5865f2]/10"
+              ? "border-[#283E7C] bg-[#283E7C]/10"
               : "border-[#35373c] hover:border-[#4e5058] bg-[#1e1f22] hover:bg-[#1e1f22]/80"
           )}
         >
@@ -134,7 +134,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
             className="hidden"
             multiple
           />
-          <div className="w-12 h-12 rounded-full bg-[#2b2d31] border border-[#35373c] flex items-center justify-center text-[#5865f2] mb-3">
+          <div className="w-12 h-12 rounded-full bg-[#2b2d31] border border-[#35373c] flex items-center justify-center text-[#9098C8] mb-3">
             <FileArrowUp size={24} weight="bold" />
           </div>
           <p className="text-sm font-medium text-[#f2f3f5]">
@@ -168,10 +168,10 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
                       className={cn(
                         "h-full transition-all duration-150 rounded-full",
                         t.status === "completed"
-                          ? "bg-[#23a55a]"
+                          ? "bg-[#9098C8]"
                           : t.status === "error"
                           ? "bg-[#da373c]"
-                          : "bg-[#5865f2]"
+                          : "bg-[#283E7C]"
                       )}
                       style={{ width: `${t.progress}%` }}
                     />

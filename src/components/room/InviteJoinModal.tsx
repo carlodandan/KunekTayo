@@ -57,7 +57,7 @@ export const InviteJoinModal: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
+          <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
             <Link size={24} weight="bold" />
           </div>
           <div>
@@ -69,11 +69,11 @@ export const InviteJoinModal: React.FC = () => {
         <div className="p-3.5 rounded-xl bg-[#1e1f22] border border-[#35373c] text-xs text-[#dbdee1] space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[#949ba4]">Target Room:</span>
-            <span className="font-mono text-[#5865f2] font-semibold">
+            <span className="font-mono text-[#9098C8] font-semibold">
               #{pendingInvite.roomId.substring(0, 8)}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-[#23a55a]">
+          <div className="flex items-center gap-1.5 text-[#9098C8]">
             <ShieldCheck size={14} weight="fill" />
             <span>Cryptographic invite token verified</span>
           </div>
