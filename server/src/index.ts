@@ -121,7 +121,8 @@ export default {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       } catch (err) {
-        return new Response(JSON.stringify({ error: String(err) }), {
+        console.error("Failed to create room:", err);
+        return new Response(JSON.stringify({ error: "Internal server error", code: "INTERNAL_ERROR" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
