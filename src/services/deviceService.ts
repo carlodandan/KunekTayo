@@ -72,11 +72,21 @@ class DeviceService {
   /**
    * Switch active audio input device on an existing MediaStream
    */
-  async switchAudioDevice(stream: MediaStream, deviceId: string): Promise<MediaStreamTrack | null> {
+  async switchAudioDevice(
+    stream: MediaStream,
+    deviceId: string,
+    noiseSuppression = true
+  ): Promise<MediaStreamTrack | null> {
     try {
       const oldTrack = stream.getAudioTracks()[0];
       const newStream = await navigator.mediaDevices.getUserMedia({
-        audio: { deviceId: { exact: deviceId } },
+        audio: {
+          deviceId: { exact: deviceId },
+          echoCancellation: true,
+          noiseSuppression,
+          autoGainControl: true,
+          channelCount: 1,
+        },
       });
       const newTrack = newStream.getAudioTracks()[0];
 

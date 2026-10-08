@@ -10,9 +10,11 @@ interface WebRtcContextValue {
   isMuted: boolean;
   isCameraOff: boolean;
   isScreenSharing: boolean;
+  isNoiseSuppressionEnabled: boolean;
   toggleMic: () => void;
   toggleCamera: () => void;
   toggleScreenShare: () => Promise<void>;
+  setNoiseSuppression: (enabled: boolean) => Promise<boolean>;
 }
 
 const WebRtcContext = createContext<WebRtcContextValue | null>(null);
@@ -26,6 +28,9 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isNoiseSuppressionEnabled, setIsNoiseSuppressionEnabled] = useState(
+    webrtcService.isNoiseSuppressionEnabled()
+  );
 
   useEffect(() => {
     const unsubLocal = webrtcService.on("local_stream", (stream: MediaStream) => {
@@ -50,12 +55,17 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setScreenStream(data.stream);
     });
 
+    const unsubAudioProcessing = webrtcService.on("audio_processing_change", (data: { noiseSuppression: boolean }) => {
+      setIsNoiseSuppressionEnabled(data.noiseSuppression);
+    });
+
     return () => {
       unsubLocal();
       unsubRemote();
       unsubConn();
       unsubMediaState();
       unsubScreenShare();
+      unsubAudioProcessing();
     };
   }, []);
 
@@ -101,6 +111,12 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const setNoiseSuppression = async (enabled: boolean) => {
+    const updated = await webrtcService.setNoiseSuppression(enabled);
+    setIsNoiseSuppressionEnabled(updated);
+    return updated;
+  };
+
   return (
     <WebRtcContext.Provider
       value={{
@@ -111,9 +127,11 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isMuted,
         isCameraOff,
         isScreenSharing,
+        isNoiseSuppressionEnabled,
         toggleMic,
         toggleCamera,
         toggleScreenShare,
+        setNoiseSuppression,
       }}
     >
       {children}
