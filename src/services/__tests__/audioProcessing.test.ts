@@ -118,7 +118,7 @@ describe("Audio Processing and Noise Suppression", () => {
       addTrack: vi.fn(),
     } as any;
 
-    await deviceService.switchAudioDevice(mockStream, "mic-studio-id", false);
+    await deviceService.switchAudioDevice(mockStream, "mic-studio-id", async () => {}, false);
 
     expect(capturedConstraints.audio).toEqual({
       deviceId: { exact: "mic-studio-id" },

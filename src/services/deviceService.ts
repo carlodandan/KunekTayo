@@ -48,13 +48,23 @@ class DeviceService {
   /**
    * Switch active video input device on an existing MediaStream
    */
-  async switchVideoDevice(stream: MediaStream, deviceId: string): Promise<MediaStreamTrack | null> {
+  async switchVideoDevice(
+    stream: MediaStream,
+    deviceId: string,
+    replaceTrack: (track: MediaStreamTrack) => Promise<void>
+  ): Promise<MediaStreamTrack | null> {
+    let newTrack: MediaStreamTrack | undefined;
     try {
       const oldTrack = stream.getVideoTracks()[0];
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { deviceId: { exact: deviceId } },
       });
-      const newTrack = newStream.getVideoTracks()[0];
+      newTrack = newStream.getVideoTracks()[0];
+      if (!newTrack) return null;
+      newTrack.enabled = oldTrack?.enabled ?? true;
+
+      // Keep the current track live until the peer accepts its replacement.
+      await replaceTrack(newTrack);
 
       if (oldTrack) {
         stream.removeTrack(oldTrack);
@@ -64,6 +74,7 @@ class DeviceService {
       stream.addTrack(newTrack);
       return newTrack;
     } catch (err) {
+      newTrack?.stop();
       console.error("Failed to switch video device:", err);
       return null;
     }
@@ -75,8 +86,10 @@ class DeviceService {
   async switchAudioDevice(
     stream: MediaStream,
     deviceId: string,
+    replaceTrack: (track: MediaStreamTrack) => Promise<void>,
     noiseSuppression = true
   ): Promise<MediaStreamTrack | null> {
+    let newTrack: MediaStreamTrack | undefined;
     try {
       const oldTrack = stream.getAudioTracks()[0];
       const newStream = await navigator.mediaDevices.getUserMedia({
@@ -88,7 +101,12 @@ class DeviceService {
           channelCount: 1,
         },
       });
-      const newTrack = newStream.getAudioTracks()[0];
+      newTrack = newStream.getAudioTracks()[0];
+      if (!newTrack) return null;
+      newTrack.enabled = oldTrack?.enabled ?? true;
+
+      // Keep the current track live until the peer accepts its replacement.
+      await replaceTrack(newTrack);
 
       if (oldTrack) {
         stream.removeTrack(oldTrack);
@@ -98,6 +116,7 @@ class DeviceService {
       stream.addTrack(newTrack);
       return newTrack;
     } catch (err) {
+      newTrack?.stop();
       console.error("Failed to switch audio device:", err);
       return null;
     }
