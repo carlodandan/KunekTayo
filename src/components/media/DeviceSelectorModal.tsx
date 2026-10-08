@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import {
-  X,
-  Microphone,
-  VideoCamera,
-  SpeakerHigh,
-  GearSix,
-  Check,
-  Waveform,
+  XIcon,
+  MicrophoneIcon,
+  VideoCameraIcon,
+  SpeakerHighIcon,
+  GearSixIcon,
+  CheckIcon,
+  WaveformIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -94,12 +94,12 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
           className="absolute top-4 right-4 text-[#949ba4] hover:text-[#f2f3f5] p-1 rounded-lg hover:bg-[#35373c] transition-colors cursor-pointer"
           aria-label="Close"
         >
-          <X size={18} />
+          <XIcon size={18} />
         </button>
 
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
-            <GearSix size={22} weight="bold" />
+            <GearSixIcon size={22} weight="bold" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-[#f2f3f5] tracking-tight">
@@ -111,11 +111,11 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
           </div>
         </div>
 
-        {/* Microphone Selection */}
+        {/* MicrophoneIcon Selection */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
-            <Microphone size={14} className="text-[#9098C8]" />
-            <span>Microphone</span>
+            <MicrophoneIcon size={14} className="text-[#9098C8]" />
+            <span>MicrophoneIcon</span>
           </label>
           <select
             value={selectedAudioInput}
@@ -123,7 +123,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
             className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors"
           >
             {devices.audioInputs.length === 0 ? (
-              <option value="">Default Microphone</option>
+              <option value="">Default MicrophoneIcon</option>
             ) : (
               devices.audioInputs.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>
@@ -138,7 +138,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         <div className="bg-[#1e1f22] border border-[#35373c] rounded-xl p-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#2b2d31] flex items-center justify-center text-[#9098C8] shrink-0">
-              <Waveform size={18} weight="bold" />
+              <WaveformIcon size={18} weight="bold" />
             </div>
             <div>
               <p className="text-xs font-semibold text-[#f2f3f5]">
@@ -171,7 +171,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         {/* Camera Selection */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
-            <VideoCamera size={14} className="text-[#9098C8]" />
+            <VideoCameraIcon size={14} className="text-[#9098C8]" />
             <span>Camera</span>
           </label>
           <select
@@ -195,7 +195,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         {devices.audioOutputs.length > 0 && (
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
-              <SpeakerHigh size={14} className="text-[#9098C8]" />
+              <SpeakerHighIcon size={14} className="text-[#9098C8]" />
               <span>Speaker</span>
             </label>
             <select className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors">
@@ -221,7 +221,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
             variant="primary"
             size="md"
             onClick={handleApply}
-            icon={savedSuccess ? <Check size={16} weight="bold" /> : undefined}
+            icon={savedSuccess ? <CheckIcon size={16} weight="bold" /> : undefined}
           >
             {savedSuccess ? "Applied!" : "Apply Changes"}
           </Button>

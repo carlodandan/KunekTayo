@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { User, VideoCameraSlash, MicrophoneSlash } from "@phosphor-icons/react";
+import { UserIcon, VideoCameraSlashIcon, MicrophoneSlashIcon } from "@phosphor-icons/react";
 import { cn } from "@/utils/cn";
 
 export interface VideoPlayerProps {
@@ -91,11 +91,11 @@ export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
               isPip ? "w-8 h-8 sm:w-10 sm:h-10" : "w-16 h-16 sm:w-20 sm:h-20"
             )}
           >
-            <User size={isPip ? 18 : 36} weight="bold" />
+            <UserIcon size={isPip ? 18 : 36} weight="bold" />
           </div>
           {!isPip && (
             <div className="flex items-center gap-1.5 text-xs text-[#949ba4]">
-              <VideoCameraSlash size={14} className="text-[#da373c]" />
+              <VideoCameraSlashIcon size={14} className="text-[#da373c]" />
               <span>Camera Off</span>
             </div>
           )}
@@ -122,7 +122,7 @@ export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
               isPip ? "p-1" : "p-1.5"
             )}
           >
-            <MicrophoneSlash size={isPip ? 10 : 14} weight="bold" />
+            <MicrophoneSlashIcon size={isPip ? 10 : 14} weight="bold" />
           </span>
         )}
       </div>

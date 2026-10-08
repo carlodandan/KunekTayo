@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { WifiHigh, WifiMedium, WifiLow } from "@phosphor-icons/react";
+import { WifiHighIcon, WifiMediumIcon, WifiLowIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/common/Badge";
 import { webrtcService } from "@/services/webrtcService";
 
@@ -57,10 +57,10 @@ export const ConnectionQualityBadge: React.FC = () => {
 
   const Icon =
     stats.quality === "excellent" || stats.quality === "good"
-      ? WifiHigh
+      ? WifiHighIcon
       : stats.quality === "fair"
-      ? WifiMedium
-      : WifiLow;
+      ? WifiMediumIcon
+      : WifiLowIcon;
 
   return (
     <Badge variant={variant} className="gap-1.5 select-none" title="Live WebRTC Connection Quality">

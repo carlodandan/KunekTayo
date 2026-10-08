@@ -1,14 +1,14 @@
 import React, { useRef, useState } from "react";
 import {
-  X,
-  FileArrowUp,
-  FileArrowDown,
-  FileImage,
-  FileText,
-  FileZip,
-  File as FileGeneric,
-  Clock,
-  ShieldCheck,
+  XIcon,
+  FileArrowUpIcon,
+  FileArrowDownIcon,
+  FileImageIcon,
+  FileTextIcon,
+  FileZipIcon,
+  FileIcon,
+  ClockIcon,
+  ShieldCheckIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -30,14 +30,14 @@ function formatBytes(bytes: number, decimals = 1): string {
 }
 
 function getFileIcon(mime: string, isImage: boolean) {
-  if (isImage) return <FileImage size={24} className="text-emerald-400" weight="fill" />;
+  if (isImage) return <FileImageIcon size={24} className="text-emerald-400" weight="fill" />;
   if (mime.includes("pdf") || mime.includes("text") || mime.includes("document")) {
-    return <FileText size={24} className="text-blue-400" weight="fill" />;
+    return <FileTextIcon size={24} className="text-blue-400" weight="fill" />;
   }
   if (mime.includes("zip") || mime.includes("tar") || mime.includes("rar")) {
-    return <FileZip size={24} className="text-amber-400" weight="fill" />;
+    return <FileZipIcon size={24} className="text-amber-400" weight="fill" />;
   }
-  return <FileGeneric size={24} className="text-slate-400" weight="fill" />;
+  return <FileIcon size={24} className="text-slate-400" weight="fill" />;
 }
 
 export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose }) => {
@@ -92,7 +92,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
         <div className="flex items-center justify-between pb-3 border-b border-[#35373c] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
-              <FileArrowUp size={20} weight="bold" />
+              <FileArrowUpIcon size={20} weight="bold" />
             </div>
             <div>
               <h2 className="text-base font-semibold text-[#f2f3f5]">P2P File & Image Sharing</h2>
@@ -104,13 +104,13 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
             className="p-2 text-[#949ba4] hover:text-[#f2f3f5] rounded-lg hover:bg-[#35373c] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Close"
           >
-            <X size={20} />
+            <XIcon size={20} />
           </button>
         </div>
 
         {/* Security Notice */}
         <div className="px-3.5 py-2 rounded-xl bg-[#283E7C]/15 border border-[#283E7C]/30 text-xs text-[#9098C8] flex items-center gap-2 select-none shrink-0">
-          <ShieldCheck size={18} className="shrink-0 text-[#9098C8]" />
+          <ShieldCheckIcon size={18} className="shrink-0 text-[#9098C8]" />
           <span>Direct P2P over WebRTC DataChannel. Zero server upload. Files vanish upon call exit.</span>
         </div>
 
@@ -135,7 +135,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
             multiple
           />
           <div className="w-12 h-12 rounded-full bg-[#2b2d31] border border-[#35373c] flex items-center justify-center text-[#9098C8] mb-3">
-            <FileArrowUp size={24} weight="bold" />
+            <FileArrowUpIcon size={24} weight="bold" />
           </div>
           <p className="text-sm font-medium text-[#f2f3f5]">
             Click to upload or drag & drop files
@@ -190,7 +190,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
 
           {files.length === 0 ? (
             <div className="h-28 flex flex-col items-center justify-center text-[#80848e] text-xs text-center">
-              <Clock size={24} className="mb-1 text-[#80848e]" />
+              <ClockIcon size={24} className="mb-1 text-[#80848e]" />
               <span>No files shared in this session yet.</span>
             </div>
           ) : (
@@ -226,7 +226,7 @@ export const FileShareModal: React.FC<FileShareModalProps> = ({ isOpen, onClose 
                     className="p-2 rounded-lg bg-[#383a40] hover:bg-[#4e5058] text-[#f2f3f5] transition-colors flex items-center gap-1.5 text-xs font-medium min-h-[40px] min-w-[40px] justify-center"
                     title="Download"
                   >
-                    <FileArrowDown size={16} weight="bold" />
+                    <FileArrowDownIcon size={16} weight="bold" />
                   </a>
                 </div>
               </div>

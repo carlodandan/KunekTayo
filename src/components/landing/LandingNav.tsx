@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowRight, Desktop, DeviceMobile, Globe } from "@phosphor-icons/react";
+import { ArrowRightIcon, DesktopIcon, DeviceMobileIcon, GlobeIcon } from "@phosphor-icons/react";
 import { usePlatform } from "@/hooks/usePlatform";
 import { APP_NAME, APP_VERSION } from "@/constants/app";
 
@@ -18,9 +18,9 @@ export const LandingNav: React.FC<LandingNavProps> = ({
   const { isAndroid, isWindows } = usePlatform();
 
   const getPlatformLabel = () => {
-    if (isAndroid) return { label: "Android", icon: <DeviceMobile size={13} weight="bold" /> };
-    if (isWindows) return { label: "Windows", icon: <Desktop size={13} weight="bold" /> };
-    return { label: "Web", icon: <Globe size={13} weight="bold" /> };
+    if (isAndroid) return { label: "Android", icon: <DeviceMobileIcon size={13} weight="bold" /> };
+    if (isWindows) return { label: "Windows", icon: <DesktopIcon size={13} weight="bold" /> };
+    return { label: "Web", icon: <GlobeIcon size={13} weight="bold" /> };
   };
 
   const platform = getPlatformLabel();
@@ -45,7 +45,7 @@ export const LandingNav: React.FC<LandingNavProps> = ({
           </div>
         </div>
 
-        {/* Center Nav Links (Desktop) */}
+        {/* Center Nav Links (DesktopIcon) */}
         <div className="hidden md:flex items-center gap-6 text-xs font-medium text-[#949ba4]">
           <a
             href="#features"
@@ -122,7 +122,7 @@ export const LandingNav: React.FC<LandingNavProps> = ({
             className="inline-flex items-center justify-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-lg bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283E7C] min-h-[40px]"
           >
             <span>Launch App</span>
-            <ArrowRight size={14} weight="bold" />
+            <ArrowRightIcon size={14} weight="bold" />
           </button>
         </div>
       </div>

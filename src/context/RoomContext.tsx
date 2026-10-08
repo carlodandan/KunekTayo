@@ -42,7 +42,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rejoinSession, setRejoinSession] = useState<RejoinSession | null>(null);
   const [now, setNow] = useState(Date.now());
 
-  // Check for cached rejoin session on mount
+  // CheckIcon for cached rejoin session on mount
   useEffect(() => {
     const cached = roomService.getRejoinSession();
     if (cached) {

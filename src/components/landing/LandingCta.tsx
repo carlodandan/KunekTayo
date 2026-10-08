@@ -1,5 +1,5 @@
 import React from "react";
-import { PlusCircle, DownloadSimple } from "@phosphor-icons/react";
+import { PlusCircleIcon, DownloadSimpleIcon } from "@phosphor-icons/react";
 
 interface LandingCtaProps {
   onCreateRoom: () => void;
@@ -24,7 +24,7 @@ export const LandingCta: React.FC<LandingCtaProps> = ({ onCreateRoom }) => {
             onClick={onCreateRoom}
             className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px]"
           >
-            <PlusCircle size={20} weight="bold" />
+            <PlusCircleIcon size={20} weight="bold" />
             <span>Create Instant Room</span>
           </button>
 
@@ -32,7 +32,7 @@ export const LandingCta: React.FC<LandingCtaProps> = ({ onCreateRoom }) => {
             href="#downloads"
             className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#1e1f22] hover:bg-[#35373c] active:scale-[0.98] border border-[#35373c] text-[#f2f3f5] text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px]"
           >
-            <DownloadSimple size={20} weight="bold" />
+            <DownloadSimpleIcon size={20} weight="bold" />
             <span>Download Apps</span>
           </a>
         </div>

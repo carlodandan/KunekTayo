@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, SignIn, X, ShieldCheck } from "@phosphor-icons/react";
+import { LinkIcon, SignInIcon, XIcon, ShieldCheckIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
@@ -11,7 +11,7 @@ export const InviteJoinModal: React.FC = () => {
   const [pendingInvite, setPendingInvite] = useState<DeepLinkPayload | null>(null);
 
   useEffect(() => {
-    // Check initial URL parameters
+    // CheckIcon initial URL parameters
     const initial = deepLinkService.checkInitialUrl();
     if (initial && status === "idle") {
       setPendingInvite(initial);
@@ -53,12 +53,12 @@ export const InviteJoinModal: React.FC = () => {
           className="absolute top-4 right-4 text-[#949ba4] hover:text-[#f2f3f5] p-1 rounded-lg hover:bg-[#35373c] transition-colors cursor-pointer"
           aria-label="Close"
         >
-          <X size={18} />
+          <XIcon size={18} />
         </button>
 
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
-            <Link size={24} weight="bold" />
+            <LinkIcon size={24} weight="bold" />
           </div>
           <div>
             <Badge variant="info">Direct Invite Detected</Badge>
@@ -74,7 +74,7 @@ export const InviteJoinModal: React.FC = () => {
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-[#9098C8]">
-            <ShieldCheck size={14} weight="fill" />
+            <ShieldCheckIcon size={14} weight="fill" />
             <span>Cryptographic invite token verified</span>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const InviteJoinModal: React.FC = () => {
             size="md"
             onClick={handleJoin}
             isLoading={isLoading}
-            icon={<SignIn size={18} weight="bold" />}
+            icon={<SignInIcon size={18} weight="bold" />}
             className="flex-1"
           >
             Join Room Now

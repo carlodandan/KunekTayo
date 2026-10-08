@@ -1,52 +1,52 @@
 import React from "react";
 import {
-  Users,
-  Clock,
-  LockKey,
-  Fire,
-  Paperclip,
-  ShieldCheck,
+  UsersIcon,
+  ClockIcon,
+  LockKeyIcon,
+  FireIcon,
+  PaperclipIcon,
+  ShieldCheckIcon,
 } from "@phosphor-icons/react";
 
 export const LandingFeatures: React.FC = () => {
   const features = [
     {
-      icon: <Users size={24} weight="bold" className="text-[#9098C8]" />,
+      icon: <UsersIcon size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Strict 1-to-1 Boundary",
       description:
         "Every room is capped at exactly 2 participants (Host and Guest). Any third party attempting to enter is immediately rejected by authoritative server state.",
       badge: "No Groups",
     },
     {
-      icon: <Clock size={24} weight="bold" className="text-[#f0b232]" />,
+      icon: <ClockIcon size={24} weight="bold" className="text-[#f0b232]" />,
       title: "30-Minute Solo Room Expiration",
       description:
         "When you create a room, an automatic 30-minute countdown starts. If your peer doesn't connect within 30 minutes, the room self-destructs.",
       badge: "Auto-Purge",
     },
     {
-      icon: <LockKey size={24} weight="bold" className="text-[#9098C8]" />,
+      icon: <LockKeyIcon size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Direct Peer-to-Peer Media",
       description:
         "High-definition video and voice travel directly device-to-device through WebRTC DTLS-SRTP encryption, bypassing central media servers entirely.",
       badge: "End-to-End Encrypted",
     },
     {
-      icon: <Fire size={24} weight="fill" className="text-[#f0b232]" />,
+      icon: <FireIcon size={24} weight="fill" className="text-[#f0b232]" />,
       title: "Vanishing Ephemeral Chat",
       description:
         "In-band RTCDataChannel text chat with configurable TTL (15s to 5m). Messages exist solely in volatile browser RAM and auto-expire with a burning timer.",
       badge: "In-Memory Only",
     },
     {
-      icon: <Paperclip size={24} weight="bold" className="text-[#9098C8]" />,
+      icon: <PaperclipIcon size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Ephemeral P2P File Sharing",
       description:
         "Transfer documents and photos directly over encrypted peer channels. Files are chunked in memory and auto-revoked upon room termination. No cloud uploads.",
       badge: "Zero Cloud Storage",
     },
     {
-      icon: <ShieldCheck size={24} weight="bold" className="text-[#9098C8]" />,
+      icon: <ShieldCheckIcon size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Zero Accounts & Zero Database",
       description:
         "No signup forms, passwords, email verification, or tracking cookies. Room tokens are generated via 128-bit Web Crypto and leave no permanent record.",

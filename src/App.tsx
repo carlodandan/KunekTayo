@@ -15,7 +15,7 @@ import { ChatProvider } from "@/context/ChatContext";
 import { FileTransferProvider } from "@/context/FileTransferContext";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { usePlatform } from "@/hooks/usePlatform";
-import { WarningCircle, X } from "@phosphor-icons/react";
+import { WarningCircleIcon, XIcon } from "@phosphor-icons/react";
 import { InviteJoinModal } from "@/components/room/InviteJoinModal";
 
 function RoomAppContent() {
@@ -105,7 +105,7 @@ function RoomAppContent() {
         {error && (
           <div className="w-full max-w-2xl p-4 rounded-xl bg-red-950/40 border border-red-800/60 text-red-200 text-xs sm:text-sm flex items-center justify-between gap-3 text-left animate-in fade-in duration-200">
             <div className="flex items-center gap-2">
-              <WarningCircle size={18} className="text-red-400 shrink-0" weight="fill" />
+              <WarningCircleIcon size={18} className="text-red-400 shrink-0" weight="fill" />
               <div>
                 <span className="font-semibold block sm:inline">[{error.code}] </span>
                 <span>{error.message}</span>
@@ -116,7 +116,7 @@ function RoomAppContent() {
               className="p-1 hover:bg-red-900/50 rounded-lg text-red-400 hover:text-white transition-colors cursor-pointer"
               aria-label="Close error notice"
             >
-              <X size={14} />
+              <XIcon size={14} />
             </button>
           </div>
         )}

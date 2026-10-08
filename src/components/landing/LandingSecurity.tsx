@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, X, ShieldCheck, LockKey, HardDrives } from "@phosphor-icons/react";
+import { CheckIcon, XIcon, ShieldCheckIcon, LockKeyIcon, HardDrivesIcon } from "@phosphor-icons/react";
 
 export const LandingSecurity: React.FC = () => {
   const comparison = [
@@ -74,13 +74,13 @@ export const LandingSecurity: React.FC = () => {
                     <td className="p-4 sm:p-5 font-medium text-[#f2f3f5]">{row.feature}</td>
                     <td className="p-4 sm:p-5 text-[#949ba4]">
                       <div className="flex items-center gap-2">
-                        <X size={15} className="text-[#da373c] shrink-0" weight="bold" />
+                        <XIcon size={15} className="text-[#da373c] shrink-0" weight="bold" />
                         <span>{row.traditional}</span>
                       </div>
                     </td>
                     <td className="p-4 sm:p-5 font-semibold text-[#f2f3f5]">
                       <div className="flex items-center gap-2">
-                        <Check size={16} className="text-[#9098C8] shrink-0" weight="bold" />
+                        <CheckIcon size={16} className="text-[#9098C8] shrink-0" weight="bold" />
                         <span>{row.kunektayo}</span>
                       </div>
                     </td>
@@ -95,7 +95,7 @@ export const LandingSecurity: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 pt-4">
           <div className="p-5 rounded-xl bg-[#2b2d31] border border-[#35373c] space-y-2">
             <div className="flex items-center gap-2 text-[#9098C8]">
-              <LockKey size={18} weight="bold" />
+              <LockKeyIcon size={18} weight="bold" />
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">
                 128-Bit Token Entropy
               </h4>
@@ -108,7 +108,7 @@ export const LandingSecurity: React.FC = () => {
 
           <div className="p-5 rounded-xl bg-[#2b2d31] border border-[#35373c] space-y-2">
             <div className="flex items-center gap-2 text-[#9098C8]">
-              <ShieldCheck size={18} weight="bold" />
+              <ShieldCheckIcon size={18} weight="bold" />
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">
                 Constant-Time Verification
               </h4>
@@ -121,7 +121,7 @@ export const LandingSecurity: React.FC = () => {
 
           <div className="p-5 rounded-xl bg-[#2b2d31] border border-[#35373c] space-y-2">
             <div className="flex items-center gap-2 text-[#f0b232]">
-              <HardDrives size={18} weight="bold" />
+              <HardDrivesIcon size={18} weight="bold" />
               <h4 className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">
                 Zero Disk Persistence
               </h4>

@@ -1,25 +1,25 @@
 import React from "react";
-import { PlusCircle, PaperPlaneTilt, PhoneDisconnect, ArrowRight } from "@phosphor-icons/react";
+import { PlusCircleIcon, PaperPlaneTiltIcon, PhoneDisconnectIcon, ArrowRightIcon } from "@phosphor-icons/react";
 
 export const LandingHowItWorks: React.FC = () => {
   const steps = [
     {
       step: "01",
-      icon: <PlusCircle size={24} weight="bold" className="text-[#9098C8]" />,
+      icon: <PlusCircleIcon size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Create Instant Room",
       description:
         "Click one button to generate a 128-bit cryptographically unique room ID and token using standard Web Crypto. No email, username, or phone number required.",
     },
     {
       step: "02",
-      icon: <PaperPlaneTilt size={24} weight="bold" className="text-[#9098C8]" />,
+      icon: <PaperPlaneTiltIcon size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Share Private Link",
       description:
         "Copy your single-use invite link or scan the deep-link QR code. Send it to the one person you want to talk with through any messaging channel.",
     },
     {
       step: "03",
-      icon: <PhoneDisconnect size={24} weight="bold" className="text-[#f0b232]" />,
+      icon: <PhoneDisconnectIcon size={24} weight="bold" className="text-[#f0b232]" />,
       title: "Talk Privately & Dissolve",
       description:
         "Enjoy direct peer-to-peer audio, video, and self-purging text chat. When you hang up, everything dissolves. Zero logs, zero residue, zero traces.",
@@ -66,7 +66,7 @@ export const LandingHowItWorks: React.FC = () => {
 
               {idx < steps.length - 1 && (
                 <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-[#35373c]">
-                  <ArrowRight size={20} weight="bold" />
+                  <ArrowRightIcon size={20} weight="bold" />
                 </div>
               )}
             </div>
