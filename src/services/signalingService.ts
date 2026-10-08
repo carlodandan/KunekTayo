@@ -46,7 +46,7 @@ class SignalingService {
       try {
         handler(payload);
       } catch (err) {
-        console.error(`Signaling event error [${event}]:`, err);
+        console.error("Signaling event error [%s]:", event, err);
       }
     });
   }
