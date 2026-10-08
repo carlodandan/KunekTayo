@@ -35,6 +35,8 @@ interface DurableRoomState {
 
 ## 2. Room REST API & Worker Endpoints
 
+> **Routing Note:** In production, all `/api/*` REST endpoints and WebSocket upgrades (`/api/rooms/:roomId/ws`) are proxied internally via the Cloudflare Pages Function (`functions/api/[[route]].ts`) using the private `SIGNALING` Service Binding. Clients call same-origin paths (`/api/...`), completely concealing the underlying worker infrastructure.
+
 ### `POST /api/rooms`
 Creates an authoritative room instance within a dedicated Cloudflare Durable Object.
 * **Request Body**:
