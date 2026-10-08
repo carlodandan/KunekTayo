@@ -24,7 +24,7 @@ dist-ssr
 *.sw?
 
 # Context Files
-APP.md
+todo/
 
 # Agentic Skills
 .agents/
