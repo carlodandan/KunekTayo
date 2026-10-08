@@ -4,6 +4,7 @@
 
 export const APP_NAME = "KunekTayo";
 export const APP_TAGLINE = "Temporary 1-on-1 private voice, video & chat";
+export const APP_VERSION = import.meta.env.VITE_APP_VERSION || "0.1.0";
 
 export const ROOM_CONSTRAINTS = {
   MAX_PARTICIPANTS: 2,

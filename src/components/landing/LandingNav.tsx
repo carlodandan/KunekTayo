@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowRight, Desktop, DeviceMobile, Globe } from "@phosphor-icons/react";
 import { usePlatform } from "@/hooks/usePlatform";
-import { APP_NAME } from "@/constants/app";
+import { APP_NAME, APP_VERSION } from "@/constants/app";
 
 interface LandingNavProps {
   onLaunchApp: () => void;
@@ -40,7 +40,7 @@ export const LandingNav: React.FC<LandingNavProps> = ({
               {APP_NAME}
             </span>
             <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-[#2b2d31] text-[#949ba4] border border-[#35373c] hidden xs:inline-block">
-              v0.1
+              v{APP_VERSION}
             </span>
           </div>
         </div>
