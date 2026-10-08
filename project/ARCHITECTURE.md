@@ -115,7 +115,23 @@ To ensure uninterrupted calls when switching audio inputs, headphones, or webcam
 
 ---
 
-## 6. Room Lifecycle State Machine
+## 6. Android Native Picture-in-Picture & Background Calling Architecture
+
+To achieve parity with native Android communication applications (WhatsApp, Google Meet, Discord):
+1. **OS-Level Picture-in-Picture (PiP)**:
+   * Enabled via `android:supportsPictureInPicture="true"` on `MainActivity`.
+   * On Android 12+ (API 31+), `PictureInPictureParams.Builder.setAutoEnterEnabled(true)` seamlessly transitions the call into a floating mini-window on gesture/home swipes.
+   * On Android 8.0–11, `onUserLeaveHint()` intercepts background navigation and calls `enterPictureInPictureMode()`.
+   * Dispatches `android:pip-changed` events to React, hiding controls and rendering video full-bleed in the floating window.
+2. **Foreground Calling Service (`CallNotificationService`)**:
+   * Uses `android:foregroundServiceType="microphone"` with `FOREGROUND_SERVICE_MICROPHONE` permission, ensuring Android does not cut the microphone or throttle CPU.
+   * Posts an ongoing system notification (*"KunekTayo Call in Progress"*) with single-tap return to the live call.
+3. **WebView Unpause Guard**:
+   * `MainActivity.onPause()` invokes `webView.onResume()` during active calls or PiP mode, guaranteeing WebRTC media threads, audio output, and video rendering stay unthrottled.
+
+---
+
+## 7. Room Lifecycle State Machine
 
 ```mermaid
 stateDiagram-v2

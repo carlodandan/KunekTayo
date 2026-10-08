@@ -11,7 +11,7 @@
     <a href="https://github.com/carlodandan/KunekTayo/releases"><img src="https://img.shields.io/badge/version-v1.0.0-283E7C?style=for-the-badge" alt="Version 1.0.0" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/tauri-v2.12-9098C8?style=for-the-badge&logo=tauri&logoColor=white" alt="Tauri v2" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/react-v19.3-283E7C?style=for-the-badge&logo=react&logoColor=white" alt="React 19" /></a>
-    <a href="#-automated-testing"><img src="https://img.shields.io/badge/tests-38%2F38%20passed-1F332B?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest 38/38 Passed" /></a>
+    <a href="#-automated-testing"><img src="https://img.shields.io/badge/tests-46%2F46%20passed-1F332B?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest 46/46 Passed" /></a>
     <a href="#-security--privacy-guarantees"><img src="https://img.shields.io/badge/security-E2EE%20DTLS--SRTP-1F332B?style=for-the-badge" alt="E2EE" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-9098C8?style=for-the-badge" alt="MIT License" /></a>
   </p>
@@ -55,8 +55,9 @@ In traditional platforms, every direct call and message leaves a persistent trai
 ### 🎙️ Audio & Video Excellence
 * **Web Audio DSP Noise Suppression**: Multi-stage audio processing graph filtering low-frequency rumble (85 Hz high-pass), elevating vocal presence (3 kHz peaking EQ), and balancing vocal dynamics.
 * **Atomic Media Device Switching**: Seamlessly swap microphones, headphones, or cameras mid-call with zero connection drops. If a new hardware track fails, the existing stream is automatically retained.
-* **Hardware Device Listener**: Automatically updates available microphones and cameras when USB or Bluetooth devices are plugged in or removed.
-* **Adaptive Video Grid & PiP**: Fullscreen split-screen on desktop; responsive column layout with floating Picture-in-Picture (PiP) on mobile.
+* **Android Native Picture-in-Picture (PiP)**: Swiping home automatically shrinks the live video into a native floating window over other apps.
+* **Continuous Background Calling**: Android Foreground Calling Service keeps microphone capture, audio output, and WebRTC streaming unthrottled with an ongoing notification when minimized.
+* **Adaptive Video Grid**: Fullscreen split-screen on desktop; responsive column layout with floating Picture-in-Picture on mobile.
 
 ### 💬 In-Call Collaboration
 * **Burning Ephemeral Chat**: In-memory text messaging over WebRTC `RTCDataChannel`. Messages feature selectable auto-purge timers (15s, 30s, 60s, or 5m) with visual burning countdowns.
@@ -292,16 +293,17 @@ pnpm test
 Current test status:
 ```text
  ✓ src/utils/__tests__/crypto.test.ts (8 tests)
- ✓ src/services/__tests__/audioProcessing.test.ts (4 tests)
  ✓ src/services/__tests__/deviceSwitching.test.ts (10 tests)
- ✓ src/components/chat/__tests__/ephemeralChat.test.ts (3 tests)
- ✓ src/components/room/__tests__/pictureInPicture.test.ts (4 tests)
+ ✓ src/services/__tests__/androidPipService.test.ts (8 tests)
  ✓ src/services/__tests__/deepLinkService.test.ts (5 tests)
- ✓ src/components/layout/__tests__/headerGating.test.tsx (2 tests)
+ ✓ src/services/__tests__/audioProcessing.test.ts (4 tests)
+ ✓ src/components/room/__tests__/pictureInPicture.test.ts (4 tests)
+ ✓ src/components/chat/__tests__/ephemeralChat.test.ts (3 tests)
  ✓ src/components/room/__tests__/foundationInfoCard.test.ts (2 tests)
+ ✓ src/components/layout/__tests__/headerGating.test.tsx (2 tests)
 
- Test Files  8 passed (8)
-      Tests  38 passed (38)
+ Test Files  9 passed (9)
+      Tests  46 passed (46)
 ```
 
 ---

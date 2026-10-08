@@ -9,6 +9,7 @@ import {
 import { roomService } from "@/services/roomService";
 import { signalingService } from "@/services/signalingService";
 import { buildInviteUrl } from "@/utils/crypto";
+import { notifyNativeCallState } from "@/services/androidPipService";
 
 interface RoomContextValue {
   session: RoomSession | null;
@@ -49,6 +50,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setRejoinSession(cached);
     }
   }, []);
+
+  // Sync active call state with native Android container (PiP & Foreground Service)
+  useEffect(() => {
+    notifyNativeCallState(status === "active");
+  }, [status]);
 
   // 1-second clock for solo countdown calculation
   useEffect(() => {
