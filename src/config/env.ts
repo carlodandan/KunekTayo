@@ -33,11 +33,26 @@ function parseTurnServers(): RTCIceServer[] {
   ];
 }
 
+function getSignalingUrl(): string {
+  const envUrl = import.meta.env.VITE_SIGNALING_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/$/, "");
+  }
+
+  // When deployed to the web (Cloudflare Pages), use the same origin via Service Binding
+  if (typeof window !== "undefined" && window.location && window.location.host) {
+    const isHttps = window.location.protocol === "https:";
+    const protocol = isHttps ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}`;
+  }
+
+  return "ws://localhost:8787";
+}
+
 export const env: AppConfig = {
   appName: "KunekTayo",
   appVersion: "0.1.0",
-  signalingUrl:
-    import.meta.env.VITE_SIGNALING_URL || "ws://localhost:8787/signaling",
+  signalingUrl: getSignalingUrl(),
   defaultStunServers: [
     "stun:stun.l.google.com:19302",
     "stun:stun1.l.google.com:19302",
