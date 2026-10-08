@@ -30,8 +30,9 @@ KunekTayo is a privacy-first, zero-footprint communication tool designed for dir
 | :--- | :--- |
 | **Desktop / Mobile Shell** | [Tauri 2](https://v2.tauri.app/) (Rust stable, Windows MSVC, Android NDK) |
 | **Frontend UI** | [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS v4](https://tailwindcss.com/) |
+| **Web Hosting & Edge Routing** | [Cloudflare Pages](https://pages.cloudflare.com/) + Functions (Service Binding to Worker) |
 | **Icons & Design** | [Phosphor Icons](https://phosphoricons.com/), Touch-optimized ($\ge 48\text{dp}$) |
-| **Signaling & Authority** | [Cloudflare Workers](https://workers.cloudflare.com/) + [Durable Objects](https://developers.cloudflare.com/durable-objects/) (`server/`) |
+| **Signaling & Authority** | [Cloudflare Workers](https://workers.cloudflare.com/) + [Durable Objects](https://developers.cloudflare.com/durable-objects/) (Private) |
 | **Real-Time P2P** | WebRTC (`RTCPeerConnection`, `RTCDataChannel`, Google STUN/TURN) |
 | **Testing** | [Vitest](https://vitest.dev/) (`vitest run`) |
 
@@ -105,18 +106,31 @@ pnpm tauri android build --apk
 Artifacts are generated in:
 - `src-tauri/gen/android/app/build/outputs/apk/release/*.apk`
 
-#### Signaling Worker (Cloudflare)
+#### Web Client & Landing Page (Cloudflare Pages)
+
+```bash
+# Build production bundle
+pnpm build
+
+# Option A: Automatic Git Deployment (Recommended)
+# Connect repo to Cloudflare Pages: Build command "pnpm build", output "dist"
+
+# Option B: Direct CLI Deployment
+npx wrangler pages deploy dist --project-name kunektayo
+```
+
+#### Private Signaling Worker & Service Binding
 
 ```bash
 cd server
 pnpm install
 
-# Run local Durable Object emulator
-pnpm dev
-
-# Deploy to Cloudflare global network
+# Deploy Worker and Durable Object
 pnpm run deploy
 ```
+*To isolate the backend and conceal server URLs*:
+1. In **Cloudflare Pages &rarr; Settings &rarr; Functions &rarr; Service bindings**, bind `SIGNALING` to `kunektayo-signaling`.
+2. In **Cloudflare Workers &rarr; `kunektayo-signaling` &rarr; Settings &rarr; Domains & Routes**, toggle **OFF** `workers.dev`. All traffic will route privately through `https://kunektayo.app/api/...`.
 
 ---
 

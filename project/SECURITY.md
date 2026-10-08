@@ -11,6 +11,7 @@ The threat model assumes:
 - Passive network eavesdroppers.
 - Unauthorized third parties attempting to guess room IDs or access private conversations.
 - Denial of Service / Signaling flooding attacks.
+- Scrapers, botnets, and third-party attackers attempting to discover and hijack backend APIs.
 
 ---
 
@@ -98,3 +99,19 @@ Implemented in `server/src/index.ts` and `server/src/RoomDurableObject.ts`:
    - Maximum 3 ICE restart attempts to prevent runaway reconnection loops during permanent loss of connectivity.
 3. **Multi-Tab / Local Fallback**:
    - In environments without remote signaling, `BroadcastChannel` provides zero-configuration local mesh synchronization for testing and development.
+
+---
+
+## 7. Backend URL Concealment & Infrastructure Isolation (Service Bindings)
+
+To eliminate the risk of public exposure and unauthorized third-party consumption of the signaling infrastructure:
+
+1. **Zero Public Worker Endpoints**:
+   - The signaling worker's public `workers.dev` routing is disabled in the Cloudflare Dashboard.
+   - The worker cannot be addressed, scanned, or targeted via external DNS or direct HTTP.
+2. **Internal Pages Function Service Binding**:
+   - Cloudflare Pages uses `functions/api/[[route]].ts` to proxy requests directly to the Worker over Cloudflare’s internal memory bus via the `SIGNALING` service binding.
+   - Client applications only communicate with same-origin paths (`/api/rooms` and `/api/rooms/:id/ws`).
+3. **Zero Leaked Server Secrets**:
+   - Web clients do not require any hardcoded backend URLs in their JavaScript bundle (`import.meta.env.VITE_SIGNALING_URL` resolves dynamically to the current host).
+   - Network inspections via browser developer tools reveal only standard same-domain traffic, completely obscuring underlying Cloudflare infrastructure details.
