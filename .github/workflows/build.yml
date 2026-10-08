@@ -82,8 +82,8 @@ jobs:
           runtime: node@22
           cache: true
 
-      - name: Initialize Android project
-        run: pnpm tauri android init && pnpm tauri icon logos/kunektayo@Android.png
+      - name: Generate Android Icon
+        run: pnpm tauri icon logos/kunektayo@Android.png
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
 
