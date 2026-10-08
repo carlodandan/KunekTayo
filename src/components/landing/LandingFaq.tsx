@@ -18,7 +18,7 @@ export const LandingFaq: React.FC = () => {
     {
       question: "Why is there a 30-minute expiration countdown?",
       answer:
-        "When you create a room and wait for your peer, an authoritative Cloudflare Durable Object alarm runs for 30 minutes. If no one joins, the room self-destructs to prevent orphaned instances. Once your peer connects, the timer cancels and the room remains alive indefinitely until you finish talking.",
+        "When you create a room and wait for your peer, an automatic volatile timer runs for 30 minutes. If no one joins, the room self-destructs to prevent orphaned instances. Once your peer connects, the timer cancels and the room remains alive indefinitely until you finish talking.",
     },
     {
       question: "Can a third person eavesdrop or join our room?",
@@ -33,7 +33,7 @@ export const LandingFaq: React.FC = () => {
     {
       question: "What happens when we hang up or leave the room?",
       answer:
-        "When both participants disconnect, the Cloudflare Durable Object calls storage.deleteAll() to obliterate the room state from memory. No call history, transcripts, recordings, or user records are ever retained.",
+        "When both participants disconnect, the ephemeral coordinator immediately purges all room state from volatile memory. No call history, transcripts, recordings, or user records are ever retained.",
     },
     {
       question: "Can I use KunekTayo on both desktop and mobile?",
@@ -50,7 +50,7 @@ export const LandingFaq: React.FC = () => {
     <section id="faq" className="w-full py-12 sm:py-20 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
         <div className="text-center space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5865f2]">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#9098C8]">
             Questions & Answers
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-[#f2f3f5] tracking-tight">
@@ -72,11 +72,11 @@ export const LandingFaq: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => toggle(idx)}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left font-bold text-sm sm:text-base text-[#f2f3f5] hover:text-[#5865f2] transition-colors cursor-pointer select-none"
+                  className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left font-bold text-sm sm:text-base text-[#f2f3f5] hover:text-[#9098C8] transition-colors cursor-pointer select-none"
                   aria-expanded={isOpen}
                 >
                   <div className="flex items-center gap-3">
-                    <Question size={18} className="text-[#5865f2] shrink-0" weight="bold" />
+                    <Question size={18} className="text-[#9098C8] shrink-0" weight="bold" />
                     <span>{faq.question}</span>
                   </div>
                   <span className="text-[#949ba4] shrink-0">

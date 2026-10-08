@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Sparkle,
   PlusCircle,
   SignIn,
   WindowsLogo,
@@ -23,17 +22,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
   return (
     <section className="w-full pt-12 pb-16 sm:pt-20 sm:pb-24 text-center px-4 sm:px-6 relative">
       <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
-        {/* Subtle pill tag */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2b2d31] border border-[#35373c] text-[#dbdee1] text-xs font-semibold select-none">
-          <Sparkle size={14} weight="fill" className="text-[#5865f2]" />
-          <span>Lightweight • Temporary • 1-to-1 Voice, Video & Chat</span>
-        </div>
 
         {/* Main Display Headline */}
         <div className="space-y-3">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#f2f3f5] tracking-tight leading-[1.15]">
             Direct 1-on-1 conversations. <br className="hidden sm:inline" />
-            <span className="text-[#5865f2]">Ephemeral by design.</span>
+            <span className="text-[#9098C8]">Ephemeral by design.</span>
           </h1>
 
           <p className="text-sm sm:text-lg text-[#949ba4] max-w-2xl mx-auto leading-relaxed pt-2">
@@ -48,7 +42,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           <button
             type="button"
             onClick={onCreateRoom}
-            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#5865f2] hover:bg-[#4752c4] active:scale-[0.98] text-white text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865f2]"
+            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283E7C]"
           >
             <PlusCircle size={20} weight="bold" />
             <span>Create Instant Room</span>
@@ -57,7 +51,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           <button
             type="button"
             onClick={onJoinRoom}
-            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#2b2d31] hover:bg-[#35373c] active:scale-[0.98] border border-[#35373c] text-[#f2f3f5] text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865f2]"
+            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#2b2d31] hover:bg-[#35373c] active:scale-[0.98] border border-[#35373c] text-[#f2f3f5] text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#283E7C]"
           >
             <SignIn size={20} weight="bold" />
             <span>Join with Code / Link</span>
@@ -73,7 +67,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2b2d31] border border-[#35373c] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer"
           >
-            <WindowsLogo size={14} weight="fill" className="text-[#5865f2]" />
+            <WindowsLogo size={14} weight="fill" className="text-[#9098C8]" />
             <span>Windows (.exe / .msi)</span>
           </a>
           <a
@@ -82,7 +76,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2b2d31] border border-[#35373c] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer"
           >
-            <AndroidLogo size={14} weight="fill" className="text-[#23a55a]" />
+            <AndroidLogo size={14} weight="fill" className="text-[#9098C8]" />
             <span>Android (.apk)</span>
           </a>
         </div>
@@ -90,7 +84,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         {/* Core Invariants Trust Strip */}
         <div className="pt-8 sm:pt-12 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto text-left">
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
-            <div className="flex items-center gap-2 text-[#5865f2] mb-1">
+            <div className="flex items-center gap-2 text-[#9098C8] mb-1">
               <Users size={18} weight="bold" />
               <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">Strict 1-to-1</span>
             </div>
@@ -110,7 +104,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           </div>
 
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
-            <div className="flex items-center gap-2 text-[#23a55a] mb-1">
+            <div className="flex items-center gap-2 text-[#9098C8] mb-1">
               <LockKey size={18} weight="bold" />
               <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">Direct P2P</span>
             </div>
@@ -120,7 +114,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           </div>
 
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
-            <div className="flex items-center gap-2 text-[#5865f2] mb-1">
+            <div className="flex items-center gap-2 text-[#9098C8] mb-1">
               <ShieldCheck size={18} weight="bold" />
               <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">Zero Footprint</span>
             </div>

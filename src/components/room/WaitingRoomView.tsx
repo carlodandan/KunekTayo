@@ -93,7 +93,7 @@ export const WaitingRoomView: React.FC = () => {
       <Card elevated className="space-y-4 text-left p-5 sm:p-6 bg-[#2b2d31] border-[#35373c]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShareNetwork size={20} className="text-[#5865f2]" weight="bold" />
+            <ShareNetwork size={20} className="text-[#9098C8]" weight="bold" />
             <h3 className="text-sm font-semibold text-[#dbdee1] uppercase tracking-wider">
               Shareable Invite Link
             </h3>
@@ -114,7 +114,7 @@ export const WaitingRoomView: React.FC = () => {
             variant="primary"
             size="md"
             onClick={handleCopyLink}
-            icon={copied ? <Check size={18} className="text-[#23a55a]" weight="bold" /> : <Copy size={18} weight="bold" />}
+            icon={copied ? <Check size={18} className="text-[#9098C8]" weight="bold" /> : <Copy size={18} weight="bold" />}
             className="shrink-0"
           >
             {copied ? "Link Copied!" : "Copy Link"}
@@ -137,25 +137,25 @@ export const WaitingRoomView: React.FC = () => {
       <div className="space-y-2 text-left">
         <div className="flex items-center justify-between px-1 text-xs text-[#949ba4]">
           <span>Room Slots (Max 2 Participants)</span>
-          <span className="text-[#5865f2] font-semibold">1 / 2 Occupied</span>
+          <span className="text-[#9098C8] font-semibold">1 / 2 Occupied</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Host Slot */}
           <div className="p-4 rounded-xl bg-[#2b2d31] border border-[#35373c] flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
+              <div className="w-10 h-10 rounded-full bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
                 <User size={20} weight="bold" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#f2f3f5]">You (Host)</p>
-                <p className="text-xs text-[#23a55a] flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#23a55a] inline-block" />
-                  Connected
+                <p className="text-xs text-[#9098C8] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9098C8] inline-block" />
+                  Ready
                 </p>
               </div>
             </div>
-            <Badge variant="success">Slot 1</Badge>
+            <Badge variant="info">Slot 1</Badge>
           </div>
 
           {/* Guest Slot */}

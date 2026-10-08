@@ -11,7 +11,7 @@ import {
 export const LandingFeatures: React.FC = () => {
   const features = [
     {
-      icon: <Users size={24} weight="bold" className="text-[#5865f2]" />,
+      icon: <Users size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Strict 1-to-1 Boundary",
       description:
         "Every room is capped at exactly 2 participants (Host and Guest). Any third party attempting to enter is immediately rejected by authoritative server state.",
@@ -21,11 +21,11 @@ export const LandingFeatures: React.FC = () => {
       icon: <Clock size={24} weight="bold" className="text-[#f0b232]" />,
       title: "30-Minute Solo Room Expiration",
       description:
-        "When you create a room, an authoritative Cloudflare Durable Object countdown starts. If your peer doesn't connect within 30 minutes, the room self-destructs.",
+        "When you create a room, an automatic 30-minute countdown starts. If your peer doesn't connect within 30 minutes, the room self-destructs.",
       badge: "Auto-Purge",
     },
     {
-      icon: <LockKey size={24} weight="bold" className="text-[#23a55a]" />,
+      icon: <LockKey size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Direct Peer-to-Peer Media",
       description:
         "High-definition video and voice travel directly device-to-device through WebRTC DTLS-SRTP encryption, bypassing central media servers entirely.",
@@ -39,14 +39,14 @@ export const LandingFeatures: React.FC = () => {
       badge: "In-Memory Only",
     },
     {
-      icon: <Paperclip size={24} weight="bold" className="text-[#5865f2]" />,
+      icon: <Paperclip size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Ephemeral P2P File Sharing",
       description:
         "Transfer documents and photos directly over encrypted peer channels. Files are chunked in memory and auto-revoked upon room termination. No cloud uploads.",
       badge: "Zero Cloud Storage",
     },
     {
-      icon: <ShieldCheck size={24} weight="bold" className="text-[#23a55a]" />,
+      icon: <ShieldCheck size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Zero Accounts & Zero Database",
       description:
         "No signup forms, passwords, email verification, or tracking cookies. Room tokens are generated via 128-bit Web Crypto and leave no permanent record.",
@@ -58,7 +58,7 @@ export const LandingFeatures: React.FC = () => {
     <section id="features" className="w-full py-12 sm:py-20 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
         <div className="text-center space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5865f2]">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#9098C8]">
             Core Architecture
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-[#f2f3f5] tracking-tight">
@@ -74,7 +74,7 @@ export const LandingFeatures: React.FC = () => {
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className="p-5 sm:p-6 rounded-2xl bg-[#2b2d31] border border-[#35373c] hover:border-[#5865f2]/50 transition-colors flex flex-col justify-between space-y-4"
+              className="p-5 sm:p-6 rounded-2xl bg-[#2b2d31] border border-[#35373c] hover:border-[#283E7C]/60 transition-colors flex flex-col justify-between space-y-4"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">

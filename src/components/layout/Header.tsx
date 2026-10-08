@@ -53,19 +53,27 @@ export const Header: React.FC<HeaderProps> = ({
           <img
             src="/logo.png"
             alt={APP_NAME}
-            className="w-10 h-10 rounded-xl object-contain bg-[#2b2d31] p-1 border border-[#35373c] shrink-0 cursor-pointer"
-            onClick={() => onToggleView?.("landing")}
-            title="Go to Overview"
+            className={`w-10 h-10 rounded-xl object-contain bg-[#2b2d31] border border-[#35373c] shrink-0 ${
+              isWeb ? "cursor-pointer" : ""
+            }`}
+            onClick={() => {
+              if (isWeb) onToggleView?.("landing");
+            }}
+            title={isWeb ? "Go to Overview" : undefined}
           />
           <div>
             <div className="flex items-center gap-2">
               <h1
-                className="text-lg font-bold tracking-tight text-[#f2f3f5] cursor-pointer hover:text-[#5865f2] transition-colors"
-                onClick={() => onToggleView?.("landing")}
+                className={`text-lg font-bold tracking-tight text-[#f2f3f5] transition-colors ${
+                  isWeb ? "cursor-pointer hover:text-[#9098C8]" : ""
+                }`}
+                onClick={() => {
+                  if (isWeb) onToggleView?.("landing");
+                }}
               >
                 {APP_NAME}
               </h1>
-              <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-[#2b2d31] text-[#949ba4] border border-[#35373c]">
+              <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-[#2b2d31] text-[#9098C8] border border-[#35373c]">
                 v{APP_VERSION}
               </span>
             </div>
@@ -77,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Status, Toggle and Platform */}
         <div className="flex items-center gap-2 sm:gap-2.5">
-          {showViewToggle && onToggleView && (
+          {isWeb && showViewToggle && onToggleView && (
             <div className="flex items-center p-0.5 rounded-lg bg-[#2b2d31] border border-[#35373c] text-xs">
               <button
                 type="button"
@@ -95,17 +103,17 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => onToggleView("app")}
                 className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                   activeView === "app"
-                    ? "bg-[#5865f2] text-white"
+                    ? "bg-[#283E7C] text-white"
                     : "text-[#949ba4] hover:text-[#f2f3f5]"
                 }`}
               >
-                Workspace
+                App
               </button>
             </div>
           )}
 
-          <Badge variant="success" dot className="hidden xs:inline-flex">
-            <ShieldCheck size={14} weight="fill" className="text-emerald-400" />
+          <Badge variant="info" dot className="hidden xs:inline-flex">
+            <ShieldCheck size={14} weight="fill" className="text-[#9098C8]" />
             <span>P2P Ready</span>
           </Badge>
           {getPlatformBadge()}

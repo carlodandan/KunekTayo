@@ -98,7 +98,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
+          <div className="w-10 h-10 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
             <GearSix size={22} weight="bold" />
           </div>
           <div>
@@ -114,13 +114,13 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         {/* Microphone Selection */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
-            <Microphone size={14} className="text-[#5865f2]" />
+            <Microphone size={14} className="text-[#9098C8]" />
             <span>Microphone</span>
           </label>
           <select
             value={selectedAudioInput}
             onChange={(e) => setSelectedAudioInput(e.target.value)}
-            className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#5865f2] focus:outline-none transition-colors"
+            className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors"
           >
             {devices.audioInputs.length === 0 ? (
               <option value="">Default Microphone</option>
@@ -137,7 +137,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         {/* Noise Suppression Toggle */}
         <div className="bg-[#1e1f22] border border-[#35373c] rounded-xl p-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#2b2d31] flex items-center justify-center text-[#5865f2] shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[#2b2d31] flex items-center justify-center text-[#9098C8] shrink-0">
               <Waveform size={18} weight="bold" />
             </div>
             <div>
@@ -155,8 +155,8 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
             aria-checked={noiseSuppression}
             onClick={() => setNoiseSuppressionLocal(!noiseSuppression)}
             className={cn(
-              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#5865f2]",
-              noiseSuppression ? "bg-[#5865f2]" : "bg-[#4e5058]"
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#283E7C]",
+              noiseSuppression ? "bg-[#283E7C]" : "bg-[#4e5058]"
             )}
           >
             <span
@@ -171,13 +171,13 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         {/* Camera Selection */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
-            <VideoCamera size={14} className="text-[#5865f2]" />
+            <VideoCamera size={14} className="text-[#9098C8]" />
             <span>Camera</span>
           </label>
           <select
             value={selectedVideoInput}
             onChange={(e) => setSelectedVideoInput(e.target.value)}
-            className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#5865f2] focus:outline-none transition-colors"
+            className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors"
           >
             {devices.videoInputs.length === 0 ? (
               <option value="">Default Camera</option>
@@ -195,10 +195,10 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         {devices.audioOutputs.length > 0 && (
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
-              <SpeakerHigh size={14} className="text-[#23a55a]" />
+              <SpeakerHigh size={14} className="text-[#9098C8]" />
               <span>Speaker</span>
             </label>
-            <select className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#5865f2] focus:outline-none transition-colors">
+            <select className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors">
               {devices.audioOutputs.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>
                   {d.label}

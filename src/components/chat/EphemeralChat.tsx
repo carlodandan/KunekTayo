@@ -145,7 +145,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
                 className={cn(
                   "px-2 py-0.5 text-[10px] font-semibold rounded-md transition-colors cursor-pointer",
                   selectedTtl === opt.value
-                    ? "bg-[#5865f2] text-white"
+                    ? "bg-[#283E7C] text-white"
                     : "text-[#949ba4] hover:text-[#f2f3f5]"
                 )}
               >
@@ -188,7 +188,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
                   className={cn(
                     "max-w-[85%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm leading-relaxed break-words",
                     isMine
-                      ? "bg-[#5865f2] text-white rounded-br-xs"
+                      ? "bg-[#283E7C] text-white rounded-br-xs"
                       : "bg-[#383a40] text-[#f2f3f5] rounded-bl-xs border border-[#3f4147]"
                   )}
                 >
@@ -206,7 +206,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
                   {isMine && (
                     <span className="ml-0.5 text-[#dbdee1]" title={msg.status}>
                       {msg.status === "delivered" ? (
-                        <CheckFat size={12} weight="fill" className="text-[#23a55a]" />
+                        <CheckFat size={12} weight="fill" className="text-[#9098C8]" />
                       ) : (
                         <Check size={12} />
                       )}
@@ -221,7 +221,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
         {/* Peer Typing Indicator */}
         {isPeerTyping && (
           <div className="flex items-center gap-2 text-xs text-[#949ba4] animate-pulse pt-1">
-            <DotsThree size={20} weight="bold" className="text-[#5865f2]" />
+            <DotsThree size={20} weight="bold" className="text-[#9098C8]" />
             <span>Peer is typing...</span>
           </div>
         )}
@@ -259,7 +259,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder={`Type message (${selectedTtl}s auto-purge)...`}
-          className="flex-1 min-w-0 bg-[#383a40] text-[#f2f3f5] placeholder:text-[#80848e] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm border border-[#3f4147] focus:border-[#5865f2] focus:outline-none transition-colors resize-none overflow-y-auto max-h-28 leading-snug"
+          className="flex-1 min-w-0 bg-[#383a40] text-[#f2f3f5] placeholder:text-[#80848e] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm border border-[#3f4147] focus:border-[#283E7C] focus:outline-none transition-colors resize-none overflow-y-auto max-h-28 leading-snug"
         />
 
         <div className="shrink-0 flex items-center">

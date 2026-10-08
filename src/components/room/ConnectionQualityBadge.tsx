@@ -68,7 +68,7 @@ export const ConnectionQualityBadge: React.FC = () => {
       <span className="font-mono text-[11px]">
         {stats.rttMs !== null ? `${stats.rttMs}ms` : "P2P Direct"}
       </span>
-      <span className="hidden sm:inline text-[10px] uppercase font-bold text-[#949ba4]">
+      <span className="hidden sm:inline text-[10px] uppercase font-bold opacity-80">
         ({stats.quality})
       </span>
     </Badge>

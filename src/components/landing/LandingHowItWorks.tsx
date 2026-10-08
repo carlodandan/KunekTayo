@@ -5,14 +5,14 @@ export const LandingHowItWorks: React.FC = () => {
   const steps = [
     {
       step: "01",
-      icon: <PlusCircle size={24} weight="bold" className="text-[#5865f2]" />,
+      icon: <PlusCircle size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Create Instant Room",
       description:
         "Click one button to generate a 128-bit cryptographically unique room ID and token using standard Web Crypto. No email, username, or phone number required.",
     },
     {
       step: "02",
-      icon: <PaperPlaneTilt size={24} weight="bold" className="text-[#23a55a]" />,
+      icon: <PaperPlaneTilt size={24} weight="bold" className="text-[#9098C8]" />,
       title: "Share Private Link",
       description:
         "Copy your single-use invite link or scan the deep-link QR code. Send it to the one person you want to talk with through any messaging channel.",
@@ -30,7 +30,7 @@ export const LandingHowItWorks: React.FC = () => {
     <section id="how-it-works" className="w-full py-12 sm:py-20 px-4 sm:px-6 bg-[#1e1f22]/40">
       <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
         <div className="text-center space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5865f2]">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#9098C8]">
             Simplicity by Design
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-[#f2f3f5] tracking-tight">

@@ -17,7 +17,7 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
     <section id="downloads" className="w-full py-12 sm:py-20 px-4 sm:px-6 bg-[#1e1f22]/50">
       <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
         <div className="text-center space-y-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5865f2]">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#9098C8]">
             Multi-Platform
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-[#f2f3f5] tracking-tight">
@@ -33,7 +33,7 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
           {/* Windows Desktop */}
           <div className="p-6 rounded-2xl bg-[#2b2d31] border border-[#35373c] flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#5865f2]">
+              <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
                 <WindowsLogo size={28} weight="fill" />
               </div>
 
@@ -44,15 +44,15 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
 
               <ul className="space-y-2 text-xs text-[#dbdee1]">
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>Native NSIS Setup Installer & Portable .exe</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>Low latency WebRTC hardware acceleration</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>High-fidelity microphone device routing</span>
                 </li>
               </ul>
@@ -62,7 +62,7 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
               href="https://github.com/carlodandan/KunekTayo/releases/latest"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#5865f2] hover:bg-[#4752c4] active:scale-[0.98] text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[48px]"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[48px]"
             >
               <DownloadSimple size={18} weight="bold" />
               <span>Download for Windows</span>
@@ -72,7 +72,7 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
           {/* Android Mobile */}
           <div className="p-6 rounded-2xl bg-[#2b2d31] border border-[#35373c] flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#23a55a]">
+              <div className="w-12 h-12 rounded-xl bg-[#1e1f22] border border-[#35373c] flex items-center justify-center text-[#9098C8]">
                 <AndroidLogo size={28} weight="fill" />
               </div>
 
@@ -83,15 +83,15 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
 
               <ul className="space-y-2 text-xs text-[#dbdee1]">
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>Signed standalone APK package</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>Touch-optimized mobile UI (&ge;48dp targets)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>Front/rear camera selection & deep linking</span>
                 </li>
               </ul>
@@ -122,16 +122,16 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
 
               <ul className="space-y-2 text-xs text-[#dbdee1]">
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>No installation required — pure web standards</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
                   <span>Instant URL-based invite link acceptance</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle size={14} className="text-[#23a55a] shrink-0" weight="fill" />
-                  <span>Powered by Cloudflare Workers & Durable Objects</span>
+                  <CheckCircle size={14} className="text-[#9098C8] shrink-0" weight="fill" />
+                  <span>High-performance, zero-logging ephemeral network</span>
                 </li>
               </ul>
             </div>

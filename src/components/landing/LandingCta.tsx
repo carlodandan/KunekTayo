@@ -22,7 +22,7 @@ export const LandingCta: React.FC<LandingCtaProps> = ({ onCreateRoom }) => {
           <button
             type="button"
             onClick={onCreateRoom}
-            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#5865f2] hover:bg-[#4752c4] active:scale-[0.98] text-white text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px]"
+            className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white text-sm sm:text-base font-semibold transition-all cursor-pointer min-h-[48px]"
           >
             <PlusCircle size={20} weight="bold" />
             <span>Create Instant Room</span>
