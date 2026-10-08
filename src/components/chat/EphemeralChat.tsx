@@ -36,6 +36,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Update clock every second for live TTL burn countdown
   useEffect(() => {
@@ -48,8 +49,17 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const nextHeight = Math.min(textareaRef.current.scrollHeight, 120);
+      textareaRef.current.style.height = `${nextHeight}px`;
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
+    adjustTextareaHeight();
 
     // Trigger typing event with debounce
     sendTyping(true);
@@ -59,6 +69,13 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
     }, 2000);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(e);
+    }
+  };
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = inputText.trim();
@@ -66,6 +83,9 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
 
     sendMessage(trimmed);
     setInputText("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     sendTyping(false);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
   };
@@ -212,7 +232,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
       {/* Input Area */}
       <form
         onSubmit={handleSend}
-        className="p-3 border-t border-[#35373c] bg-[#1e1f22] flex items-center gap-2"
+        className="p-3 border-t border-[#35373c] bg-[#1e1f22] flex items-end gap-2 w-full max-w-full"
       >
         <input
           type="file"
@@ -225,31 +245,35 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-[#949ba4] hover:text-[#f2f3f5] rounded-xl hover:bg-[#35373c] transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center shrink-0"
+          className="p-2 text-[#949ba4] hover:text-[#f2f3f5] rounded-xl hover:bg-[#35373c] transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center shrink-0 mb-0.5"
           title="Share File / Image (Direct P2P)"
           aria-label="Share File"
         >
           <Paperclip size={18} weight="bold" />
         </button>
 
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
+          rows={1}
           value={inputText}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           placeholder={`Type message (${selectedTtl}s auto-purge)...`}
-          className="flex-1 bg-[#383a40] text-[#f2f3f5] placeholder:text-[#80848e] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm border border-[#3f4147] focus:border-[#5865f2] focus:outline-none transition-colors"
+          className="flex-1 min-w-0 bg-[#383a40] text-[#f2f3f5] placeholder:text-[#80848e] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm border border-[#3f4147] focus:border-[#5865f2] focus:outline-none transition-colors resize-none overflow-y-auto max-h-28 leading-snug"
         />
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="sm"
-          disabled={!inputText.trim()}
-          icon={<PaperPlaneRight size={16} weight="bold" />}
-          className="h-10 px-3.5 rounded-xl shrink-0 cursor-pointer"
-        >
-          Send
-        </Button>
+        <div className="shrink-0 flex items-center">
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            disabled={!inputText.trim()}
+            icon={<PaperPlaneRight size={16} weight="bold" />}
+            className="h-10 min-h-[40px] min-w-[40px] sm:min-w-[76px] px-3.5 rounded-xl shrink-0 cursor-pointer flex items-center justify-center mb-0.5"
+          >
+            <span>Send</span>
+          </Button>
+        </div>
       </form>
     </div>
   );
