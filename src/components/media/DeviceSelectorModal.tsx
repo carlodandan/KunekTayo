@@ -59,20 +59,21 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
     }
     if (localStream) {
       if (selectedVideoInput) {
-        const newVideoTrack = await deviceService.switchVideoDevice(localStream, selectedVideoInput);
-        if (newVideoTrack) {
-          await webrtcService.replaceVideoTrack(newVideoTrack);
-        }
+        const newVideoTrack = await deviceService.switchVideoDevice(
+          localStream,
+          selectedVideoInput,
+          (track) => webrtcService.replaceVideoTrack(track)
+        );
+        if (!newVideoTrack) return;
       }
       if (selectedAudioInput) {
         const newAudioTrack = await deviceService.switchAudioDevice(
           localStream,
           selectedAudioInput,
+          (track) => webrtcService.replaceAudioTrack(track),
           noiseSuppression
         );
-        if (newAudioTrack) {
-          await webrtcService.replaceAudioTrack(newAudioTrack);
-        }
+        if (!newAudioTrack) return;
       }
     }
     setSavedSuccess(true);

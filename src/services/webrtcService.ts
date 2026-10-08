@@ -376,34 +376,28 @@ class WebRtcService {
   }
 
   /**
-   * Replace audio track on active peer connection
+   * Replace audio track on active peer connection; rejects if replacement fails
    */
   async replaceAudioTrack(newTrack: MediaStreamTrack): Promise<void> {
     if (this.peerConnection) {
       const audioSender = this.peerConnection.getSenders().find((s) => s.track?.kind === "audio");
-      if (audioSender) {
-        try {
-          await audioSender.replaceTrack(newTrack);
-        } catch (err) {
-          console.warn("Failed to replace audio track on peer connection:", err);
-        }
+      if (!audioSender) {
+        throw new Error("No audio sender available for track replacement");
       }
+      await audioSender.replaceTrack(newTrack);
     }
   }
 
   /**
-   * Replace video track on active peer connection
+   * Replace video track on active peer connection; rejects if replacement fails
    */
   async replaceVideoTrack(newTrack: MediaStreamTrack): Promise<void> {
     if (this.peerConnection) {
       const videoSender = this.peerConnection.getSenders().find((s) => s.track?.kind === "video");
-      if (videoSender) {
-        try {
-          await videoSender.replaceTrack(newTrack);
-        } catch (err) {
-          console.warn("Failed to replace video track on peer connection:", err);
-        }
+      if (!videoSender) {
+        throw new Error("No video sender available for track replacement");
       }
+      await videoSender.replaceTrack(newTrack);
     }
   }
 
