@@ -1,121 +1,147 @@
 # KunekTayo — Architecture Documentation
 
-KunekTayo is a lightweight, temporary, 1-to-1 communication desktop, mobile, and web application for **Windows**, **Android**, and **Web**, built with **Tauri 2**, **React 19**, **Vite**, **Tailwind CSS**, and **WebRTC P2P**, with **Cloudflare Pages, Workers & Durable Objects** for private signaling and authoritative room state.
+KunekTayo is a lightweight, temporary, 1-to-1 communication application for **Windows**, **Android**, and **Web**, engineered with **Tauri 2**, **React 19**, **Vite 8**, **Tailwind CSS v4**, and **WebRTC P2P**, coordinated by a **Cloudflare Pages, Workers & Durable Objects** zero-knowledge signaling mesh.
 
 ---
 
 ## 1. System Overview & Core Philosophy
 
-> **Product Principle:** Create a room. Send the link. Connect with one person. Talk privately.
+> **Product Principle:** Create a room. Send the link. Connect with one person. Talk privately. Leave with zero trace.
 
-* **Strict 1-to-1 limitation**: Exactly 2 participants maximum per room.
-* **No traditional user accounts**: Ephemeral session tokens; zero persistent user profiles.
-* **Direct P2P Media**: Audio and video flow directly between peers via WebRTC.
-* **Private Service Binding Architecture**: The Cloudflare Worker backend has **zero public URLs**. It is mounted internally to Cloudflare Pages via a `SIGNALING` Service Binding, preventing third parties from discovering or abusing the server.
-* **Authoritative Ephemeral State**: Cloudflare Durable Objects track participant counts, heartbeats, and room expiration without persisting conversational data.
-* **Zero Footprint**: Ephemeral chat operates over WebRTC DataChannels with local TTL-based auto-purging.
+* **Strict 1-to-1 Limitation**: Exactly 2 participants maximum per room enforced authoritatively at the server level.
+* **Zero User Accounts**: No usernames, passwords, cookies, or persistent identity records. Authentication relies on volatile 128-bit cryptographic tokens.
+* **Direct P2P Media Mesh**: Audio, video, and screen sharing flow directly between peer devices over encrypted WebRTC DTLS-SRTP channels.
+* **Zero Server Storage**: No databases, transcripts, or media recording. Disconnection triggers immediate memory destruction (`storage.deleteAll()`).
+* **Platform-Adaptive UX**:
+  * **Native Apps (Windows & Android)**: Bypasses the marketing landing page and boots directly into the in-call or room creation workspace.
+  * **Web Client**: Provides both the marketing overview and full web calling application with an instant toggle.
+* **Production Boundary**: Internal system and foundation diagnostics (`FoundationInfoCard`) are automatically stripped in production builds.
 
 ---
 
-## 2. Architecture Diagram (Mermaid)
+## 2. Architecture Diagram
 
 ```mermaid
 flowchart TD
     subgraph ClientA["Participant 1 (Host)"]
         UI_A["React 19 + Tailwind UI"]
-        Tauri_A["Tauri 2 Core (Windows / Android / Web)"]
+        Audio_A["Audio Processing Pipeline (Noise Suppression)"]
         WebRTC_A["WebRTC PeerConnection"]
-        UI_A --> Tauri_A
-        UI_A --> WebRTC_A
+        UI_A --> Audio_A
+        Audio_A --> WebRTC_A
     end
 
-    subgraph Cloudflare["Cloudflare Infrastructure (Private Service Mesh)"]
-        Pages["Cloudflare Pages (kunektayo.app)"]
+    subgraph Infrastructure["Private Signaling Mesh"]
+        Pages["Cloudflare Pages (kunektayo.pages.dev)"]
         Functions["Pages Function (/api/[[route]])"]
-        Worker["Cloudflare Worker (Private / No public URL)"]
+        Worker["Signaling Worker (Private Service Binding)"]
         DO["Durable Object (Room Coordinator)"]
-        STUN["STUN/TURN Service"]
+        STUN["Google STUN / Cloudflare TURN"]
 
         Pages --> Functions
-        Functions -- "Service Binding (SIGNALING)" --> Worker
+        Functions -- "Internal Service Binding" --> Worker
         Worker --> DO
     end
 
     subgraph ClientB["Participant 2 (Guest)"]
         UI_B["React 19 + Tailwind UI"]
-        Tauri_B["Tauri 2 Core (Windows / Android / Web)"]
+        Audio_B["Audio Processing Pipeline (Noise Suppression)"]
         WebRTC_B["WebRTC PeerConnection"]
-        UI_B --> Tauri_B
-        UI_B --> WebRTC_B
+        UI_B --> Audio_B
+        Audio_B --> WebRTC_B
     end
 
     ClientA -- "1. Create Room (/api/rooms)" --> Pages
     ClientB -- "2. Join via Invite Link" --> Pages
 
-    ClientA <-. "3. Signaling (Offer / Answer / ICE over /ws)" .-> DO
-    ClientB <-. "3. Signaling (Offer / Answer / ICE over /ws)" .-> DO
+    ClientA <-. "3. Signaling (Offer / Answer / ICE)" .-> DO
+    ClientB <-. "3. Signaling (Offer / Answer / ICE)" .-> DO
 
-    ClientA <-. "STUN/TURN Fallback" .-> STUN
-    ClientB <-. "STUN/TURN Fallback" .-> STUN
+    ClientA <-. "NAT Traversal" .-> STUN
+    ClientB <-. "NAT Traversal" .-> STUN
 
-    WebRTC_A == "4. Direct P2P Media (Audio/Video)" === WebRTC_B
-    WebRTC_A == "5. Ephemeral DataChannel Chat (TTL)" === WebRTC_B
+    WebRTC_A == "4. Direct Encrypted Media (Audio / Video)" === WebRTC_B
+    WebRTC_A == "5. Ephemeral DataChannel (Chat TTL & Files)" === WebRTC_B
 ```
 
 ---
 
 ## 3. Technology Stack Breakdown
 
-| Layer | Technology | Responsibility |
+| Layer | Technology | Primary Function |
 | :--- | :--- | :--- |
-| **Desktop / Mobile Shell** | Tauri 2.12 (Rust) | Native Windows and Android windowing, OS media permissions, deep linking |
-| **Frontend Framework** | React 19.3 + TypeScript 6.0 | Reactive UI components, state management, audio/video rendering |
-| **Web Hosting & Edge Routing** | Cloudflare Pages + Pages Functions | Serves static SPA/landing page; proxies `/api/*` via private Service Binding |
-| **Bundler & Build Tool** | Vite 8.3 | Ultra-fast HMR, asset compilation, native modern bundler |
-| **Design & Styling** | Tailwind CSS v4 + Phosphor Icons | Accessible dark-mode system, >=48dp touch targets, responsive layout |
-| **Media & P2P Transport**| WebRTC standard (RTCPeerConnection) | Opus audio, VP8/H.264 video, RTCDataChannel for ephemeral chat |
-| **Signaling & Room State** | Cloudflare Workers + Durable Objects | WebSocket signaling, room coordination, 30m solo room expiration (Private) |
-| **NAT Traversal** | Google STUN + Production TURN | ICE candidate gathering, firewall penetration, relay fallback |
+| **Desktop Shell** | Tauri 2.12 (Rust MSVC) | Native Windows windowing, MSI/NSIS packaging, tray & deep links |
+| **Mobile Shell** | Tauri 2.12 (Rust Android NDK) | Native Android activity, APK/AAB packaging, camera/mic permissions |
+| **Frontend Framework** | React 19.3 + TypeScript 6.0 | Reactive component architecture, hooks, state orchestration |
+| **Styling & Design** | Tailwind CSS v4 | Strict 7-color palette, OLED dark mode, responsive layout |
+| **Icons** | Phosphor Icons (`@phosphor-icons/react`) | Vector icons, touch targets $\ge 48\text{dp}$ |
+| **Bundler & Tooling** | Vite 8.3 + Rolldown | High-speed HMR, asset compilation, chunk minification |
+| **Signaling & Edge** | Cloudflare Workers + Durable Objects | Authoritative 1-on-1 coordination, 30m solo room alarm |
+| **Web Hosting** | Cloudflare Pages + Pages Functions | Static asset delivery, `/api/*` internal service binding routing |
+| **Media Transport** | WebRTC (`RTCPeerConnection`) | DTLS-SRTP encrypted peer-to-peer audio and video |
+| **Audio Processing** | Web Audio API (`BiquadFilter`, `DynamicsCompressor`) | Noise suppression, high-pass rumble filter, voice presence EQ |
+| **Data Transport** | WebRTC `RTCDataChannel` | Ephemeral burning chat (15s–5m TTL) and chunked file transfer |
+| **Testing** | Vitest 5.0 | Unit and integration test suites |
 
 ---
 
-## 4. Room Lifecycle State Machine
+## 4. Audio Processing Pipeline
+
+KunekTayo features a multi-stage Web Audio API processing graph designed to suppress ambient background noise and enhance vocal clarity before transmission:
+
+```mermaid
+flowchart LR
+    Mic["Microphone Input (getUserMedia)"] --> Source["MediaStreamAudioSourceNode"]
+    Source --> HPF["BiquadFilter (High-Pass 85Hz)"]
+    HPF --> Presence["BiquadFilter (Peaking EQ 3kHz)"]
+    Presence --> Comp["DynamicsCompressorNode"]
+    Comp --> Dest["MediaStreamAudioDestinationNode"]
+    Dest --> WebRTC["WebRTC RTCPeerConnection (Opus HD)"]
+```
+
+1. **High-Pass Filter (85 Hz)**: Cuts low-frequency HVAC rumble, desk vibrations, and handling thumps.
+2. **Presence Peaking Filter (3 kHz, +2.5 dB, Q=1.2)**: Elevates speech consonants for intelligibility without harshness.
+3. **Dynamics Compressor**: Smooths loud vocal spikes (ratio 4:1, threshold -24 dB) and elevates softer speech.
+4. **Hardware Constraints**: Requests native `noiseSuppression: true`, `echoCancellation: true`, and `autoGainControl: true` from the audio hardware driver.
+
+---
+
+## 5. Media Device Switching Architecture
+
+To ensure uninterrupted calls when switching audio inputs, headphones, or webcams:
+* **Atomic Replacement**: `replaceAudioTrack` and `replaceVideoTrack` query `RTCRtpSender.replaceTrack`.
+* **Zero Interruption**: The existing track remains active until the new track is confirmed operational. If negotiation fails, the new track is disposed of and the existing track is seamlessly retained.
+* **Hardware Listener**: Tracks `navigator.mediaDevices.ondevicechange` to dynamically refresh available audio and video devices without restarting the room.
+
+---
+
+## 6. Room Lifecycle State Machine
 
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
     Idle --> Waiting: Host creates room (1 participant)
     Waiting --> Expired: Solo timeout elapsed (30 minutes)
-    Waiting --> Active: Guest joins via invite (2 participants)
-    Active --> Waiting: One participant disconnects (30m countdown starts)
-    Waiting --> Active: Participant rejoins within 30m (countdown cancelled)
+    Waiting --> Active: Guest joins via invite link (2 participants)
+    Active --> Waiting: One peer disconnects (30m countdown restarts)
+    Waiting --> Active: Peer rejoins within 30m (alarm cancelled)
     Active --> Closed: Both participants leave or end call
     Expired --> [*]
     Closed --> [*]
 ```
 
 ### Expiration Invariants
-1. **Solo Room Expiration**: When only 1 participant is in a room, a strict **30-minute timer** runs. If no second peer joins, the room is deleted.
-2. **Active Room Longevity**: While both participants are connected, the room remains alive indefinitely.
-3. **Disconnection Handling**: If one participant drops, the 30-minute grace period restarts. If they reconnect, the timer is cleared.
-4. **Third-Party Rejection**: Any attempt by a 3rd party to join returns HTTP 409 / WebSocket `ROOM_FULL`.
+1. **Solo Room Timeout**: An unjoined room runs an authoritative 30-minute timer. If no second peer joins, the room self-destructs.
+2. **Active Call Longevity**: When both participants are connected, the timer cancels and the room stays active indefinitely.
+3. **Disconnection Grace**: If one participant drops, a 30-minute grace window begins. If they reconnect, the call continues seamlessly.
+4. **Third-Party Rejection**: Any attempt by a 3rd party to enter an active room returns HTTP 409 / WebSocket `ROOM_FULL`.
 
 ---
 
-## 5. Ephemeral Chat Architecture
+## 7. Ephemeral Chat & DataChannel Architecture
 
-* **Transport**: Direct WebRTC `RTCDataChannel` labeled `"ephemeral-chat"`.
-* **Lifespan**: Completely decoupled from room lifespan.
-* **Message TTL**: Default **60 seconds** (configurable 10s – 600s).
-* **Storage**: In-memory only on client devices. No chat messages ever hit the server or database.
-* **Auto-Purge**: Reactive client timer schedules removal of each message upon TTL expiration.
-
----
-
-## 6. Security and Privacy Model
-
-1. **Backend Server Isolation**: The signaling worker is bound via Cloudflare **Service Binding** directly to Pages. Public `workers.dev` routing is disabled, concealing backend infrastructure from external scrapers.
-2. **Cryptographic Room Tokens**: 16-byte cryptographically secure pseudo-random tokens generated via `crypto.getRandomValues`.
-3. **Zero Permanent Storage**: No user database, no message logging, no call recordings.
-4. **End-to-End Encryption**: DTLS-SRTP for all audio/video streams, DTLS for RTCDataChannel.
-5. **Local Isolation**: Tauri security boundaries enforce CSP, preventing unwanted external code injection.
+* **Channel Label**: `"ephemeral-chat"`.
+* **Independent TTL**: Configurable auto-purge durations: 15s, 30s, 60s, or 5m.
+* **Storage**: In-memory array on client devices only. Messages never touch any server or database.
+* **Local Purge**: Client-side timers automatically evaporate messages once their TTL countdown hits zero.
+* **Direct File Sharing**: Files are chunked into 32 KB blocks, transferred over `RTCDataChannel`, assembled into RAM Blobs, and revoked on session exit.
