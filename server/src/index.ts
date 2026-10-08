@@ -39,21 +39,21 @@ export default {
     const pathname = url.pathname;
     const clientIp = request.headers.get("cf-connecting-ip") || "client-dev";
 
-    // CORS preflight handling for web previews
+    const origin = request.headers.get("origin") || "*";
+    const corsHeaders: Record<string, string> = {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, x-requested-with",
+      "Access-Control-Max-Age": "86400",
+    };
+
+    // CORS preflight handling for web previews and direct API calls
     if (request.method === "OPTIONS") {
       return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
+        status: 204,
+        headers: corsHeaders,
       });
     }
-
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
 
     // Body size guard: reject payloads > 64 KB
     const contentLength = request.headers.get("content-length");

@@ -34,16 +34,23 @@ function parseTurnServers(): RTCIceServer[] {
 }
 
 function getSignalingUrl(): string {
+  // In a web browser environment, always prioritize same-origin Service Binding proxy
+  // to avoid CORS errors and prevent exposing backend worker URLs.
+  if (typeof window !== "undefined" && window.location && window.location.host) {
+    const host = window.location.host;
+    const isLocalVite = host.includes("localhost:1420") || host.includes("127.0.0.1:1420");
+    const isTauriEnv = !!((window as any).__TAURI_INTERNALS__ || (window as any).isTauri);
+
+    if (!isLocalVite && !isTauriEnv) {
+      const isHttps = window.location.protocol === "https:";
+      const protocol = isHttps ? "wss:" : "ws:";
+      return `${protocol}//${host}`;
+    }
+  }
+
   const envUrl = import.meta.env.VITE_SIGNALING_URL;
   if (envUrl && envUrl.trim()) {
     return envUrl.trim().replace(/\/$/, "");
-  }
-
-  // When deployed to the web (Cloudflare Pages), use the same origin via Service Binding
-  if (typeof window !== "undefined" && window.location && window.location.host) {
-    const isHttps = window.location.protocol === "https:";
-    const protocol = isHttps ? "wss:" : "ws:";
-    return `${protocol}//${window.location.host}`;
   }
 
   return "ws://localhost:8787";
