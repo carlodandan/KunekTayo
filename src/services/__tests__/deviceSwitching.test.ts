@@ -27,7 +27,7 @@ describe.each(["audio", "video"] as const)("%s device replacement", (kind) => {
       track: oldTrack,
       replaceTrack: vi.fn(async (track: MediaStreamTrack) => { sender.track = track; }),
     };
-    const pc = { getSenders: vi.fn(() => [sender]), close: vi.fn() };
+    const pc = { getSenders: vi.fn(() => [sender]), addTransceiver: vi.fn(() => ({ sender })), close: vi.fn() };
     vi.stubGlobal("RTCPeerConnection", vi.fn(function () { return pc; }));
     vi.stubGlobal("MediaStream", vi.fn(function () { return {}; }));
     vi.stubGlobal("navigator", {

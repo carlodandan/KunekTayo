@@ -7,10 +7,12 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 
 /**
  * Foreground Service that preserves continuous microphone capture, WebRTC
@@ -56,12 +58,30 @@ class CallNotificationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                stopForeground(Service.STOP_FOREGROUND_REMOVE)
-            } else {
-                @Suppress("DEPRECATION")
-                stopForeground(true)
-            }
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(Service.STOP_FOREGROUND_REMOVE)
+                } else {
+                    @Suppress("DEPRECATION")
+                    stopForeground(true)
+                }
+            } catch (_: Exception) {}
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        // On Android 14+ (API 34+), starting a foreground service of type microphone
+        // requires RECORD_AUDIO to already be granted. If the user is still on the permission
+        // dialog or denied microphone, calling startForeground with microphone type will throw
+        // SecurityException. If startForeground fails to attach a notification within 5 seconds
+        // of startForegroundService(), Android kills the app with ForegroundServiceDidNotStartInTimeException.
+        // Therefore, we MUST stopSelf() immediately if permission is missing, which cancels the timeout.
+        val hasMicPermission = ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasMicPermission) {
             stopSelf()
             return START_NOT_STICKY
         }
@@ -82,10 +102,12 @@ class CallNotificationService : Service() {
             }
         )
 
+        val smallIconRes = if (applicationInfo.icon != 0) applicationInfo.icon else android.R.drawable.ic_menu_call
+
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("KunekTayo Call in Progress")
             .setContentText("Private 1-on-1 audio/video call active")
-            .setSmallIcon(android.R.drawable.stat_sys_phone_call)
+            .setSmallIcon(smallIconRes)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -93,18 +115,18 @@ class CallNotificationService : Service() {
             .build()
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-                } else {
-                    0
-                }
-                startForeground(NOTIFICATION_ID, notification, type)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
             } else {
                 startForeground(NOTIFICATION_ID, notification)
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            // CRITICAL: If startForeground throws SecurityException or fails, we MUST call stopSelf()
+            // to cancel the system's 5-second pending FGS timeout and prevent the fatal
+            // ForegroundServiceDidNotStartInTimeException crash.
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         return START_STICKY

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { webrtcService, PeerConnectionState } from "@/services/webrtcService";
+import { notifyNativeCallState } from "@/services/androidPipService";
 import { useRoom } from "./RoomContext";
 
 interface WebRtcContextValue {
@@ -71,16 +72,21 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // When room status transitions to 'active', acquire local media and initialize peer connection
   useEffect(() => {
+    let cancelled = false;
+    let offerTimeout: ReturnType<typeof setTimeout> | undefined;
+
     if (status === "active" && session) {
       const isHost = session.myRole === "host";
 
       webrtcService.startLocalMedia(true, true).then((stream) => {
+        if (cancelled) return;
         if (stream) {
+          notifyNativeCallState(true);
           webrtcService.initPeerConnection(isHost);
           if (isHost) {
             // Give brief moment for peer connection ready, then offer
-            setTimeout(() => {
-              webrtcService.createAndSendOffer();
+            offerTimeout = setTimeout(() => {
+              if (!cancelled) webrtcService.createAndSendOffer();
             }, 600);
           }
         }
@@ -93,6 +99,11 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsScreenSharing(false);
       setConnectionState("new");
     }
+    return () => {
+      cancelled = true;
+      if (offerTimeout !== undefined) clearTimeout(offerTimeout);
+      webrtcService.stopAllMedia();
+    };
   }, [status, session?.roomId, session?.myRole]);
 
   const toggleMic = () => {

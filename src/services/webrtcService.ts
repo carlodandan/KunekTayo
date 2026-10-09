@@ -19,6 +19,8 @@ export type WebRtcEventListener = (data: any) => void;
 class WebRtcService {
   private peerConnection: RTCPeerConnection | null = null;
   private localStream: MediaStream | null = null;
+  private mediaRequestId = 0;
+  private fallbackVideoSender: RTCRtpSender | null = null;
   private remoteStream: MediaStream | null = null;
   private isOfferer = false;
   private isMuted = false;
@@ -95,12 +97,13 @@ class WebRtcService {
    * Request user camera and microphone
    */
   async startLocalMedia(audio = true, video = true): Promise<MediaStream | null> {
+    const requestId = ++this.mediaRequestId;
     try {
       if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
         throw new Error("MediaDevices API is not available on this platform.");
       }
 
-      this.localStream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: audio
           ? {
               echoCancellation: true,
@@ -118,10 +121,43 @@ class WebRtcService {
           : false,
       });
 
+      if (requestId !== this.mediaRequestId) {
+        stream.getTracks().forEach((track) => track.stop());
+        return null;
+      }
+      this.localStream = stream;
       this.emit("local_stream", this.localStream);
       return this.localStream;
     } catch (err: unknown) {
-      console.warn("getUserMedia failed or denied:", err);
+      if (requestId !== this.mediaRequestId) return null;
+      console.warn("getUserMedia failed or denied with video:", err);
+      // If combined audio+video failed, attempt fallback to audio-only to preserve calling capability
+      if (video && audio) {
+        try {
+          console.warn("Attempting fallback to audio-only media stream...");
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: this.noiseSuppressionEnabled,
+              autoGainControl: true,
+              channelCount: 1,
+            },
+            video: false,
+          });
+          if (requestId !== this.mediaRequestId) {
+            stream.getTracks().forEach((track) => track.stop());
+            return null;
+          }
+          this.localStream = stream;
+          this.isCameraOff = true;
+          this.emit("local_stream", this.localStream);
+          this.emit("media_state", { isMuted: this.isMuted, isCameraOff: true });
+          return this.localStream;
+        } catch (audioErr: unknown) {
+          console.warn("Audio-only media fallback also failed:", audioErr);
+        }
+      }
+      if (requestId !== this.mediaRequestId) return null;
       this.emit("media_error", err);
       return null;
     }
@@ -153,6 +189,14 @@ class WebRtcService {
       this.localStream.getTracks().forEach((track) => {
         pc.addTrack(track, this.localStream!);
       });
+    }
+
+    // Reserve a negotiated video sender for screen sharing in audio-only calls.
+    if (!this.localStream?.getVideoTracks().length) {
+      this.fallbackVideoSender = pc.addTransceiver("video", {
+        direction: "sendrecv",
+        streams: this.localStream ? [this.localStream] : [],
+      }).sender;
     }
 
     // Set up Ephemeral Chat DataChannel
@@ -425,7 +469,7 @@ class WebRtcService {
       // Replace track on the video sender if peer connection is active
       if (this.peerConnection) {
         const senders = this.peerConnection.getSenders();
-        const videoSender = senders.find((s) => s.track?.kind === "video");
+        const videoSender = senders.find((s) => s.track?.kind === "video") || this.fallbackVideoSender;
         if (videoSender) {
           await videoSender.replaceTrack(screenTrack);
         }
@@ -460,8 +504,8 @@ class WebRtcService {
     if (this.peerConnection && this.localStream) {
       const cameraTrack = this.localStream.getVideoTracks()[0] || null;
       const senders = this.peerConnection.getSenders();
-      const videoSender = senders.find((s) => s.track?.kind === "video" || s.track === null);
-      if (videoSender && cameraTrack) {
+      const videoSender = senders.find((s) => s.track?.kind === "video") || this.fallbackVideoSender;
+      if (videoSender) {
         try {
           await videoSender.replaceTrack(cameraTrack);
         } catch (err) {
@@ -511,6 +555,7 @@ class WebRtcService {
   }
 
   closePeerConnection(): void {
+    this.fallbackVideoSender = null;
     if (this.dataChannel) {
       try {
         this.dataChannel.close();
@@ -534,6 +579,7 @@ class WebRtcService {
   }
 
   stopAllMedia(): void {
+    ++this.mediaRequestId;
     if (this.screenStream) {
       this.screenStream.getTracks().forEach((t) => t.stop());
       this.screenStream = null;
