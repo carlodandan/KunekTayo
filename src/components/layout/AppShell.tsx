@@ -22,7 +22,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         onToggleView={onToggleView}
         showViewToggle={showViewToggle}
       />
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-center items-center">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-2 sm:p-6 lg:p-8 flex flex-col justify-start sm:justify-center items-center">
         {children}
       </main>
       <StatusBar />

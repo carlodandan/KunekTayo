@@ -13,6 +13,8 @@ import {
   ProjectorScreenIcon,
   FileArrowUpIcon,
   PictureInPictureIcon,
+  FireIcon,
+  DotsThreeIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -25,6 +27,7 @@ import { EphemeralChat } from "@/components/chat/EphemeralChat";
 import { useRoom } from "@/context/RoomContext";
 import { useWebRtc } from "@/context/WebRtcContext";
 import { useFileTransfer } from "@/context/FileTransferContext";
+import { useChat } from "@/context/ChatContext";
 import { isNativePipSupported, requestNativePip } from "@/services/androidPipService";
 import { cn } from "@/utils/cn";
 
@@ -41,6 +44,7 @@ export const ActiveRoomView: React.FC = () => {
     toggleScreenShare,
   } = useWebRtc();
   const { files, sendFile } = useFileTransfer();
+  const { messages, isPeerTyping } = useChat();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -48,6 +52,13 @@ export const ActiveRoomView: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isLocalSwapped, setIsLocalSwapped] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  // Ticker for real-time TTL countdown updates
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const desktopRemoteVideoRef = useRef<HTMLVideoElement>(null);
   const mobileMainVideoRef = useRef<HTMLVideoElement>(null);
@@ -236,6 +247,10 @@ export const ActiveRoomView: React.FC = () => {
     }
   };
 
+  // Filter unexpired messages and take the last 2 for the mobile 2-line chat box
+  const activeMessages = messages.filter((msg) => msg.expiresAt > now);
+  const recentMessages = activeMessages.slice(-2);
+
   return (
     <div
       onDragOver={(e) => {
@@ -248,7 +263,7 @@ export const ActiveRoomView: React.FC = () => {
       }}
       onDrop={handleDrop}
       className={cn(
-        "relative w-full max-w-4xl mx-auto flex flex-col space-y-3 sm:space-y-4 animate-in fade-in duration-200",
+        "relative w-full max-w-4xl mx-auto flex flex-col space-y-1.5 sm:space-y-4 animate-in fade-in duration-200",
         isNativePiPActive && "fixed inset-0 z-50 h-screen w-screen p-0 m-0 space-y-0 bg-black justify-center items-center max-w-none rounded-none"
       )}
     >
@@ -264,7 +279,7 @@ export const ActiveRoomView: React.FC = () => {
       )}
 
       {/* Top Bar Status */}
-      <div className={cn("flex flex-wrap items-center justify-between gap-2.5 px-1", isNativePiPActive && "hidden")}>
+      <div className={cn("flex items-center justify-between gap-2 px-1 py-0.5", isNativePiPActive && "hidden")}>
         <div className="flex items-center gap-2 flex-wrap">
           <ConnectionQualityBadge />
           {isScreenSharing && (
@@ -278,7 +293,7 @@ export const ActiveRoomView: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex items-center gap-2.5 text-xs text-[#949ba4]">
+        <div className="flex items-center gap-2 text-xs text-[#949ba4]">
           <div className="flex items-center gap-1.5">
             <InfinityIcon size={15} className="text-[#9098C8]" weight="bold" />
             <span className="text-[11px] sm:text-xs">Active (2/2)</span>
@@ -286,7 +301,7 @@ export const ActiveRoomView: React.FC = () => {
 
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 rounded-lg text-[#949ba4] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+            className="p-1 rounded-lg text-[#949ba4] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             aria-label="Toggle Fullscreen"
           >
@@ -315,11 +330,11 @@ export const ActiveRoomView: React.FC = () => {
           />
         </div>
 
-        {/* Mobile Stage: Primary Video + Floating Picture-in-Picture (visible < md) */}
+        {/* Mobile Stage: Semi-portrait, semi-fullscreen video + Top-right PiP + Bottom 2-line Chat Box (visible < md) */}
         <div
           className={cn(
-            "relative w-full aspect-[4/3] sm:aspect-video rounded-2xl overflow-hidden border border-[#35373c] md:hidden bg-[#1e1f22]",
-            isNativePiPActive && "fixed inset-0 z-50 h-screen w-screen aspect-auto rounded-none border-0"
+            "relative w-full aspect-[9/15] sm:aspect-video min-h-[460px] max-h-[76vh] rounded-2xl overflow-hidden border border-[#35373c] md:hidden bg-[#1e1f22]",
+            isNativePiPActive && "fixed inset-0 z-50 h-screen w-screen aspect-auto rounded-none border-0 min-h-0 max-h-none"
           )}
         >
           {/* Mobile Main Video Feed */}
@@ -333,10 +348,10 @@ export const ActiveRoomView: React.FC = () => {
             className="w-full h-full border-0 rounded-none"
           />
 
-          {/* Mobile Floating Picture-in-Picture (Tap to swap feeds) */}
+          {/* Mobile Floating Picture-in-Picture (Tap to swap feeds, positioned top-right) */}
           <div
             className={cn(
-              "absolute bottom-3 right-3 w-28 sm:w-36 aspect-video z-20 rounded-xl overflow-hidden border border-[#35373c] bg-[#2b2d31] transition-transform active:scale-95 cursor-pointer",
+              "absolute top-2.5 right-2.5 w-24 sm:w-28 aspect-[3/4] z-20 rounded-xl overflow-hidden border border-[#35373c] bg-[#2b2d31] shadow-lg transition-transform active:scale-95 cursor-pointer",
               isNativePiPActive && "hidden"
             )}
             title="Tap to swap primary feed"
@@ -500,6 +515,134 @@ export const ActiveRoomView: React.FC = () => {
           <span className="hidden sm:inline">Leave Call</span>
         </Button>
       </Card>
+
+      {/* Mobile 2-Line Ephemeral Chat Box placed below the buttons (visible < md) */}
+      {!isNativePiPActive && (
+        <div
+          onClick={() => setIsChatOpen(true)}
+          className="w-full bg-[#2b2d31] border border-[#35373c] rounded-2xl p-2.5 shadow-md cursor-pointer transition-all hover:bg-[#32353b] active:scale-[0.99] flex flex-col justify-center space-y-1.5 select-none md:hidden"
+          title="Tap to open Ephemeral Chat"
+          aria-label="Open Ephemeral Chat"
+        >
+          {recentMessages.length >= 2 ? (
+            <>
+              {/* Line 1: 2nd most recent message */}
+              <div className="flex items-center justify-between gap-2 text-xs min-w-0">
+                <div className="flex items-center gap-1.5 truncate">
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold px-1.5 py-0.5 rounded border shrink-0",
+                      recentMessages[0].senderId === session?.myParticipantId
+                        ? "bg-[#283E7C]/40 border-[#283E7C] text-[#f2f3f5]"
+                        : "bg-[#9098C8]/20 border-[#9098C8]/40 text-[#9098C8]"
+                    )}
+                  >
+                    {recentMessages[0].senderId === session?.myParticipantId ? "You" : "Peer"}
+                  </span>
+                  <span className="text-[#f2f3f5] truncate text-[11px] sm:text-xs">
+                    {recentMessages[0].text}
+                  </span>
+                </div>
+                <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
+                  <FireIcon size={11} weight="fill" />
+                  {Math.max(0, Math.ceil((recentMessages[0].expiresAt - now) / 1000))}s
+                </span>
+              </div>
+
+              {/* Line 2: Most recent message */}
+              <div className="flex items-center justify-between gap-2 text-xs min-w-0">
+                <div className="flex items-center gap-1.5 truncate">
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold px-1.5 py-0.5 rounded border shrink-0",
+                      recentMessages[1].senderId === session?.myParticipantId
+                        ? "bg-[#283E7C]/40 border-[#283E7C] text-[#f2f3f5]"
+                        : "bg-[#9098C8]/20 border-[#9098C8]/40 text-[#9098C8]"
+                    )}
+                  >
+                    {recentMessages[1].senderId === session?.myParticipantId ? "You" : "Peer"}
+                  </span>
+                  <span className="text-[#f2f3f5] truncate text-[11px] sm:text-xs">
+                    {recentMessages[1].text}
+                  </span>
+                </div>
+                <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
+                  <FireIcon size={11} weight="fill" />
+                  {Math.max(0, Math.ceil((recentMessages[1].expiresAt - now) / 1000))}s
+                </span>
+              </div>
+            </>
+          ) : recentMessages.length === 1 ? (
+            <>
+              {/* Line 1: Single active message */}
+              <div className="flex items-center justify-between gap-2 text-xs min-w-0">
+                <div className="flex items-center gap-1.5 truncate">
+                  <span
+                    className={cn(
+                      "text-[10px] font-semibold px-1.5 py-0.5 rounded border shrink-0",
+                      recentMessages[0].senderId === session?.myParticipantId
+                        ? "bg-[#283E7C]/40 border-[#283E7C] text-[#f2f3f5]"
+                        : "bg-[#9098C8]/20 border-[#9098C8]/40 text-[#9098C8]"
+                    )}
+                  >
+                    {recentMessages[0].senderId === session?.myParticipantId ? "You" : "Peer"}
+                  </span>
+                  <span className="text-[#f2f3f5] truncate text-[11px] sm:text-xs">
+                    {recentMessages[0].text}
+                  </span>
+                </div>
+                <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
+                  <FireIcon size={11} weight="fill" />
+                  {Math.max(0, Math.ceil((recentMessages[0].expiresAt - now) / 1000))}s
+                </span>
+              </div>
+
+              {/* Line 2: Typing indicator or Tap to reply prompt */}
+              {isPeerTyping ? (
+                <div className="flex items-center gap-1.5 text-[11px] text-[#9098C8] animate-pulse">
+                  <DotsThreeIcon size={16} weight="bold" />
+                  <span>Peer is typing...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-[11px] text-[#949ba4]">
+                  <span className="truncate">Tap to open chat or reply...</span>
+                  <span className="text-[10px] text-[#9098C8] flex items-center gap-1 shrink-0 font-medium">
+                    <span>Reply</span>
+                    <ChatTextIcon size={12} weight="bold" />
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Line 1: Ephemeral Chat header notice */}
+              <div className="flex items-center justify-between gap-2 text-[11px]">
+                <div className="flex items-center gap-1.5 text-[#f2f3f5] font-medium">
+                  <FireIcon size={13} className="text-[#f0b232]" weight="fill" />
+                  <span>Ephemeral Chat</span>
+                  <span className="text-[10px] text-[#949ba4] font-normal">• Direct P2P</span>
+                </div>
+                <span className="text-[10px] text-[#9098C8] flex items-center gap-1 font-medium">
+                  <span>Chat</span>
+                  <ChatTextIcon size={12} weight="bold" />
+                </span>
+              </div>
+
+              {/* Line 2: Typing or prompt to chat */}
+              {isPeerTyping ? (
+                <div className="flex items-center gap-1.5 text-[11px] text-[#9098C8] animate-pulse">
+                  <DotsThreeIcon size={16} weight="bold" />
+                  <span>Peer is typing...</span>
+                </div>
+              ) : (
+                <div className="text-[11px] text-[#949ba4] truncate">
+                  No active messages • Tap to send a vanishing message
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Device Selection Settings Modal */}
       <DeviceSelectorModal
