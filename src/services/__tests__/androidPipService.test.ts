@@ -17,16 +17,28 @@ describe("androidPipService", () => {
   });
 
   describe("isNativePipSupported", () => {
-    it("returns false when AndroidCallBridge is not present", () => {
+    it("returns false without a bridge or when the bridge reports no support", () => {
       expect(isNativePipSupported()).toBe(false);
+      const isSupported = vi.fn().mockReturnValue(false);
+      window.AndroidCallBridge = {
+        setCallActive: vi.fn(),
+        enterPip: vi.fn(),
+        isSupported,
+      };
+      expect(isNativePipSupported()).toBe(false);
+      expect(isSupported).toHaveBeenCalledOnce();
     });
 
-    it("returns true when AndroidCallBridge is present on window", () => {
+    it("supports legacy bridges and bridges that report support", () => {
       (globalThis as any).window.AndroidCallBridge = {
         setCallActive: vi.fn(),
         enterPip: vi.fn(),
       };
       expect(isNativePipSupported()).toBe(true);
+      const isSupported = vi.fn().mockReturnValue(true);
+      window.AndroidCallBridge!.isSupported = isSupported;
+      expect(isNativePipSupported()).toBe(true);
+      expect(isSupported).toHaveBeenCalledOnce();
     });
   });
 

@@ -54,6 +54,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sync active call state with native Android container (PiP & Foreground Service)
   useEffect(() => {
     notifyNativeCallState(status === "active");
+    return () => notifyNativeCallState(false);
   }, [status]);
 
   // 1-second clock for solo countdown calculation
