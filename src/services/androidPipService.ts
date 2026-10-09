@@ -50,5 +50,6 @@ export function requestNativePip(): boolean {
  * Checks if the native Android PiP bridge is available in the current environment.
  */
 export function isNativePipSupported(): boolean {
-  return typeof window !== "undefined" && Boolean(window.AndroidCallBridge);
+  if (typeof window === "undefined" || !window.AndroidCallBridge) return false;
+  return window.AndroidCallBridge.isSupported?.() !== false;
 }

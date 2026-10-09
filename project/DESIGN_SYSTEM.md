@@ -22,11 +22,11 @@ The design system strictly revolves around an authorized **7-color palette**. No
 
 | Token | Hex Value | Semantic Usage & Strict Rules |
 | :--- | :--- | :--- |
-| **Brand Primary** | `#283E7C` | Primary buttons, active tabs, outgoing chat bubbles, interactive focus rings |
-| **Accent Lavender-Blue** | `#9098C8` | Section highlights, subheadings, verified badges, active icons, non-signal checkmarks |
+| **Brand Primary** | `#283E7C` | Primary buttons, active tabs, outgoing chat bubbles |
+| **Accent Lavender-Blue** | `#9098C8` | Section highlights, subheadings, verified badges, active icons, non-signal checkmarks, interactive focus rings |
 | **Pure Black** | `#000000` | Deep video backdrops, modal scrim overlays, OLED contrast layers |
 | **Dark Surface** | `#1E1F22` | Application shell background, container cards, inputs, in-call panels |
-| **Danger Red** | `#DA373C` | **Leave Call / Hang Up button**, critical errors, poor connection signal (< 400ms) |
+| **Danger Red** | `#DA373C` | **Leave Call / Hang Up button**, critical errors, poor connection signal (> 400ms) |
 | **Signal Green** | `#1F332B` | **Exclusively gated to connection quality, ping, and TLS status.** Forbidden elsewhere. |
 | **Warning Yellow** | `#F0B232` | Ephemeral message TTL burning timer, fair connection ping (200–400ms), solo room clock |
 
@@ -43,7 +43,7 @@ The design system strictly revolves around an authorized **7-color palette**. No
    * Poor (> 400ms): `bg-[#DA373C]/15 text-[#DA373C] border-[#DA373C]/30`
 4. **Chat & Message Bubbles**:
    * Local User: `bg-[#283E7C] text-white`
-   * Remote Peer: `bg-[#383a40] text-[#f2f3f5] border-[#3f4147]`
+   * Remote Peer: `bg-[#1E1F22] text-[#9098C8] border-[#9098C8]`
    * TTL Burning Flame: `#F0B232` with numeric countdown.
 
 ---
@@ -77,7 +77,7 @@ The design system strictly revolves around an authorized **7-color palette**. No
   * Mobile / Android minimum tap target: `48px` (`min-h-[48px]`).
 * **Interactive States**:
   * Active tap feedback: `active:scale-[0.98]` within 100ms.
-  * Focus indicators: `focus-visible:ring-2 focus-visible:ring-[#283E7C]`.
+  * Focus indicators: `focus-visible:ring-2 focus-visible:ring-[#9098C8]`.
   * Zero layout shifts on hover or click.
 * **Mobile Safe Areas**:
   * Top header accounts for status bar: `pt-safe` (`env(safe-area-inset-top)`).

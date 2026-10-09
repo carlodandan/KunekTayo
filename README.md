@@ -8,7 +8,7 @@
   <p><em>Lightweight, temporary 1-on-1 private voice, video, and vanishing chat for Windows, Android, and Web.</em></p>
 
   <p>
-    <a href="https://github.com/carlodandan/KunekTayo/releases"><img src="https://img.shields.io/badge/version-v1.0.0-283E7C?style=for-the-badge" alt="Version 1.0.0" /></a>
+    <a href="https://github.com/carlodandan/KunekTayo/releases"><img src="https://img.shields.io/badge/version-v1.1.0-283E7C?style=for-the-badge" alt="Version 1.1.0" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/tauri-v2.12-9098C8?style=for-the-badge&logo=tauri&logoColor=white" alt="Tauri v2" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/react-v19.3-283E7C?style=for-the-badge&logo=react&logoColor=white" alt="React 19" /></a>
     <a href="#-automated-testing"><img src="https://img.shields.io/badge/tests-46%2F46%20passed-1F332B?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest 46/46 Passed" /></a>
@@ -37,10 +37,10 @@
 In traditional platforms, every direct call and message leaves a persistent trail across databases, servers, and identity graphs. KunekTayo fundamentally eliminates that trail:
 * **No user accounts, profiles, or cookies.**
 * **Strict 2-participant limit enforced authoritatively at the server level.**
-* **Zero server database, message logging, or call transcripts.**
+* **No long-term user-content records, message logging, or call transcripts; transient room coordination uses SQLite-backed Durable Object storage.**
 * **Direct peer-to-peer audio, video, and screen sharing via WebRTC DTLS-SRTP.**
 * **Automatic 30-minute self-destruct countdown for unclaimed rooms.**
-* **Volatile in-memory room coordination destroyed instantly upon departure.**
+* **Room state is deleted immediately only after both participants have left; when one remains, a 30-minute reconnect grace period applies.**
 
 ---
 
@@ -50,7 +50,7 @@ In traditional platforms, every direct call and message leaves a persistent trai
 * **Authoritative 2-Person Ceiling**: Third-party connections receive an immediate HTTP 409 (`ROOM_FULL`) rejection.
 * **Cryptographic Room Tokens**: 128-bit pseudorandom tokens (`crypto.getRandomValues`) validated with SHA-256 hashes and constant-time comparisons (`timingSafeEqual`).
 * **30-Minute Solo Room TTL**: Unpaired rooms self-destruct after 30 minutes. Once both peers connect, the countdown cancels and the call stays active indefinitely.
-* **Instant Destruction**: When both participants leave, the coordinator wipes all room state from volatile memory (`storage.deleteAll()`).
+* **Instant Destruction**: When both participants leave, the coordinator clears its in-memory state and Durable Object storage (`storage.deleteAll()`).
 
 ### 🎙️ Audio & Video Excellence
 * **Web Audio DSP Noise Suppression**: Multi-stage audio processing graph filtering low-frequency rumble (85 Hz high-pass), elevating vocal presence (3 kHz peaking EQ), and balancing vocal dynamics.
@@ -81,7 +81,7 @@ In traditional platforms, every direct call and message leaves a persistent trai
 | **Authoritative 2-Peer Cap** | ✅ **Strict 2/2** | ❌ Unlimited | ❌ Large Meetings | ❌ Group Cap |
 | **Message Auto-Purge (TTL)** | ✅ **15s – 5m Burning** | ❌ No | ❌ No | ⚠️ 24h – 90d |
 | **Data Retention on Exit** | ❌ **Zero (Wiped)** | ✅ Permanent | ✅ Account Logs | ⚠️ Permanent History |
-| **Third-Party Server Exposure**| ❌ **Private Binding** | ⚠️ Public APIs | ⚠️ Public APIs | ⚠️ Centralized Meta |
+| **Third-Party Server Exposure**| **Pages API public unless Access-protected** | ⚠️ Public APIs | ⚠️ Public APIs | ⚠️ Centralized Meta |
 
 ---
 
@@ -106,9 +106,9 @@ flowchart TD
         DO["Durable Object (Room Coordinator)"]
         STUN["Google STUN / Cloudflare TURN"]
 
-        Pages --> Functions
-        Functions -- "Internal Service Binding" --> Worker
-        Worker --> DO
+        Pages <--> Functions
+        Functions <-- "SIGNALING Service Binding" --> Worker
+        Worker <--> DO
     end
 
     subgraph ClientB["Participant 2 (Guest)"]
@@ -122,8 +122,8 @@ flowchart TD
     ClientA -- "1. Create Room (/api/rooms)" --> Pages
     ClientB -- "2. Join via Invite Link" --> Pages
 
-    ClientA <-. "3. Signaling (Offer / Answer / ICE)" .-> DO
-    ClientB <-. "3. Signaling (Offer / Answer / ICE)" .-> DO
+    ClientA <-. "3. Signaling (/api/rooms/:id/ws)" .-> Pages
+    ClientB <-. "3. Signaling (/api/rooms/:id/ws)" .-> Pages
 
     ClientA <-. "NAT Traversal" .-> STUN
     ClientB <-. "NAT Traversal" .-> STUN
@@ -140,8 +140,8 @@ KunekTayo’s visual interface is strictly confined to an authorized 7-color pal
 
 | Swatch | Color Hex | Role | Usage Rules |
 | :---: | :--- | :--- | :--- |
-| <img src="https://via.placeholder.com/20/283E7C/283E7C.png" width="20" height="20" /> | `#283E7C` | **Brand Primary** | Action buttons, local chat bubbles, interactive rings, focus states |
-| <img src="https://via.placeholder.com/20/9098C8/9098C8.png" width="20" height="20" /> | `#9098C8` | **Lavender-Blue Accent** | Subheadings, verified badges, active icons, non-signal checkmarks |
+| <img src="https://via.placeholder.com/20/283E7C/283E7C.png" width="20" height="20" /> | `#283E7C` | **Brand Primary** | Action buttons, local chat bubbles, interactive rings |
+| <img src="https://via.placeholder.com/20/9098C8/9098C8.png" width="20" height="20" /> | `#9098C8` | **Lavender-Blue Accent** | Subheadings, verified badges, active icons, non-signal checkmarks, focus states |
 | <img src="https://via.placeholder.com/20/000000/000000.png" width="20" height="20" /> | `#000000` | **Pure Black** | Deep video backdrop, modal scrims, OLED power efficiency |
 | <img src="https://via.placeholder.com/20/1E1F22/1E1F22.png" width="20" height="20" /> | `#1E1F22` | **Dark Surface** | Application canvas, container cards, input backgrounds |
 | <img src="https://via.placeholder.com/20/DA373C/DA373C.png" width="20" height="20" /> | `#DA373C` | **Danger Red** | **Leave Call / Hang Up button**, critical errors, poor ping (> 400ms) |
@@ -189,7 +189,7 @@ flowchart LR
 | **Signaling & Edge** | [Cloudflare Workers](https://workers.cloudflare.com/) + [DO](https://developers.cloudflare.com/durable-objects/) | Latest | Authoritative 1-on-1 state, 30m solo room alarm |
 | **Web Hosting** | [Cloudflare Pages](https://pages.cloudflare.com/) | Latest | Static hosting, `/api/*` private Service Binding |
 | **P2P Protocols** | WebRTC (`RTCPeerConnection`, `RTCDataChannel`) | Standard | DTLS-SRTP audio/video, SCTP ephemeral data |
-| **Test Runner** | [Vitest](https://vitest.dev/) | `v5.0` | 38 unit & integration tests across 8 test suites |
+| **Test Runner** | [Vitest](https://vitest.dev/) | `v5.0` | 46 unit & integration tests across 8 test suites |
 
 ---
 
@@ -237,8 +237,8 @@ pnpm build
 pnpm tauri build
 ```
 Generated artifacts:
-* `src-tauri/target/release/bundle/nsis/KunekTayo_1.0.0_x64-setup.exe`
-* `src-tauri/target/release/bundle/msi/KunekTayo_1.0.0_x64_en-US.msi`
+* `src-tauri/target/release/bundle/nsis/KunekTayo_1.1.0_x64-setup.exe`
+* `src-tauri/target/release/bundle/msi/KunekTayo_1.1.0_x64_en-US.msi`
 
 ### 2. Android Mobile Package (`.apk`)
 
@@ -269,14 +269,14 @@ cd server
 pnpm install
 pnpm run deploy
 ```
-*Note: In Cloudflare Pages Settings &rarr; Functions, add the `SIGNALING` Service Binding to `kunektayo-signaling` and turn OFF `workers.dev` to make the backend completely private.*
+*Note: In Cloudflare Pages Settings &rarr; Functions, add the `SIGNALING` Service Binding to `kunektayo-signaling` and turn OFF `workers.dev` to hide the direct Worker hostname. The Pages `/api/*` routes remain public; Cloudflare Access protection is required when external requests must be blocked (see the [deployment runbook](project/DEPLOYMENT.md#23-disable-the-direct-workersdev-route)).*
 
 ---
 
 ## 🛡️ Security & Privacy Guarantees
 
 1. **Zero-Knowledge Token Architecture**: Plaintext invite tokens never touch the server. Only SHA-256 hashes are transmitted and compared using constant-time `timingSafeEqual`.
-2. **Backend Server Isolation**: The signaling worker has no public URL; all requests proxy over Cloudflare's private internal memory bus via Service Bindings.
+2. **Backend Server Isolation**: With `workers.dev` disabled, clients reach the signaling Worker through the Pages `/api/*` route and `SIGNALING` Service Binding. This route remains publicly reachable unless protected by Cloudflare Access.
 3. **End-to-End Encryption**: DTLS-SRTP secures all media; SCTP-over-DTLS secures data channels.
 4. **Rate Limiting & Flood Shield**: Sliding-window IP rate limiting (15 room creates/min, 30 joins/min) and 30 msgs/s WebSocket message caps.
 5. **Auto-Reconnection**: Exponential backoff signaling recovery and automatic ICE restarts (up to 3 retries) on network interruption.

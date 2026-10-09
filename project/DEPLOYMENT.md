@@ -7,14 +7,14 @@ KunekTayo consists of two coordinated tiers:
    - **Native targets**: Windows (`.exe` NSIS installer, `.msi`) and Android (`.apk`, `.aab`). Native apps boot straight into the in-call/room workspace, completely omitting the landing page.
    - **Web target**: Hosted on **Cloudflare Pages** serving both the **Landing Page** and the **Instant Web Client** from a unified bundle (`dist/`).
 2. **Signaling & Room State Backend (Cloudflare Workers & Durable Objects)**:
-   - Private serverless Worker with Durable Objects for authoritative 1-on-1 room state and WebSockets.
-   - **Internal Service Binding**: Connected privately to Cloudflare Pages via the `SIGNALING` Service Binding. The public `workers.dev` route is disabled, exposing zero backend URLs to external scrapers.
+   - Serverless Worker with Durable Objects for authoritative 1-on-1 room state and WebSockets.
+   - **Internal Service Binding**: Connected privately to Cloudflare Pages via the `SIGNALING` Service Binding. Disabling `workers.dev` hides only the direct Worker hostname; the Pages `/api/...` route remains publicly reachable unless protected by Cloudflare Access.
 
 ---
 
-## 2. Cloudflare Pages & Service Binding Deployment (Zero Server Exposure)
+## 2. Cloudflare Pages & Service Binding Deployment
 
-To protect backend endpoints from scrapers and third-party abuse, KunekTayo uses a **Cloudflare Pages Function** (`functions/api/[[route]].ts`) that forwards requests internally to the worker over Cloudflare's private network mesh.
+KunekTayo uses a **Cloudflare Pages Function** (`functions/api/[[route]].ts`) that forwards requests internally to the worker over Cloudflare's private network mesh.
 
 ### 2.1 Deploy the Signaling Worker
 
@@ -40,13 +40,15 @@ Upon initial deployment, Wrangler registers the worker named `kunektayo-signalin
    - **Environment**: `production`
 4. Click **Save**.
 
-### 2.3 Disable Public `workers.dev` Route (Make Worker Private)
+### 2.3 Disable the Direct `workers.dev` Route
 
 1. In the Cloudflare Dashboard, go to **Workers & Pages** &rarr; `kunektayo-signaling`.
 2. Navigate to **Settings** &rarr; **Domains & Routes**.
 3. Under **workers.dev**, toggle it **OFF** (or delete the public route).
 
-The Worker now has **zero public web address**. It cannot be accessed via curl or foreign sites, only via your own Cloudflare Pages domain (`https://kunektayo.pages.dev/api/...`).
+This disables only the direct Worker hostname. Requests to `https://kunektayo.pages.dev/api/...` still reach the Worker through the Pages Function and `SIGNALING` binding, including requests from curl or external clients. Service Bindings do not authenticate those callers.
+
+**Deployment requirement when external requests must be blocked:** Configure Cloudflare Access to protect the Pages `/api/*` routes on every exposed Pages and custom domain, with policies allowing only authorized callers. Verify that unauthorized HTTP requests and WebSocket upgrades are denied, and that authorized web and native clients can connect. Disabling `workers.dev` alone does not provide this protection.
 
 ### 2.4 Deploy Cloudflare Pages
 
@@ -76,9 +78,9 @@ npx wrangler pages deploy dist --project-name kunektayo
 
 Because the web client automatically resolves to the current window origin when deployed, **`VITE_SIGNALING_URL` is completely optional for Cloudflare Pages**. The frontend automatically routes requests to `/api/rooms` and `/api/rooms/:id/ws` on the same domain.
 
-For native desktop (Windows) and mobile (Android) builds, set your production domain:
+For native desktop (Windows) and mobile (Android) builds, set your production domain using the `wss://` scheme for the WebSocket constructor:
 ```env
-VITE_SIGNALING_URL=https://kunektayo.pages.dev
+VITE_SIGNALING_URL=wss://kunektayo.pages.dev
 ```
 
 ---
@@ -130,8 +132,8 @@ pnpm tauri build
 ```
 
 ### Output Artifacts
-- **NSIS Setup Installer**: `src-tauri/target/release/bundle/nsis/KunekTayo_1.0.0_x64-setup.exe`
-- **MSI Installer**: `src-tauri/target/release/bundle/msi/KunekTayo_1.0.0_x64_en-US.msi`
+- **NSIS Setup Installer**: `src-tauri/target/release/bundle/nsis/KunekTayo_1.1.0_x64-setup.exe`
+- **MSI Installer**: `src-tauri/target/release/bundle/msi/KunekTayo_1.1.0_x64_en-US.msi`
 
 ---
 

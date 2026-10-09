@@ -11,7 +11,7 @@ KunekTayo is a lightweight, temporary, 1-to-1 communication application for **Wi
 * **Strict 1-to-1 Limitation**: Exactly 2 participants maximum per room enforced authoritatively at the server level.
 * **Zero User Accounts**: No usernames, passwords, cookies, or persistent identity records. Authentication relies on volatile 128-bit cryptographic tokens.
 * **Direct P2P Media Mesh**: Audio, video, and screen sharing flow directly between peer devices over encrypted WebRTC DTLS-SRTP channels.
-* **Zero Server Storage**: No databases, transcripts, or media recording. Disconnection triggers immediate memory destruction (`storage.deleteAll()`).
+* **Transient Room Storage**: SQLite-backed Durable Object storage holds room coordination state and alarms, with no long-term user-content records, transcripts, or media recording. The final participant’s departure immediately clears room state (`storage.deleteAll()`); when one participant remains, a 30-minute reconnect grace period applies.
 * **Platform-Adaptive UX**:
   * **Native Apps (Windows & Android)**: Bypasses the marketing landing page and boots directly into the in-call or room creation workspace.
   * **Web Client**: Provides both the marketing overview and full web calling application with an instant toggle.
@@ -38,9 +38,9 @@ flowchart TD
         DO["Durable Object (Room Coordinator)"]
         STUN["Google STUN / Cloudflare TURN"]
 
-        Pages --> Functions
-        Functions -- "Internal Service Binding" --> Worker
-        Worker --> DO
+        Pages <--> Functions
+        Functions <-- "SIGNALING Service Binding" --> Worker
+        Worker <--> DO
     end
 
     subgraph ClientB["Participant 2 (Guest)"]
@@ -54,8 +54,8 @@ flowchart TD
     ClientA -- "1. Create Room (/api/rooms)" --> Pages
     ClientB -- "2. Join via Invite Link" --> Pages
 
-    ClientA <-. "3. Signaling (Offer / Answer / ICE)" .-> DO
-    ClientB <-. "3. Signaling (Offer / Answer / ICE)" .-> DO
+    ClientA <-. "3. Signaling (/api/rooms/:id/ws)" .-> Pages
+    ClientB <-. "3. Signaling (/api/rooms/:id/ws)" .-> Pages
 
     ClientA <-. "NAT Traversal" .-> STUN
     ClientB <-. "NAT Traversal" .-> STUN

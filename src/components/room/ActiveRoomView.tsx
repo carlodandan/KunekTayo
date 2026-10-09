@@ -54,7 +54,9 @@ export const ActiveRoomView: React.FC = () => {
   const mobileFloatingVideoRef = useRef<HTMLVideoElement>(null);
 
   const [isPiPSupported, setIsPiPSupported] = useState(false);
-  const [isPiPActive, setIsPiPActive] = useState(false);
+  const [isBrowserPiPActive, setIsBrowserPiPActive] = useState(false);
+  const [isNativePiPActive, setIsNativePiPActive] = useState(false);
+  const isPiPActive = isBrowserPiPActive || isNativePiPActive;
   const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
 
   // Check Picture-in-Picture support (Android native Activity PiP or browser HTML5 PiP)
@@ -73,7 +75,7 @@ export const ActiveRoomView: React.FC = () => {
     const handleAndroidPip = (e: Event) => {
       const customEvent = e as CustomEvent<{ isPip?: boolean }>;
       if (customEvent.detail?.isPip !== undefined) {
-        setIsPiPActive(Boolean(customEvent.detail.isPip));
+        setIsNativePiPActive(Boolean(customEvent.detail.isPip));
       }
     };
     window.addEventListener("android:pip-changed", handleAndroidPip);
@@ -120,8 +122,8 @@ export const ActiveRoomView: React.FC = () => {
 
   // Synchronize Picture-in-Picture events across candidate video elements
   useEffect(() => {
-    const onEnter = () => setIsPiPActive(true);
-    const onLeave = () => setIsPiPActive(false);
+    const onEnter = () => setIsBrowserPiPActive(true);
+    const onLeave = () => setIsBrowserPiPActive(false);
 
     const elements = [
       desktopRemoteVideoRef.current,
@@ -135,7 +137,7 @@ export const ActiveRoomView: React.FC = () => {
     });
 
     if (typeof document !== "undefined") {
-      setIsPiPActive(
+      setIsBrowserPiPActive(
         Boolean(
           document.pictureInPictureElement &&
             elements.includes(document.pictureInPictureElement as HTMLVideoElement)
@@ -190,7 +192,7 @@ export const ActiveRoomView: React.FC = () => {
     if (isNativePipSupported()) {
       const entered = requestNativePip();
       if (entered) {
-        setIsPiPActive(true);
+        setIsNativePiPActive(true);
         return;
       }
     }
@@ -200,12 +202,12 @@ export const ActiveRoomView: React.FC = () => {
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
-        setIsPiPActive(false);
+        setIsBrowserPiPActive(false);
       } else {
         const videoEl = getActiveRemoteVideoElement();
         if (videoEl) {
           await videoEl.requestPictureInPicture();
-          setIsPiPActive(true);
+          setIsBrowserPiPActive(true);
         }
       }
     } catch (err) {
@@ -247,7 +249,7 @@ export const ActiveRoomView: React.FC = () => {
       onDrop={handleDrop}
       className={cn(
         "relative w-full max-w-4xl mx-auto flex flex-col space-y-3 sm:space-y-4 animate-in fade-in duration-200",
-        isPiPActive && "fixed inset-0 z-50 h-screen w-screen p-0 m-0 space-y-0 bg-black justify-center items-center max-w-none rounded-none"
+        isNativePiPActive && "fixed inset-0 z-50 h-screen w-screen p-0 m-0 space-y-0 bg-black justify-center items-center max-w-none rounded-none"
       )}
     >
       {/* Drag & Drop Visual Overlay */}
@@ -262,7 +264,7 @@ export const ActiveRoomView: React.FC = () => {
       )}
 
       {/* Top Bar Status */}
-      <div className={cn("flex flex-wrap items-center justify-between gap-2.5 px-1", isPiPActive && "hidden")}>
+      <div className={cn("flex flex-wrap items-center justify-between gap-2.5 px-1", isNativePiPActive && "hidden")}>
         <div className="flex items-center gap-2 flex-wrap">
           <ConnectionQualityBadge />
           {isScreenSharing && (
@@ -317,7 +319,7 @@ export const ActiveRoomView: React.FC = () => {
         <div
           className={cn(
             "relative w-full aspect-[4/3] sm:aspect-video rounded-2xl overflow-hidden border border-[#35373c] md:hidden bg-[#1e1f22]",
-            isPiPActive && "fixed inset-0 z-50 h-screen w-screen aspect-auto rounded-none border-0"
+            isNativePiPActive && "fixed inset-0 z-50 h-screen w-screen aspect-auto rounded-none border-0"
           )}
         >
           {/* Mobile Main Video Feed */}
@@ -335,7 +337,7 @@ export const ActiveRoomView: React.FC = () => {
           <div
             className={cn(
               "absolute bottom-3 right-3 w-28 sm:w-36 aspect-video z-20 rounded-xl overflow-hidden border border-[#35373c] bg-[#2b2d31] transition-transform active:scale-95 cursor-pointer",
-              isPiPActive && "hidden"
+              isNativePiPActive && "hidden"
             )}
             title="Tap to swap primary feed"
           >
@@ -385,7 +387,7 @@ export const ActiveRoomView: React.FC = () => {
         elevated
         className={cn(
           "p-2 sm:p-4 bg-[#2b2d31] border-[#35373c] flex items-center justify-between gap-1.5 sm:gap-3 sticky bottom-2 z-30",
-          isPiPActive && "hidden"
+          isNativePiPActive && "hidden"
         )}
       >
         <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-center sm:justify-start">
