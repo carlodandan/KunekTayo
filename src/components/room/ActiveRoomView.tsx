@@ -179,7 +179,7 @@ export const ActiveRoomView: React.FC = () => {
         el.removeEventListener("leavepictureinpicture", onLeave);
       });
     };
-  }, [remoteStream, isLocalSwapped]);
+  }, [remoteStream, isLocalSwapped, isMobile]);
 
   // Ensure Picture-in-Picture is exited if component unmounts
   useEffect(() => {
