@@ -60,6 +60,23 @@ export const ActiveRoomView: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Track viewport breakpoint to prevent rendering duplicate WebRTC video sinks
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mediaQuery.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
   const desktopRemoteVideoRef = useRef<HTMLVideoElement>(null);
   const mobileMainVideoRef = useRef<HTMLVideoElement>(null);
   const mobileFloatingVideoRef = useRef<HTMLVideoElement>(null);
@@ -312,63 +329,67 @@ export const ActiveRoomView: React.FC = () => {
 
       {/* Main Content Area */}
       <div className={cn("grid gap-4 w-full", isChatOpen ? "lg:grid-cols-3" : "grid-cols-1")}>
-        {/* DesktopIcon Side-by-Side Split View (visible md:) */}
-        <div className={cn("hidden md:grid grid-cols-2 gap-4", isChatOpen ? "lg:col-span-2" : "col-span-1")}>
-          <VideoPlayer
-            ref={desktopRemoteVideoRef}
-            stream={remoteStream}
-            label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
-            className="aspect-video"
-          />
-          <VideoPlayer
-            stream={localStream}
-            label="You"
-            isLocal
-            isMuted={isMuted}
-            isVideoOff={isCameraOff}
-            className="aspect-video"
-          />
-        </div>
-
-        {/* Mobile Stage: Semi-portrait, semi-fullscreen video + Top-right PiP + Bottom 2-line Chat Box (visible < md) */}
-        <div
-          className={cn(
-            "relative w-full aspect-[9/15] sm:aspect-video min-h-[460px] max-h-[76vh] rounded-2xl overflow-hidden border border-[#35373c] md:hidden bg-[#1e1f22]",
-            isNativePiPActive && "fixed inset-0 z-50 h-screen w-screen aspect-auto rounded-none border-0 min-h-0 max-h-none"
-          )}
-        >
-          {/* Mobile Main Video Feed */}
-          <VideoPlayer
-            ref={mobileMainVideoRef}
-            stream={isLocalSwapped ? localStream : remoteStream}
-            label={isLocalSwapped ? "You" : session?.myRole === "host" ? "Guest" : "Host"}
-            isLocal={isLocalSwapped}
-            isMuted={isLocalSwapped ? isMuted : false}
-            isVideoOff={isLocalSwapped ? isCameraOff : false}
-            className="w-full h-full border-0 rounded-none"
-          />
-
-          {/* Mobile Floating Picture-in-Picture (Tap to swap feeds, positioned top-right) */}
-          <div
-            className={cn(
-              "absolute top-2.5 right-2.5 w-24 sm:w-28 aspect-[3/4] z-20 rounded-xl overflow-hidden border border-[#35373c] bg-[#2b2d31] shadow-lg transition-transform active:scale-95 cursor-pointer",
-              isNativePiPActive && "hidden"
-            )}
-            title="Tap to swap primary feed"
-          >
+        {/* Desktop Side-by-Side Split View (only mounted on desktop >= md to prevent duplicate video sinks/decoders) */}
+        {!isMobile && (
+          <div className={cn("grid grid-cols-2 gap-4", isChatOpen ? "lg:col-span-2" : "col-span-1")}>
             <VideoPlayer
-              ref={mobileFloatingVideoRef}
-              stream={isLocalSwapped ? remoteStream : localStream}
-              label={isLocalSwapped ? (session?.myRole === "host" ? "Guest" : "Host") : "You"}
-              isLocal={!isLocalSwapped}
-              isMuted={!isLocalSwapped ? isMuted : false}
-              isVideoOff={!isLocalSwapped ? isCameraOff : false}
-              isPip
-              onClick={() => setIsLocalSwapped(!isLocalSwapped)}
-              className="w-full h-full border-0 rounded-none"
+              ref={desktopRemoteVideoRef}
+              stream={remoteStream}
+              label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
+              className="aspect-video"
+            />
+            <VideoPlayer
+              stream={localStream}
+              label="You"
+              isLocal
+              isMuted={isMuted}
+              isVideoOff={isCameraOff}
+              className="aspect-video"
             />
           </div>
-        </div>
+        )}
+
+        {/* Mobile Stage: Semi-portrait, semi-fullscreen video + Top-right PiP (only mounted on mobile < md) */}
+        {isMobile && (
+          <div
+            className={cn(
+              "relative w-full aspect-[9/15] sm:aspect-video min-h-[460px] max-h-[76vh] rounded-2xl overflow-hidden border border-[#35373c] bg-[#1e1f22]",
+              isNativePiPActive && "fixed inset-0 z-50 h-screen w-screen aspect-auto rounded-none border-0 min-h-0 max-h-none"
+            )}
+          >
+            {/* Mobile Main Video Feed */}
+            <VideoPlayer
+              ref={mobileMainVideoRef}
+              stream={isLocalSwapped ? localStream : remoteStream}
+              label={isLocalSwapped ? "You" : session?.myRole === "host" ? "Guest" : "Host"}
+              isLocal={isLocalSwapped}
+              isMuted={isLocalSwapped ? isMuted : false}
+              isVideoOff={isLocalSwapped ? isCameraOff : false}
+              className="w-full h-full border-0 rounded-none"
+            />
+
+            {/* Mobile Floating Picture-in-Picture (Tap to swap feeds, positioned top-right) */}
+            <div
+              className={cn(
+                "absolute top-2.5 right-2.5 w-24 sm:w-28 aspect-[3/4] z-20 rounded-xl overflow-hidden border border-[#35373c] bg-[#2b2d31] shadow-lg transition-transform active:scale-95 cursor-pointer",
+                isNativePiPActive && "hidden"
+              )}
+              title="Tap to swap primary feed"
+            >
+              <VideoPlayer
+                ref={mobileFloatingVideoRef}
+                stream={isLocalSwapped ? remoteStream : localStream}
+                label={isLocalSwapped ? (session?.myRole === "host" ? "Guest" : "Host") : "You"}
+                isLocal={!isLocalSwapped}
+                isMuted={!isLocalSwapped ? isMuted : false}
+                isVideoOff={!isLocalSwapped ? isCameraOff : false}
+                isPip
+                onClick={() => setIsLocalSwapped(!isLocalSwapped)}
+                className="w-full h-full border-0 rounded-none"
+              />
+            </div>
+          </div>
+        )}
 
         {/* DesktopIcon Ephemeral Chat Panel (embedded when lg:) */}
         {isChatOpen && (

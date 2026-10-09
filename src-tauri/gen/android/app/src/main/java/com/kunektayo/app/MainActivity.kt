@@ -33,7 +33,14 @@ class MainActivity : TauriActivity() {
         isCallActive = active
         runOnUiThread {
             if (active) {
-                CallNotificationService.start(this)
+                val hasMicPerm = androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.RECORD_AUDIO
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                if (hasMicPerm) {
+                    CallNotificationService.start(this)
+                }
                 updatePipParams()
             } else {
                 CallNotificationService.stop(this)
@@ -49,11 +56,30 @@ class MainActivity : TauriActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (isCallActive) {
+            val hasMicPerm = androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.RECORD_AUDIO
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (hasMicPerm) {
+                CallNotificationService.start(this)
+            }
+            updatePipParams()
+        }
+    }
+
     private fun updatePipParams() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
             try {
+                val isPortrait = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+                val ratio = if (isPortrait) Rational(9, 16) else Rational(16, 9)
+
                 val builder = PictureInPictureParams.Builder()
-                    .setAspectRatio(Rational(16, 9))
+                    .setAspectRatio(ratio)
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     builder.setAutoEnterEnabled(isCallActive)
@@ -66,22 +92,30 @@ class MainActivity : TauriActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // If the user navigates away or taps home while in an active call, enter PiP
-        if (isCallActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                val params = PictureInPictureParams.Builder()
-                    .setAspectRatio(Rational(16, 9))
-                    .build()
-                enterPictureInPictureMode(params)
-            } catch (_: Exception) {}
+        // On Android 8.0 through 11, manual enterPictureInPictureMode is needed on user leave.
+        // On Android 12+ (API 31+), setAutoEnterEnabled(true) handles this automatically;
+        // manually calling enterPictureInPictureMode here on Android 12+ can cause
+        // IllegalStateException / gesture animation race crashes on certain OEM skins.
+        if (isCallActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            if (packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                try {
+                    val isPortrait = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+                    val ratio = if (isPortrait) Rational(9, 16) else Rational(16, 9)
+                    val params = PictureInPictureParams.Builder()
+                        .setAspectRatio(ratio)
+                        .build()
+                    enterPictureInPictureMode(params)
+                } catch (_: Exception) {}
+            }
         }
     }
 
     override fun onPause() {
         super.onPause()
-        // If a call is active or the activity entered PiP, unpause the WebView so WebRTC
-        // audio, microphone capture, video decoding, and network loops stay alive.
-        if (isCallActive || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode)) {
+        // Only keep the WebView resumed if actively inside Picture-in-Picture mode so video renders.
+        // Never force resume when hidden/minimized to background, which causes Chromium EGL/GPU crashes.
+        // WebRTC background audio and peer connection are kept alive by CallNotificationService.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode) {
             webView?.onResume()
         }
     }
@@ -114,12 +148,23 @@ class AndroidCallBridge(private val activity: MainActivity) {
 
     @JavascriptInterface
     fun enterPip(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            activity.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+            val future = java.util.concurrent.CompletableFuture<Boolean>()
+            activity.runOnUiThread {
+                try {
+                    val isPortrait = activity.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+                    val ratio = if (isPortrait) Rational(9, 16) else Rational(16, 9)
+                    val params = PictureInPictureParams.Builder()
+                        .setAspectRatio(ratio)
+                        .build()
+                    future.complete(activity.enterPictureInPictureMode(params))
+                } catch (e: Exception) {
+                    future.complete(false)
+                }
+            }
             return try {
-                val params = PictureInPictureParams.Builder()
-                    .setAspectRatio(Rational(16, 9))
-                    .build()
-                activity.enterPictureInPictureMode(params)
+                future.get(1, java.util.concurrent.TimeUnit.SECONDS)
             } catch (_: Exception) {
                 false
             }
@@ -128,5 +173,8 @@ class AndroidCallBridge(private val activity: MainActivity) {
     }
 
     @JavascriptInterface
-    fun isSupported(): Boolean = true
+    fun isSupported(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+               activity.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)
+    }
 }

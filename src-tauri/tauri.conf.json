@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "KunekTayo",
-  "version": "1.1.1-beta.1",
+  "version": "1.1.1",
   "identifier": "com.kunektayo.app",
   "build": {
     "beforeDevCommand": "pnpm dev",

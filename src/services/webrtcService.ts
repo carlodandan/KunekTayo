@@ -121,7 +121,28 @@ class WebRtcService {
       this.emit("local_stream", this.localStream);
       return this.localStream;
     } catch (err: unknown) {
-      console.warn("getUserMedia failed or denied:", err);
+      console.warn("getUserMedia failed or denied with video:", err);
+      // If combined audio+video failed, attempt fallback to audio-only to preserve calling capability
+      if (video && audio) {
+        try {
+          console.warn("Attempting fallback to audio-only media stream...");
+          this.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: this.noiseSuppressionEnabled,
+              autoGainControl: true,
+              channelCount: 1,
+            },
+            video: false,
+          });
+          this.isCameraOff = true;
+          this.emit("local_stream", this.localStream);
+          this.emit("media_state", { isMuted: this.isMuted, isCameraOff: true });
+          return this.localStream;
+        } catch (audioErr: unknown) {
+          console.warn("Audio-only media fallback also failed:", audioErr);
+        }
+      }
       this.emit("media_error", err);
       return null;
     }

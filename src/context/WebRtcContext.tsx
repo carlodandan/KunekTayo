@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { webrtcService, PeerConnectionState } from "@/services/webrtcService";
+import { notifyNativeCallState } from "@/services/androidPipService";
 import { useRoom } from "./RoomContext";
 
 interface WebRtcContextValue {
@@ -76,6 +77,7 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       webrtcService.startLocalMedia(true, true).then((stream) => {
         if (stream) {
+          notifyNativeCallState(true);
           webrtcService.initPeerConnection(isHost);
           if (isHost) {
             // Give brief moment for peer connection ready, then offer
