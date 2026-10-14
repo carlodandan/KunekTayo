@@ -16,9 +16,9 @@ export const LandingFaq: React.FC = () => {
         "No. KunekTayo has zero user accounts, zero logins, and zero identity profiling. Every session is authenticated purely through 128-bit cryptographically secure pseudorandom tokens generated on demand in your browser.",
     },
     {
-      question: "Why is there a 30-minute expiration countdown?",
+      question: "How long do rooms stay open?",
       answer:
-        "When you create a room and wait for your peer, an automatic volatile timer runs for 30 minutes. If no one joins, the room self-destructs to prevent orphaned instances. Once your peer connects, the timer cancels and the room remains alive indefinitely until you finish talking.",
+        "Rooms do not have an expiration timer. A room stays open indefinitely as long as you (the host) remain inside. Once the host leaves or closes the call, the room terminates and all temporary resources vanish.",
     },
     {
       question: "Can a third person eavesdrop or join our room?",

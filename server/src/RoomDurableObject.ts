@@ -280,16 +280,29 @@ export class RoomDurableObject extends DurableObject {
     }
 
     const body = (await request.json()) as { participantId: string };
+    const leaving = state.participants.find((p) => p.id === body.participantId);
+    const isHost = leaving?.role === "host";
+
     state.participants = state.participants.filter((p) => p.id !== body.participantId);
     if (state.disconnectedParticipants) {
       delete state.disconnectedParticipants[body.participantId];
     }
     state.disconnectGraceExpiresAt = null;
 
-    if (state.participants.length === 0) {
-      // Both participants have left; close and clean up room
+    if (isHost || state.participants.length === 0) {
+      // Host left or all participants have left; close and clean up room
       state.status = "closed";
       await this.ctx.storage.deleteAlarm();
+      this.broadcast({
+        type: "room_state",
+        state: "closed",
+        reason: isHost ? "host_left" : "all_left",
+      });
+      for (const ws of this.ctx.getWebSockets()) {
+        try {
+          ws.close(4000, "Room Closed");
+        } catch {}
+      }
       await this.ctx.storage.deleteAll();
       this.stateCache = null;
       return new Response(JSON.stringify({ success: true, closed: true }), {

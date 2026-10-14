@@ -43,7 +43,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<RoomError | null>(null);
   const [rejoinSession, setRejoinSession] = useState<RejoinSession | null>(null);
   const [isPeerReconnecting, setIsPeerReconnecting] = useState(false);
-  const [now, setNow] = useState(Date.now());
 
   // CheckIcon for cached rejoin session on mount
   useEffect(() => {
@@ -58,23 +57,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     notifyNativeCallState(status === "active");
     return () => notifyNativeCallState(false);
   }, [status]);
-
-  // 1-second clock for solo countdown calculation
-  useEffect(() => {
-    if (!session?.soloExpiresAt || status !== "waiting") return;
-
-    const interval = setInterval(() => {
-      const current = Date.now();
-      setNow(current);
-      if (session.soloExpiresAt && current >= session.soloExpiresAt) {
-        setStatus("expired");
-        setSession((prev) => (prev ? { ...prev, status: "expired" } : null));
-        roomService.clearRejoinSession();
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [session?.soloExpiresAt, status]);
 
   // Connect signaling whenever active session changes
   useEffect(() => {
@@ -97,7 +79,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return {
             ...prev,
             status: payload.state,
-            soloExpiresAt: payload.soloExpiresAt,
+            soloExpiresAt: null, // Room has no expiration timer; stays active while host is inside
             participants: payload.participants || prev.participants,
           };
         });
@@ -137,22 +119,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [session?.roomId, session?.inviteToken, session?.myParticipantId]);
 
-  // Compute countdown object
-  const computeTimeRemaining = () => {
-    if (!session?.soloExpiresAt || status !== "waiting") return null;
-
-    const diff = session.soloExpiresAt - now;
-    if (diff <= 0) {
-      return { minutes: 0, seconds: 0, isExpired: true, formatted: "00:00" };
-    }
-
-    const totalSecs = Math.floor(diff / 1000);
-    const minutes = Math.floor(totalSecs / 60);
-    const seconds = totalSecs % 60;
-    const formatted = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-
-    return { minutes, seconds, isExpired: false, formatted };
-  };
+  // Rooms have no expiration countdown; life cycle depends on the host
+  const computeTimeRemaining = () => null;
 
   const createRoom = useCallback(async () => {
     setIsLoading(true);
@@ -209,7 +177,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         myParticipantId: result.participantId,
         participants: result.participants,
         createdAt: Date.now(),
-        soloExpiresAt: result.soloExpiresAt,
+        soloExpiresAt: null,
       };
 
       setSession(newSession);

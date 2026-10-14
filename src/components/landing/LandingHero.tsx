@@ -5,7 +5,7 @@ import {
   WindowsLogoIcon,
   AndroidLogoIcon,
   ShieldCheckIcon,
-  ClockIcon,
+  InfinityIcon,
   UsersIcon,
   LockKeyIcon,
 } from "@phosphor-icons/react";
@@ -94,12 +94,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           </div>
 
           <div className="p-3.5 rounded-xl bg-[#2b2d31] border border-[#35373c]">
-            <div className="flex items-center gap-2 text-[#f0b232] mb-1">
-              <ClockIcon size={18} weight="bold" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">30m Expiration</span>
+            <div className="flex items-center gap-2 text-[#9098C8] mb-1">
+              <InfinityIcon size={18} weight="bold" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#dbdee1]">No Expiry</span>
             </div>
             <p className="text-[11px] sm:text-xs text-[#949ba4] leading-normal">
-              Solo rooms auto-delete if peer does not connect within 30 min.
+              Rooms stay open as long as you're inside. Controlled solely by the host.
             </p>
           </div>
 

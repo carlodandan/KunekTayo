@@ -123,4 +123,24 @@ describe("Room Resilience & Session Persistence", () => {
     expect(room.roomId).toBeTruthy();
     expect(room.hostParticipantId).toBeTruthy();
   });
+
+  it("closes room when host leaves, but keeps room open when guest leaves", async () => {
+    // Test offline/local coordinator behavior
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Network offline"));
+
+    const created = await roomService.createRoom();
+    const guestJoin = await roomService.joinRoom(created.roomId, created.inviteToken);
+    expect(guestJoin.status).toBe("active");
+
+    // Guest leaves -> host remains -> room remains waiting without expiring
+    await roomService.leaveRoom(created.roomId, guestJoin.participantId);
+    const guestRecheck = await roomService.joinRoom(created.roomId, created.inviteToken);
+    expect(guestRecheck.status).toBe("active");
+
+    // Host leaves -> room closes permanently
+    await roomService.leaveRoom(created.roomId, created.hostParticipantId);
+    await expect(
+      roomService.joinRoom(created.roomId, created.inviteToken)
+    ).rejects.toMatchObject({ code: "ROOM_EXPIRED" });
+  });
 });
