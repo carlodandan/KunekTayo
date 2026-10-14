@@ -18,7 +18,7 @@ export interface DurableRoomState {
   disconnectedParticipants?: Record<string, number>;
 }
 
-const DISCONNECT_GRACE_MS = 45 * 1000; // 45-second disconnect grace period for active calls
+const DISCONNECT_GRACE_MS = 45 * 1000; // 45-second disconnect grace period
 
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -202,7 +202,7 @@ export class RoomDurableObject extends DurableObject {
       existingParticipant.lastPingAt = now;
       if (state.disconnectedParticipants && state.disconnectedParticipants[body.participantId]) {
         delete state.disconnectedParticipants[body.participantId];
-        if (Object.keys(state.disconnectedParticipants).length === 0 && state.status === "active") {
+        if (Object.keys(state.disconnectedParticipants).length === 0) {
           state.disconnectGraceExpiresAt = null;
           await this.ctx.storage.deleteAlarm();
         }
@@ -343,9 +343,9 @@ export class RoomDurableObject extends DurableObject {
 
     const now = Date.now();
 
-    // 1. Check if disconnect grace period expired during active room
+    // Check if disconnect grace period expired during an active or waiting room
     if (
-      state.status === "active" &&
+      (state.status === "active" || state.status === "waiting") &&
       state.disconnectGraceExpiresAt &&
       now >= state.disconnectGraceExpiresAt
     ) {
@@ -356,14 +356,28 @@ export class RoomDurableObject extends DurableObject {
 
       if (stillDisconnected.length > 0) {
         // Participant failed to reconnect within grace period; treat as left
+        const hostLost = state.participants.some(
+          (p) => p.role === "host" && stillDisconnected.includes(p.id)
+        );
         state.participants = state.participants.filter(
           (p) => !stillDisconnected.includes(p.id)
         );
         state.disconnectedParticipants = {};
         state.disconnectGraceExpiresAt = null;
 
-        if (state.participants.length === 0) {
+        if (hostLost || state.participants.length === 0) {
           state.status = "closed";
+          await this.ctx.storage.deleteAlarm();
+          this.broadcast({
+            type: "room_state",
+            state: "closed",
+            reason: hostLost ? "host_left" : "all_left",
+          });
+          for (const ws of this.ctx.getWebSockets()) {
+            try {
+              ws.close(4000, "Room Closed");
+            } catch {}
+          }
           await this.ctx.storage.deleteAll();
           this.stateCache = null;
           return;
@@ -429,9 +443,7 @@ export class RoomDurableObject extends DurableObject {
       delete state.disconnectedParticipants[participantId];
       if (Object.keys(state.disconnectedParticipants).length === 0) {
         state.disconnectGraceExpiresAt = null;
-        if (state.status === "active") {
-          await this.ctx.storage.deleteAlarm();
-        }
+        await this.ctx.storage.deleteAlarm();
       }
       await this.saveState(state);
 
@@ -535,9 +547,8 @@ export class RoomDurableObject extends DurableObject {
       return;
     }
 
-    // When an active call participant's socket closes (e.g. network handover, sleep, edge reset):
-    // DO NOT immediately demote room to "waiting"! Grant a 45-second grace period for auto-reconnection.
-    if (state.status === "active") {
+    // Keep the room status during a 45-second grace period for auto-reconnection.
+    if (state.status === "active" || state.status === "waiting") {
       const now = Date.now();
       state.disconnectedParticipants = state.disconnectedParticipants || {};
       state.disconnectedParticipants[participantId] = now;

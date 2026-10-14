@@ -27,6 +27,7 @@ class SignalingService {
   private intentionalClose = false;
   private lastPongAt = 0;
   private lifecycleWatchersBound = false;
+  private connectAttempt = 0;
 
   get roomId(): string | null {
     return this.currentRoomId;
@@ -90,6 +91,12 @@ class SignalingService {
   }
 
   async connect(roomId: string, token: string, participantId: string): Promise<void> {
+    const attempt = ++this.connectAttempt;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    this.stopHeartbeat();
     this.intentionalClose = false;
     this.currentRoomId = roomId;
     this.currentToken = token;
@@ -110,6 +117,7 @@ class SignalingService {
     }
 
     const tokenHash = token ? await hashToken(token) : "";
+    if (attempt !== this.connectAttempt || this.intentionalClose) return;
     const wsUrl = `${env.signalingUrl}/api/rooms/${roomId}/ws?tokenHash=${tokenHash}&participantId=${participantId}`;
 
     // Set up BroadcastChannel fallback for multi-tab local dev/offline
@@ -155,21 +163,24 @@ class SignalingService {
 
       this.ws.onclose = () => {
         this.stopHeartbeat();
-        // Resilient exponential backoff reconnect: keeps retrying while room is active
-        if (!this.intentionalClose && this.currentRoomId && this.currentToken) {
-          const delay = Math.min(1000 * Math.pow(1.5, Math.min(this.reconnectAttempts, 6)), 5000);
-          this.reconnectAttempts++;
-          if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-          this.reconnectTimer = setTimeout(() => {
-            if (!this.intentionalClose && this.currentRoomId) {
-              this.connect(this.currentRoomId, this.currentToken!, this.currentParticipantId!);
-            }
-          }, delay);
-        }
+        this.scheduleReconnect();
       };
     } catch {
       // Local fallback active
     }
+  }
+
+  private scheduleReconnect(): void {
+    // Resilient exponential backoff reconnect: keeps retrying while room is active
+    if (this.reconnectTimer || this.intentionalClose || !this.currentRoomId || !this.currentToken) return;
+    const delay = Math.min(1000 * Math.pow(1.5, Math.min(this.reconnectAttempts, 6)), 5000);
+    this.reconnectAttempts++;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      if (!this.intentionalClose && this.currentRoomId && this.currentToken) {
+        this.connect(this.currentRoomId, this.currentToken, this.currentParticipantId!);
+      }
+    }, delay);
   }
 
   send(type: string, payload: any): void {
@@ -228,6 +239,8 @@ class SignalingService {
           } catch {
             // Ignore
           }
+          this.stopHeartbeat();
+          this.scheduleReconnect();
           return;
         }
 
@@ -248,6 +261,7 @@ class SignalingService {
   }
 
   disconnect(): void {
+    this.connectAttempt++;
     this.intentionalClose = true;
     this.unbindLifecycleWatchers();
     if (this.reconnectTimer) {

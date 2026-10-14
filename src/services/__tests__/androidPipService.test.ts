@@ -128,17 +128,48 @@ describe("androidPipService", () => {
       const cleanup = setupAutoPipOnBack(onPipTriggered);
 
       expect(mockPushState).toHaveBeenCalledWith({ kunektayoCall: true }, "");
+      mockPushState.mockClear();
       expect(window.addEventListener).toHaveBeenCalledWith("popstate", expect.any(Function));
 
       // Simulate popstate event (e.g. user swipe back or back button)
       listeners["popstate"]?.forEach((handler) => handler());
 
       expect(window.AndroidCallBridge?.enterPip).toHaveBeenCalled();
+      expect(mockPushState).toHaveBeenCalledOnce();
+      expect(window.AndroidCallBridge!.enterPip).toHaveBeenCalledBefore(mockPushState);
       expect(onPipTriggered).toHaveBeenCalled();
 
       // Test cleanup
       cleanup();
       expect(window.removeEventListener).toHaveBeenCalledWith("popstate", expect.any(Function));
+    });
+
+    it.each(["missing", "unsupported", "rejected", "throws"])("allows Back navigation when PiP is %s", (failure) => {
+      const pushState = vi.fn();
+      let handlePopState!: () => void;
+      const enterPip = vi.fn(() => {
+        if (failure === "throws") throw new Error("PiP failed");
+        return false;
+      });
+      (globalThis as any).window = {
+        history: { pushState },
+        addEventListener: vi.fn((_event, handler) => { handlePopState = handler; }),
+        removeEventListener: vi.fn(),
+        AndroidCallBridge: failure === "missing" ? undefined : {
+          enterPip,
+          isSupported: () => failure !== "unsupported",
+        },
+      };
+      const onPipTriggered = vi.fn();
+      const cleanup = setupAutoPipOnBack(onPipTriggered);
+      pushState.mockClear();
+      handlePopState();
+      expect(pushState).not.toHaveBeenCalled();
+      expect(onPipTriggered).not.toHaveBeenCalled();
+      if (failure === "missing" || failure === "unsupported") {
+        expect(enterPip).not.toHaveBeenCalled();
+      }
+      cleanup();
     });
   });
 });
