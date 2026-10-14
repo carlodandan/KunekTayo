@@ -34,6 +34,7 @@ class WebRtcService {
   private iceRestartAttempts = 0;
   private readonly maxIceRestarts = 3;
   private iceDisconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private signalingUnsubs: Array<() => void> = [];
 
   on(event: string, listener: WebRtcEventListener): () => void {
     if (!this.listeners.has(event)) {
@@ -270,7 +271,9 @@ class WebRtcService {
   }
 
   private wireSignaling(): void {
-    signalingService.on("offer", async (payload: { sdp: RTCSessionDescriptionInit }) => {
+    this.unwireSignaling();
+
+    const unsubOffer = signalingService.on("offer", async (payload: { sdp: RTCSessionDescriptionInit }) => {
       if (!this.peerConnection || this.isOfferer) return;
 
       try {
@@ -285,7 +288,7 @@ class WebRtcService {
       }
     });
 
-    signalingService.on("answer", async (payload: { sdp: RTCSessionDescriptionInit }) => {
+    const unsubAnswer = signalingService.on("answer", async (payload: { sdp: RTCSessionDescriptionInit }) => {
       if (!this.peerConnection || !this.isOfferer) return;
 
       try {
@@ -296,7 +299,7 @@ class WebRtcService {
       }
     });
 
-    signalingService.on("candidate", async (payload: { candidate: RTCIceCandidateInit }) => {
+    const unsubCandidate = signalingService.on("candidate", async (payload: { candidate: RTCIceCandidateInit }) => {
       if (!this.peerConnection) return;
 
       if (!this.peerConnection.remoteDescription) {
@@ -310,6 +313,19 @@ class WebRtcService {
         console.error("Failed to add ICE candidate:", err);
       }
     });
+
+    this.signalingUnsubs = [unsubOffer, unsubAnswer, unsubCandidate];
+  }
+
+  private unwireSignaling(): void {
+    for (const unsub of this.signalingUnsubs) {
+      try {
+        unsub();
+      } catch {
+        // Ignored
+      }
+    }
+    this.signalingUnsubs = [];
   }
 
   private async processQueuedCandidates(): Promise<void> {
@@ -574,6 +590,7 @@ class WebRtcService {
     }
     this.iceRestartAttempts = 0;
     this.candidateQueue = [];
+    this.unwireSignaling();
     this.connectionState = "closed";
     this.emit("connection_state", "closed");
   }

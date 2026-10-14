@@ -8,6 +8,7 @@ export type SignalingEventType =
   | "candidate"
   | "peer_ready"
   | "peer_left"
+  | "peer_connection_status"
   | "datachannel_fallback"
   | "error";
 
@@ -24,6 +25,8 @@ class SignalingService {
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private intentionalClose = false;
+  private lastPongAt = 0;
+  private lifecycleWatchersBound = false;
 
   get roomId(): string | null {
     return this.currentRoomId;
@@ -31,6 +34,10 @@ class SignalingService {
 
   get participantId(): string | null {
     return this.currentParticipantId;
+  }
+
+  get isConnected(): boolean {
+    return !!this.ws && this.ws.readyState === WebSocket.OPEN;
   }
 
   on(event: SignalingEventType, handler: SignalingEventHandler): () => void {
@@ -51,13 +58,49 @@ class SignalingService {
     });
   }
 
+  private handleLifecycleEvent = () => {
+    // When returning to app (screen unblanked, tab foregrounded, network online)
+    if (this.intentionalClose || !this.currentRoomId || !this.currentToken) return;
+
+    const isStale = this.lastPongAt > 0 && Date.now() - this.lastPongAt > 25000;
+    const isDisconnected = !this.ws || this.ws.readyState !== WebSocket.OPEN;
+
+    if (isDisconnected || isStale) {
+      console.log("[Signaling] Foreground/online wake-up: refreshing signaling connection...");
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+      this.connect(this.currentRoomId, this.currentToken, this.currentParticipantId!);
+    }
+  };
+
+  private bindLifecycleWatchers(): void {
+    if (this.lifecycleWatchersBound || typeof window === "undefined") return;
+    window.addEventListener("online", this.handleLifecycleEvent);
+    document.addEventListener("visibilitychange", this.handleLifecycleEvent);
+    this.lifecycleWatchersBound = true;
+  }
+
+  private unbindLifecycleWatchers(): void {
+    if (!this.lifecycleWatchersBound || typeof window === "undefined") return;
+    window.removeEventListener("online", this.handleLifecycleEvent);
+    document.removeEventListener("visibilitychange", this.handleLifecycleEvent);
+    this.lifecycleWatchersBound = false;
+  }
+
   async connect(roomId: string, token: string, participantId: string): Promise<void> {
     this.intentionalClose = false;
     this.currentRoomId = roomId;
     this.currentToken = token;
     this.currentParticipantId = participantId;
+    this.bindLifecycleWatchers();
 
     if (this.ws) {
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onerror = null;
+      this.ws.onclose = null;
       try {
         this.ws.close();
       } catch {
@@ -89,13 +132,17 @@ class SignalingService {
 
       this.ws.onopen = () => {
         this.reconnectAttempts = 0;
+        this.lastPongAt = Date.now();
         this.startHeartbeat();
       };
 
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === "pong") return;
+          if (data.type === "pong") {
+            this.lastPongAt = Date.now();
+            return;
+          }
           this.emit(data.type, data);
         } catch {
           // Non-JSON message
@@ -108,18 +155,16 @@ class SignalingService {
 
       this.ws.onclose = () => {
         this.stopHeartbeat();
-        // Exponential backoff reconnect if not intentionally disconnected
+        // Resilient exponential backoff reconnect: keeps retrying while room is active
         if (!this.intentionalClose && this.currentRoomId && this.currentToken) {
-          if (this.reconnectAttempts < 5) {
-            const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 16000);
-            this.reconnectAttempts++;
-            if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-            this.reconnectTimer = setTimeout(() => {
-              if (!this.intentionalClose && this.currentRoomId) {
-                this.connect(this.currentRoomId, this.currentToken!, this.currentParticipantId!);
-              }
-            }, delay);
-          }
+          const delay = Math.min(1000 * Math.pow(1.5, Math.min(this.reconnectAttempts, 6)), 5000);
+          this.reconnectAttempts++;
+          if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = setTimeout(() => {
+            if (!this.intentionalClose && this.currentRoomId) {
+              this.connect(this.currentRoomId, this.currentToken!, this.currentParticipantId!);
+            }
+          }, delay);
         }
       };
     } catch {
@@ -174,9 +219,25 @@ class SignalingService {
     this.stopHeartbeat();
     this.pingInterval = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: "ping" }));
+        // Silent half-open connection / dead socket check:
+        // If we haven't received a pong in 30 seconds despite being OPEN, force-reconnect
+        if (this.lastPongAt > 0 && Date.now() - this.lastPongAt > 30000) {
+          console.warn("[Signaling] Zombie connection detected (no pong in 30s). Reconnecting...");
+          try {
+            this.ws.close();
+          } catch {
+            // Ignore
+          }
+          return;
+        }
+
+        try {
+          this.ws.send(JSON.stringify({ type: "ping" }));
+        } catch {
+          // Socket error
+        }
       }
-    }, 15000);
+    }, 10000);
   }
 
   private stopHeartbeat(): void {
@@ -188,13 +249,19 @@ class SignalingService {
 
   disconnect(): void {
     this.intentionalClose = true;
+    this.unbindLifecycleWatchers();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
     this.reconnectAttempts = 0;
+    this.lastPongAt = 0;
     this.stopHeartbeat();
     if (this.ws) {
+      this.ws.onopen = null;
+      this.ws.onmessage = null;
+      this.ws.onerror = null;
+      this.ws.onclose = null;
       try {
         this.ws.close();
       } catch {

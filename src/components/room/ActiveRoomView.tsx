@@ -15,6 +15,7 @@ import {
   PictureInPictureIcon,
   FireIcon,
   DotsThreeIcon,
+  ArrowsClockwiseIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -32,7 +33,7 @@ import { isNativePipSupported, requestNativePip } from "@/services/androidPipSer
 import { cn } from "@/utils/cn";
 
 export const ActiveRoomView: React.FC = () => {
-  const { session, leaveRoom } = useRoom();
+  const { session, leaveRoom, isPeerReconnecting } = useRoom();
   const {
     localStream,
     remoteStream,
@@ -326,6 +327,17 @@ export const ActiveRoomView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Peer Reconnection Grace Period Alert */}
+      {isPeerReconnecting && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <ArrowsClockwiseIcon size={14} className="animate-spin text-amber-400" />
+            <span>Peer connection interrupted. Holding call open while reconnecting...</span>
+          </div>
+          <span className="text-[10px] text-amber-400/80 font-mono">45s grace</span>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className={cn("grid gap-4 w-full", isChatOpen ? "lg:grid-cols-3" : "grid-cols-1")}>

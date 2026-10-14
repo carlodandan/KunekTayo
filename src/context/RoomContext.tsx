@@ -25,12 +25,13 @@ interface RoomContextValue {
     formatted: string;
   } | null;
   createRoom: () => Promise<void>;
-  joinRoom: (roomId: string, token?: string) => Promise<void>;
+  joinRoom: (roomId: string, token?: string, participantId?: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
   rejoinLastRoom: () => Promise<void>;
   simulateSecondParticipantJoin: () => void;
   simulateSecondParticipantLeave: () => void;
   clearError: () => void;
+  isPeerReconnecting: boolean;
 }
 
 const RoomContext = createContext<RoomContextValue | null>(null);
@@ -41,6 +42,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<RoomError | null>(null);
   const [rejoinSession, setRejoinSession] = useState<RejoinSession | null>(null);
+  const [isPeerReconnecting, setIsPeerReconnecting] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   // CheckIcon for cached rejoin session on mount
@@ -78,6 +80,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (!session) {
       signalingService.disconnect();
+      setIsPeerReconnecting(false);
       return;
     }
 
@@ -86,6 +89,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubState = signalingService.on("room_state", (payload: any) => {
       if (payload.state) {
         setStatus(payload.state);
+        if (payload.state === "active") {
+          setIsPeerReconnecting(false);
+        }
         setSession((prev) => {
           if (!prev) return null;
           return {
@@ -100,6 +106,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubPeerJoined = signalingService.on("peer_ready", () => {
       setStatus("active");
+      setIsPeerReconnecting(false);
       setSession((prev) => {
         if (!prev) return null;
         return {
@@ -110,9 +117,23 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     });
 
+    const unsubPeerStatus = signalingService.on("peer_connection_status", (payload: any) => {
+      if (payload.status === "disconnected") {
+        setIsPeerReconnecting(true);
+      } else if (payload.status === "connected") {
+        setIsPeerReconnecting(false);
+      }
+    });
+
+    const unsubPeerLeft = signalingService.on("peer_left", () => {
+      setIsPeerReconnecting(false);
+    });
+
     return () => {
       unsubState();
       unsubPeerJoined();
+      unsubPeerStatus();
+      unsubPeerLeft();
     };
   }, [session?.roomId, session?.inviteToken, session?.myParticipantId]);
 
@@ -174,12 +195,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const joinRoom = useCallback(async (roomId: string, token?: string) => {
+  const joinRoom = useCallback(async (roomId: string, token?: string, participantId?: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await roomService.joinRoom(roomId, token || "");
+      const result = await roomService.joinRoom(roomId, token || "", participantId);
       const newSession: RoomSession = {
         roomId: result.roomId,
         inviteToken: token || "",
@@ -209,6 +230,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(null);
     setStatus("idle");
     setRejoinSession(null);
+    setIsPeerReconnecting(false);
     signalingService.disconnect();
   }, [session]);
 
@@ -216,7 +238,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cached = roomService.getRejoinSession();
     if (!cached) return;
 
-    await joinRoom(cached.roomId, cached.inviteToken);
+    await joinRoom(cached.roomId, cached.inviteToken, cached.participantId);
   }, [joinRoom]);
 
   // Dev simulation helpers: test 2nd participant join / leave
@@ -282,6 +304,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         simulateSecondParticipantJoin,
         simulateSecondParticipantLeave,
         clearError: () => setError(null),
+        isPeerReconnecting,
       }}
     >
       {children}
