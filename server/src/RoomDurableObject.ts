@@ -18,7 +18,6 @@ export interface DurableRoomState {
   disconnectedParticipants?: Record<string, number>;
 }
 
-const SOLO_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 const DISCONNECT_GRACE_MS = 45 * 1000; // 45-second disconnect grace period for active calls
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -111,7 +110,6 @@ export class RoomDurableObject extends DurableObject {
     }
 
     const now = Date.now();
-    const soloExpiresAt = now + SOLO_TIMEOUT_MS;
 
     const state: DurableRoomState = {
       roomId: body.roomId,
@@ -125,13 +123,12 @@ export class RoomDurableObject extends DurableObject {
           lastPingAt: now,
         },
       ],
-      soloExpiresAt,
+      soloExpiresAt: null,
       createdAt: now,
     };
 
     await this.saveState(state);
-    // Set authoritative Cloudflare alarm for 30 minutes solo expiration
-    await this.ctx.storage.setAlarm(soloExpiresAt);
+    // Room stays open as long as at least one person is inside (no solo expiration alarm)
 
     return new Response(JSON.stringify({ success: true, state }), {
       status: 201,
@@ -301,18 +298,17 @@ export class RoomDurableObject extends DurableObject {
       });
     }
 
-    // Exactly 1 participant remains: restart 30-minute solo countdown
-    const now = Date.now();
+    // Exactly 1 participant remains: stay in waiting state without expiring
     state.status = "waiting";
-    state.soloExpiresAt = now + SOLO_TIMEOUT_MS;
-    await this.ctx.storage.setAlarm(state.soloExpiresAt);
+    state.soloExpiresAt = null;
+    await this.ctx.storage.deleteAlarm();
     await this.saveState(state);
 
     this.broadcast({
       type: "room_state",
       state: state.status,
       participants: state.participants,
-      soloExpiresAt: state.soloExpiresAt,
+      soloExpiresAt: null,
     });
     this.broadcast({
       type: "peer_left",
@@ -326,7 +322,7 @@ export class RoomDurableObject extends DurableObject {
   }
 
   /**
-   * Authoritative alarm triggered when 30-minute solo timer expires or disconnect grace period ends
+   * Authoritative alarm triggered when disconnect grace period ends
    */
   async alarm(): Promise<void> {
     const state = await this.getState();
@@ -360,17 +356,17 @@ export class RoomDurableObject extends DurableObject {
           return;
         }
 
-        // Exactly 1 participant remaining -> switch to waiting with 30-min countdown
+        // Exactly 1 participant remaining -> switch to waiting; stays alive as long as 1 person is inside
         state.status = "waiting";
-        state.soloExpiresAt = now + SOLO_TIMEOUT_MS;
-        await this.ctx.storage.setAlarm(state.soloExpiresAt);
+        state.soloExpiresAt = null;
+        await this.ctx.storage.deleteAlarm();
         await this.saveState(state);
 
         this.broadcast({
           type: "room_state",
           state: state.status,
           participants: state.participants,
-          soloExpiresAt: state.soloExpiresAt,
+          soloExpiresAt: null,
         });
 
         for (const leftId of stillDisconnected) {
@@ -387,28 +383,6 @@ export class RoomDurableObject extends DurableObject {
         await this.saveState(state);
         return;
       }
-    }
-
-    // 2. Check 30-minute solo expiration
-    if (state.soloExpiresAt && now >= state.soloExpiresAt && state.participants.length < 2) {
-      state.status = "expired";
-      this.broadcast({
-        type: "error",
-        code: "ROOM_EXPIRED",
-        message: "The room has expired after 30 minutes of inactivity.",
-      });
-
-      // Close all active WebSockets
-      for (const ws of this.ctx.getWebSockets()) {
-        try {
-          ws.close(4008, "Room Expired");
-        } catch {
-          // Socket already closed
-        }
-      }
-
-      await this.ctx.storage.deleteAll();
-      this.stateCache = null;
     }
   }
 

@@ -15,7 +15,6 @@ import {
 } from "@/utils/crypto";
 
 const REJOIN_STORAGE_KEY = "kunektayo_active_rejoin_session";
-const SOLO_TIMEOUT_MS = env.roomSoloTimeoutMinutes * 60 * 1000;
 
 /**
  * Local in-memory coordinator providing authoritative fallback when offline or in dev
@@ -33,21 +32,14 @@ class LocalRoomCoordinator {
 
   create(roomId: string, tokenHash: string, hostId: string): RoomSession {
     const now = Date.now();
-    const soloExpiresAt = now + SOLO_TIMEOUT_MS;
 
     const entry = {
       roomId,
       tokenHash,
       status: "waiting" as const,
       participants: [{ id: hostId, role: "host" as const, joinedAt: now }],
-      soloExpiresAt,
+      soloExpiresAt: null,
       createdAt: now,
-      timer: setTimeout(() => {
-        const r = this.rooms.get(roomId);
-        if (r && r.participants.length < 2) {
-          r.status = "expired";
-        }
-      }, SOLO_TIMEOUT_MS),
     };
 
     this.rooms.set(roomId, entry);
@@ -66,7 +58,7 @@ class LocalRoomCoordinator {
         isVideoActive: true,
       }],
       createdAt: now,
-      soloExpiresAt,
+      soloExpiresAt: null,
     };
   }
 
@@ -140,15 +132,9 @@ class LocalRoomCoordinator {
       if (room.timer) clearTimeout(room.timer);
       this.rooms.delete(roomId);
     } else {
-      const now = Date.now();
       room.status = "waiting";
-      room.soloExpiresAt = now + SOLO_TIMEOUT_MS;
+      room.soloExpiresAt = null;
       if (room.timer) clearTimeout(room.timer);
-      room.timer = setTimeout(() => {
-        if (room.participants.length < 2) {
-          room.status = "expired";
-        }
-      }, SOLO_TIMEOUT_MS);
     }
   }
 
@@ -169,7 +155,7 @@ export const roomService = {
     const hostParticipantId = generateParticipantId();
     const inviteTokenHash = await hashToken(inviteToken);
     const inviteUrl = buildInviteUrl(roomId, inviteToken);
-    const expiresAt = Date.now() + SOLO_TIMEOUT_MS;
+    const expiresAt = null;
 
     try {
       const response = await fetch(`${env.signalingUrl.replace("ws", "http")}/api/rooms`, {
