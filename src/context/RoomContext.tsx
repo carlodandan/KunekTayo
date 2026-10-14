@@ -269,14 +269,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!session || session.participants.length < 2) return;
 
     const remaining = session.participants.slice(0, 1);
-    const newExpiresAt = Date.now() + 30 * 60 * 1000;
 
     setSession((prev) => {
       if (!prev) return null;
       return {
         ...prev,
         status: "waiting",
-        soloExpiresAt: newExpiresAt, // Restart countdown
+        soloExpiresAt: null, // Room stays open as long as one person is inside
         participants: remaining,
       };
     });

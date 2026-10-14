@@ -9,6 +9,7 @@ import {
   BroadcastIcon,
   ShareNetworkIcon,
   UsersThreeIcon,
+  InfinityIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -68,24 +69,46 @@ export const WaitingRoomView: React.FC = () => {
             </div>
           </div>
 
-          {/* 30-minute solo room countdown */}
-          <div className="flex items-center gap-2 bg-[#1e1f22] border border-[#35373c] px-3.5 py-1.5 rounded-xl">
-            <ClockIcon size={16} className="text-[#f0b232] animate-spin" weight="bold" />
-            <div className="flex flex-col text-right">
-              <span className="text-[10px] text-[#949ba4] uppercase font-semibold tracking-wider">
-                Solo Room TTL
-              </span>
-              <span className="font-mono text-sm sm:text-base font-bold text-[#f0b232]">
-                {timeRemaining?.formatted || "30:00"}
-              </span>
+          {/* Room status badge / countdown */}
+          {timeRemaining ? (
+            <div className="flex items-center gap-2 bg-[#1e1f22] border border-[#35373c] px-3.5 py-1.5 rounded-xl">
+              <ClockIcon size={16} className="text-[#f0b232] animate-spin" weight="bold" />
+              <div className="flex flex-col text-right">
+                <span className="text-[10px] text-[#949ba4] uppercase font-semibold tracking-wider">
+                  Solo Room TTL
+                </span>
+                <span className="font-mono text-sm sm:text-base font-bold text-[#f0b232]">
+                  {timeRemaining.formatted}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-[#1e1f22] border border-[#35373c] px-3.5 py-1.5 rounded-xl">
+              <InfinityIcon size={16} className="text-[#9098C8]" weight="bold" />
+              <div className="flex flex-col text-right">
+                <span className="text-[10px] text-[#949ba4] uppercase font-semibold tracking-wider">
+                  Room Status
+                </span>
+                <span className="font-semibold text-xs sm:text-sm text-[#f2f3f5]">
+                  Stays Open
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <p className="text-xs sm:text-sm text-[#dbdee1] leading-relaxed">
-          This room will automatically expire if a second person doesn’t join within{" "}
-          <strong className="text-[#f0b232]">30 minutes</strong>. Once your guest joins,
-          this timer cancels and the room remains alive indefinitely.
+          {timeRemaining ? (
+            <>
+              This room will automatically expire if a second person doesn’t join within{" "}
+              <strong className="text-[#f0b232]">30 minutes</strong>. Once your guest joins,
+              this timer cancels and the room remains alive indefinitely.
+            </>
+          ) : (
+            <>
+              This room stays open as long as you are inside. Share your invite link to start the call; once your guest joins, video and voice connect automatically.
+            </>
+          )}
         </p>
       </Card>
 

@@ -37,7 +37,7 @@ export interface CreateRoomResponse {
   readonly roomId: string;
   readonly inviteToken: string;
   readonly inviteUrl: string;
-  readonly expiresAt: number;
+  readonly expiresAt: number | null;
   readonly hostParticipantId: string;
 }
 

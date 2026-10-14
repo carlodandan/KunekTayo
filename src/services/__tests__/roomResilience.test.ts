@@ -102,4 +102,25 @@ describe("Room Resilience & Session Persistence", () => {
 
     unsub();
   });
+
+  it("keeps room active without expiration as long as one person is inside", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        state: {
+          roomId: "room_solo_active",
+          status: "waiting",
+          participants: [{ id: "p_host_1", role: "host", joinedAt: 1000, lastPingAt: 1000 }],
+          soloExpiresAt: null,
+          createdAt: 1000,
+        },
+      }),
+    } as Response);
+
+    const room = await roomService.createRoom();
+    expect(room.expiresAt).toBeNull();
+    expect(room.roomId).toBeTruthy();
+    expect(room.hostParticipantId).toBeTruthy();
+  });
 });
