@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { webrtcService } from "@/services/webrtcService";
 import { signalingService } from "@/services/signalingService";
 import { useRoom } from "./RoomContext";
@@ -38,9 +38,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<EphemeralChatMessage[]>([]);
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const [selectedTtl, setSelectedTtl] = useState(0); // Default: stays as long as 1 person is inside
+  const lastRoomIdRef = useRef<string | null>(null);
 
   // Load cached messages from tab sessionStorage on room entry
   useEffect(() => {
+    if (session?.roomId) lastRoomIdRef.current = session.roomId;
     if (!session?.roomId || typeof window === "undefined" || !window.sessionStorage) return;
     try {
       const cached = sessionStorage.getItem(`kunektayo_chat_${session.roomId}`);
@@ -188,11 +190,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (roomStatus !== "active" && roomStatus !== "waiting") {
       setMessages([]);
       setIsPeerTyping(false);
-      if (session?.roomId && typeof window !== "undefined" && window.sessionStorage) {
+      const roomId = session?.roomId ?? lastRoomIdRef.current;
+      if (roomId && typeof window !== "undefined" && window.sessionStorage) {
         try {
-          sessionStorage.removeItem(`kunektayo_chat_${session.roomId}`);
+          sessionStorage.removeItem(`kunektayo_chat_${roomId}`);
         } catch {}
       }
+      lastRoomIdRef.current = null;
     }
   }, [roomStatus, session?.roomId]);
 

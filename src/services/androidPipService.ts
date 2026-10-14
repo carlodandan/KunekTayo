@@ -71,18 +71,15 @@ export function setupAutoPipOnBack(onPipTriggered?: () => void): () => void {
   }
 
   const handlePopState = () => {
+    if (!isNativePipSupported() || !requestNativePip()) return;
+
     try {
       window.history.pushState({ kunektayoCall: true }, "");
     } catch {
       // History restricted
     }
 
-    if (isNativePipSupported()) {
-      const entered = requestNativePip();
-      if (entered) {
-        onPipTriggered?.();
-      }
-    }
+    onPipTriggered?.();
   };
 
   window.addEventListener("popstate", handlePopState);

@@ -267,7 +267,9 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
           value={inputText}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder={`Type message (${selectedTtl}s auto-purge)...`}
+          placeholder={selectedTtl === 0
+            ? "Type message (no auto-purge)..."
+            : `Type message (${selectedTtl}s auto-purge)...`}
           className="flex-1 min-w-0 bg-[#383a40] text-[#f2f3f5] placeholder:text-[#80848e] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm border border-[#3f4147] focus:border-[#283E7C] focus:outline-none transition-colors resize-none overflow-y-auto max-h-28 leading-snug"
         />
 
