@@ -1,7 +1,7 @@
 import React from "react";
 import {
   UsersIcon,
-  ClockIcon,
+  InfinityIcon,
   LockKeyIcon,
   FireIcon,
   PaperclipIcon,
@@ -18,11 +18,11 @@ export const LandingFeatures: React.FC = () => {
       badge: "No Groups",
     },
     {
-      icon: <ClockIcon size={24} weight="bold" className="text-[#f0b232]" />,
-      title: "30-Minute Solo Room Expiration",
+      icon: <InfinityIcon size={24} weight="bold" className="text-[#9098C8]" />,
+      title: "No Expiration Countdown",
       description:
-        "When you create a room, an automatic 30-minute countdown starts. If your peer doesn't connect within 30 minutes, the room self-destructs.",
-      badge: "Auto-Purge",
+        "Rooms have no volatile timers. The room stays open indefinitely as long as you remain inside, terminating only when the host leaves.",
+      badge: "Host Dependent",
     },
     {
       icon: <LockKeyIcon size={24} weight="bold" className="text-[#9098C8]" />,

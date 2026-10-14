@@ -126,8 +126,11 @@ class LocalRoomCoordinator {
     const room = this.rooms.get(roomId);
     if (!room) return;
 
+    const leaving = room.participants.find((p) => p.id === participantId);
+    const isHost = leaving?.role === "host";
+
     room.participants = room.participants.filter((p) => p.id !== participantId);
-    if (room.participants.length === 0) {
+    if (isHost || room.participants.length === 0) {
       room.status = "closed";
       if (room.timer) clearTimeout(room.timer);
       this.rooms.delete(roomId);

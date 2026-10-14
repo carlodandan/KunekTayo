@@ -1,5 +1,5 @@
 import React from "react";
-import { PlusCircleIcon, LinkIcon, ShieldCheckIcon } from "@phosphor-icons/react";
+import { PlusCircleIcon, LinkIcon, ShieldCheckIcon, InfinityIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
@@ -29,7 +29,7 @@ export const CreateRoomCard: React.FC = () => {
           <h2 className="text-xl font-bold text-[#f2f3f5] tracking-tight">Create a Room</h2>
           <p className="text-sm text-[#949ba4] mt-1.5 leading-relaxed">
             Generate an ephemeral room with a cryptographically secure token.
-            Strict 2-person limit with a 30-minute solo room countdown.
+            Strict 2-person limit with no expiration timer — active until the host leaves.
           </p>
         </div>
 
@@ -39,8 +39,11 @@ export const CreateRoomCard: React.FC = () => {
             <span className="text-[#dbdee1] font-medium">Volatile In-Memory P2P</span>
           </div>
           <div className="flex items-center justify-between">
-            <span>Solo Expiration:</span>
-            <span className="text-[#f0b232] font-medium">30 minutes</span>
+            <span>Room Expiration:</span>
+            <span className="flex items-center gap-1 text-[#9098C8] font-medium">
+              <InfinityIcon size={13} weight="bold" />
+              Host Dependent
+            </span>
           </div>
         </div>
       </div>

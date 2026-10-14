@@ -16,11 +16,11 @@ export const ExpiredRoomView: React.FC = () => {
 
         <div className="space-y-1.5">
           <h2 className="text-xl font-bold text-[#f2f3f5] tracking-tight">
-            Room Expired
+            Room Closed
           </h2>
           <p className="text-xs sm:text-sm text-[#dbdee1] leading-relaxed">
-            This private room was automatically closed after 30 minutes with only 1 participant.
-            Expired rooms are permanently purged to protect privacy.
+            This private room has ended or was closed by the host.
+            All temporary session data and media connections have vanished.
           </p>
         </div>
 

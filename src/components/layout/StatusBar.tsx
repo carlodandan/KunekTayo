@@ -1,5 +1,5 @@
 import React from "react";
-import { ClockIcon, UsersIcon, LockKeyIcon, WifiHighIcon } from "@phosphor-icons/react";
+import { InfinityIcon, UsersIcon, LockKeyIcon, WifiHighIcon } from "@phosphor-icons/react";
 import { ROOM_CONSTRAINTS } from "@/constants/app";
 
 export const StatusBar: React.FC = () => {
@@ -16,14 +16,14 @@ export const StatusBar: React.FC = () => {
             <span>Max {ROOM_CONSTRAINTS.MAX_PARTICIPANTS} participants</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <ClockIcon size={14} className="text-[#f0b232]" weight="bold" />
-            <span>{ROOM_CONSTRAINTS.SOLO_EXPIRATION_MINUTES}m solo room TTL</span>
+            <InfinityIcon size={14} className="text-[#9098C8]" weight="bold" />
+            <span>No room expiry • Host dependent</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-[#949ba4]">
           <WifiHighIcon size={14} className="text-[#1C8051]" weight="bold" />
-          <span>P2P Direct • 60s TTL</span>
+          <span>P2P Direct • In-Memory</span>
         </div>
       </div>
     </footer>

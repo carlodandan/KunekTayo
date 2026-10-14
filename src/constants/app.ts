@@ -8,7 +8,6 @@ export const APP_VERSION = import.meta.env.VITE_APP_VERSION || "0.1.0";
 
 export const ROOM_CONSTRAINTS = {
   MAX_PARTICIPANTS: 2,
-  SOLO_EXPIRATION_MINUTES: 30,
   TOKEN_LENGTH: 16,
   RECONNECT_GRACE_PERIOD_SECONDS: 45,
 } as const;

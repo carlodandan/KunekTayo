@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  ClockIcon,
   CheckIcon,
   CopyIcon,
   UserIcon,
@@ -20,7 +19,6 @@ export const WaitingRoomView: React.FC = () => {
   const {
     session,
     inviteUrl,
-    timeRemaining,
     leaveRoom,
     simulateSecondParticipantJoin,
   } = useRoom();
@@ -69,46 +67,22 @@ export const WaitingRoomView: React.FC = () => {
             </div>
           </div>
 
-          {/* Room status badge / countdown */}
-          {timeRemaining ? (
-            <div className="flex items-center gap-2 bg-[#1e1f22] border border-[#35373c] px-3.5 py-1.5 rounded-xl">
-              <ClockIcon size={16} className="text-[#f0b232] animate-spin" weight="bold" />
-              <div className="flex flex-col text-right">
-                <span className="text-[10px] text-[#949ba4] uppercase font-semibold tracking-wider">
-                  Solo Room TTL
-                </span>
-                <span className="font-mono text-sm sm:text-base font-bold text-[#f0b232]">
-                  {timeRemaining.formatted}
-                </span>
-              </div>
+          {/* Room status badge */}
+          <div className="flex items-center gap-2 bg-[#1e1f22] border border-[#35373c] px-3.5 py-1.5 rounded-xl">
+            <InfinityIcon size={16} className="text-[#9098C8]" weight="bold" />
+            <div className="flex flex-col text-right">
+              <span className="text-[10px] text-[#949ba4] uppercase font-semibold tracking-wider">
+                Room Status
+              </span>
+              <span className="font-semibold text-xs sm:text-sm text-[#f2f3f5]">
+                Stays Open
+              </span>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 bg-[#1e1f22] border border-[#35373c] px-3.5 py-1.5 rounded-xl">
-              <InfinityIcon size={16} className="text-[#9098C8]" weight="bold" />
-              <div className="flex flex-col text-right">
-                <span className="text-[10px] text-[#949ba4] uppercase font-semibold tracking-wider">
-                  Room Status
-                </span>
-                <span className="font-semibold text-xs sm:text-sm text-[#f2f3f5]">
-                  Stays Open
-                </span>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         <p className="text-xs sm:text-sm text-[#dbdee1] leading-relaxed">
-          {timeRemaining ? (
-            <>
-              This room will automatically expire if a second person doesn’t join within{" "}
-              <strong className="text-[#f0b232]">30 minutes</strong>. Once your guest joins,
-              this timer cancels and the room remains alive indefinitely.
-            </>
-          ) : (
-            <>
-              This room stays open as long as you are inside. Share your invite link to start the call; once your guest joins, video and voice connect automatically.
-            </>
-          )}
+          This room has no expiration timer and stays open as long as you remain inside. Share your invite link to start the call; once your guest joins, video and voice connect automatically. The room terminates only when the host leaves.
         </p>
       </Card>
 
