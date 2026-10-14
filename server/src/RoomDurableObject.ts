@@ -14,9 +14,12 @@ export interface DurableRoomState {
   participants: ParticipantRecord[];
   soloExpiresAt: number | null;
   createdAt: number;
+  disconnectGraceExpiresAt?: number | null;
+  disconnectedParticipants?: Record<string, number>;
 }
 
 const SOLO_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const DISCONNECT_GRACE_MS = 45 * 1000; // 45-second disconnect grace period for active calls
 
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -30,6 +33,18 @@ function timingSafeEqual(a: string, b: string): boolean {
 export class RoomDurableObject extends DurableObject {
   private stateCache: DurableRoomState | null = null;
   private wsMessageCounters = new Map<WebSocket, { count: number; windowStart: number }>();
+
+  constructor(ctx: DurableObjectState, env: any) {
+    super(ctx, env);
+    try {
+      // Respond to heartbeat pings at the Cloudflare network edge without waking the DO
+      this.ctx.setWebSocketAutoResponse(
+        new WebSocketRequestResponsePair('{"type":"ping"}', '{"type":"pong"}')
+      );
+    } catch {
+      // In testing environments where WebSocketRequestResponsePair is absent
+    }
+  }
 
   private async getState(): Promise<DurableRoomState | null> {
     if (!this.stateCache) {
@@ -188,7 +203,19 @@ export class RoomDurableObject extends DurableObject {
     // Rejoin scenario
     if (existingParticipant) {
       existingParticipant.lastPingAt = now;
+      if (state.disconnectedParticipants && state.disconnectedParticipants[body.participantId]) {
+        delete state.disconnectedParticipants[body.participantId];
+        if (Object.keys(state.disconnectedParticipants).length === 0 && state.status === "active") {
+          state.disconnectGraceExpiresAt = null;
+          await this.ctx.storage.deleteAlarm();
+        }
+      }
       await this.saveState(state);
+      this.broadcast({
+        type: "peer_connection_status",
+        participantId: body.participantId,
+        status: "connected",
+      });
       return new Response(
         JSON.stringify({
           success: true,
@@ -223,6 +250,8 @@ export class RoomDurableObject extends DurableObject {
     // Both participants are now present: room becomes active and solo expiration countdown is cancelled
     state.status = "active";
     state.soloExpiresAt = null;
+    state.disconnectGraceExpiresAt = null;
+    state.disconnectedParticipants = {};
     await this.ctx.storage.deleteAlarm();
     await this.saveState(state);
 
@@ -255,6 +284,10 @@ export class RoomDurableObject extends DurableObject {
 
     const body = (await request.json()) as { participantId: string };
     state.participants = state.participants.filter((p) => p.id !== body.participantId);
+    if (state.disconnectedParticipants) {
+      delete state.disconnectedParticipants[body.participantId];
+    }
+    state.disconnectGraceExpiresAt = null;
 
     if (state.participants.length === 0) {
       // Both participants have left; close and clean up room
@@ -281,6 +314,10 @@ export class RoomDurableObject extends DurableObject {
       participants: state.participants,
       soloExpiresAt: state.soloExpiresAt,
     });
+    this.broadcast({
+      type: "peer_left",
+      participantId: body.participantId,
+    });
 
     return new Response(JSON.stringify({ success: true, state }), {
       status: 200,
@@ -289,14 +326,71 @@ export class RoomDurableObject extends DurableObject {
   }
 
   /**
-   * Authoritative alarm triggered when 30-minute solo timer expires
+   * Authoritative alarm triggered when 30-minute solo timer expires or disconnect grace period ends
    */
   async alarm(): Promise<void> {
     const state = await this.getState();
     if (!state) return;
 
-    // Only expire if room still has fewer than 2 participants
-    if (state.participants.length < 2) {
+    const now = Date.now();
+
+    // 1. Check if disconnect grace period expired during active room
+    if (
+      state.status === "active" &&
+      state.disconnectGraceExpiresAt &&
+      now >= state.disconnectGraceExpiresAt
+    ) {
+      const disconnectedIds = Object.keys(state.disconnectedParticipants || {});
+      const stillDisconnected = disconnectedIds.filter(
+        (id) => this.ctx.getWebSockets(id).length === 0
+      );
+
+      if (stillDisconnected.length > 0) {
+        // Participant failed to reconnect within grace period; treat as left
+        state.participants = state.participants.filter(
+          (p) => !stillDisconnected.includes(p.id)
+        );
+        state.disconnectedParticipants = {};
+        state.disconnectGraceExpiresAt = null;
+
+        if (state.participants.length === 0) {
+          state.status = "closed";
+          await this.ctx.storage.deleteAll();
+          this.stateCache = null;
+          return;
+        }
+
+        // Exactly 1 participant remaining -> switch to waiting with 30-min countdown
+        state.status = "waiting";
+        state.soloExpiresAt = now + SOLO_TIMEOUT_MS;
+        await this.ctx.storage.setAlarm(state.soloExpiresAt);
+        await this.saveState(state);
+
+        this.broadcast({
+          type: "room_state",
+          state: state.status,
+          participants: state.participants,
+          soloExpiresAt: state.soloExpiresAt,
+        });
+
+        for (const leftId of stillDisconnected) {
+          this.broadcast({
+            type: "peer_left",
+            participantId: leftId,
+          });
+        }
+        return;
+      } else {
+        // Reconnected before alarm ran
+        state.disconnectedParticipants = {};
+        state.disconnectGraceExpiresAt = null;
+        await this.saveState(state);
+        return;
+      }
+    }
+
+    // 2. Check 30-minute solo expiration
+    if (state.soloExpiresAt && now >= state.soloExpiresAt && state.participants.length < 2) {
       state.status = "expired";
       this.broadcast({
         type: "error",
@@ -338,6 +432,31 @@ export class RoomDurableObject extends DurableObject {
     const [clientWs, serverWs] = Object.values(pair);
 
     this.ctx.acceptWebSocket(serverWs, [participantId || "guest"]);
+
+    // If this participant was previously marked disconnected during grace period, restore them
+    if (
+      participantId &&
+      state.disconnectedParticipants &&
+      state.disconnectedParticipants[participantId]
+    ) {
+      delete state.disconnectedParticipants[participantId];
+      if (Object.keys(state.disconnectedParticipants).length === 0) {
+        state.disconnectGraceExpiresAt = null;
+        if (state.status === "active") {
+          await this.ctx.storage.deleteAlarm();
+        }
+      }
+      await this.saveState(state);
+
+      this.broadcast({
+        type: "peer_connection_status",
+        participantId,
+        status: "connected",
+      });
+      this.broadcast({
+        type: "peer_ready",
+      });
+    }
 
     // Send initial authoritative state to client
     serverWs.send(
@@ -407,27 +526,54 @@ export class RoomDurableObject extends DurableObject {
     }
   }
 
-  async webSocketClose(ws: WebSocket): Promise<void> {
+  async webSocketClose(
+    ws: WebSocket,
+    _code?: number,
+    _reason?: string,
+    _wasClean?: boolean
+  ): Promise<void> {
     this.wsMessageCounters.delete(ws);
     const tags = this.ctx.getTags(ws);
     const participantId = tags[0];
-    if (participantId) {
-      // Participant disconnected
-      const state = await this.getState();
-      if (state && state.status === "active") {
-        // Switch to waiting with 30-min countdown
-        state.status = "waiting";
-        state.soloExpiresAt = Date.now() + SOLO_TIMEOUT_MS;
-        await this.ctx.storage.setAlarm(state.soloExpiresAt);
-        await this.saveState(state);
+    if (!participantId) return;
 
-        this.broadcast({
-          type: "room_state",
-          state: state.status,
-          participants: state.participants,
-          soloExpiresAt: state.soloExpiresAt,
-        });
-      }
+    // Check if the participant still has another active WebSocket (e.g. quick replacement)
+    const activeSockets = this.ctx.getWebSockets(participantId);
+    if (activeSockets.length > 0) {
+      return;
+    }
+
+    const state = await this.getState();
+    if (!state || state.status === "closed" || state.status === "expired") {
+      return;
+    }
+
+    // When an active call participant's socket closes (e.g. network handover, sleep, edge reset):
+    // DO NOT immediately demote room to "waiting"! Grant a 45-second grace period for auto-reconnection.
+    if (state.status === "active") {
+      const now = Date.now();
+      state.disconnectedParticipants = state.disconnectedParticipants || {};
+      state.disconnectedParticipants[participantId] = now;
+      state.disconnectGraceExpiresAt = now + DISCONNECT_GRACE_MS;
+
+      await this.ctx.storage.setAlarm(state.disconnectGraceExpiresAt);
+      await this.saveState(state);
+
+      this.broadcast({
+        type: "peer_connection_status",
+        participantId,
+        status: "disconnected",
+        graceExpiresAt: state.disconnectGraceExpiresAt,
+      });
+    }
+  }
+
+  async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
+    console.warn("WebSocket error in RoomDurableObject:", error);
+    try {
+      ws.close(1011, "WebSocket unexpected error");
+    } catch {
+      // Ignored
     }
   }
 
