@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   PaperclipIcon,
   XIcon,
+  InfinityIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/common/Button";
 import { useChat, TTL_OPTIONS, EphemeralChatMessage } from "@/context/ChatContext";
@@ -105,6 +106,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
   };
 
   const getRemainingSecs = (msg: EphemeralChatMessage) => {
+    if (!msg.expiresAt) return null;
     const diff = Math.max(0, Math.ceil((msg.expiresAt - now) / 1000));
     return diff;
   };
@@ -157,9 +159,9 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
       </div>
 
       {/* Ephemeral Notice */}
-      <div className="px-3.5 py-1.5 bg-[#f0b232]/10 border-b border-[#f0b232]/20 text-[11px] text-[#f0b232] flex items-center gap-1.5 select-none">
-        <ShieldCheckIcon size={14} className="shrink-0" />
-        <span>Messages vanish locally on both devices once TTL expires. Zero server logging.</span>
+      <div className="px-3.5 py-1.5 bg-[#283E7C]/20 border-b border-[#283E7C]/30 text-[11px] text-[#dbdee1] flex items-center gap-1.5 select-none">
+        <ShieldCheckIcon size={14} className="shrink-0 text-[#9098C8]" />
+        <span>Chat stays active as long as participants are in the room. Zero server logging.</span>
       </div>
 
       {/* Messages Scroll Area */}
@@ -168,7 +170,7 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
           <div className="h-full flex flex-col items-center justify-center text-center text-[#80848e] space-y-1 select-none">
             <ClockIcon size={28} className="text-[#80848e]" />
             <p className="text-xs">No active messages.</p>
-            <p className="text-[11px] text-[#80848e]">Send a self-destructing message.</p>
+            <p className="text-[11px] text-[#80848e]">Send a message to your peer.</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -195,14 +197,21 @@ export const EphemeralChat: React.FC<{ className?: string; onClose?: () => void 
                   <p>{msg.text}</p>
                 </div>
 
-                {/* Message Meta (TTL Burn + Timestamp + Delivery status) */}
+                {/* Message Meta (TTL Burn / Room + Timestamp + Delivery status) */}
                 <div className="flex items-center gap-1.5 px-1 text-[10px] text-[#949ba4] select-none">
                   <span>{timeStr}</span>
                   <span>•</span>
-                  <span className="flex items-center gap-0.5 text-[#f0b232] font-mono font-medium">
-                    <FireIcon size={12} weight="fill" />
-                    {remaining}s
-                  </span>
+                  {remaining !== null ? (
+                    <span className="flex items-center gap-0.5 text-[#f0b232] font-mono font-medium">
+                      <FireIcon size={12} weight="fill" />
+                      {remaining}s
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-0.5 text-[#9098C8] font-medium" title="Stays active while in room">
+                      <InfinityIcon size={12} weight="bold" />
+                      Room
+                    </span>
+                  )}
                   {isMine && (
                     <span className="ml-0.5 text-[#dbdee1]" title={msg.status}>
                       {msg.status === "delivered" ? (

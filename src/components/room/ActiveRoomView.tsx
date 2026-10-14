@@ -266,7 +266,7 @@ export const ActiveRoomView: React.FC = () => {
   };
 
   // Filter unexpired messages and take the last 2 for the mobile 2-line chat box
-  const activeMessages = messages.filter((msg) => msg.expiresAt > now);
+  const activeMessages = messages.filter((msg) => !msg.expiresAt || msg.expiresAt > now);
   const recentMessages = activeMessages.slice(-2);
 
   return (
@@ -576,10 +576,17 @@ export const ActiveRoomView: React.FC = () => {
                     {recentMessages[0].text}
                   </span>
                 </div>
-                <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
-                  <FireIcon size={11} weight="fill" />
-                  {Math.max(0, Math.ceil((recentMessages[0].expiresAt - now) / 1000))}s
-                </span>
+                {recentMessages[0].expiresAt ? (
+                  <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
+                    <FireIcon size={11} weight="fill" />
+                    {Math.max(0, Math.ceil((recentMessages[0].expiresAt - now) / 1000))}s
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-0.5 text-[#9098C8] text-[10px] shrink-0 font-medium">
+                    <InfinityIcon size={11} weight="bold" />
+                    Room
+                  </span>
+                )}
               </div>
 
               {/* Line 2: Most recent message */}
@@ -599,10 +606,17 @@ export const ActiveRoomView: React.FC = () => {
                     {recentMessages[1].text}
                   </span>
                 </div>
-                <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
-                  <FireIcon size={11} weight="fill" />
-                  {Math.max(0, Math.ceil((recentMessages[1].expiresAt - now) / 1000))}s
-                </span>
+                {recentMessages[1].expiresAt ? (
+                  <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
+                    <FireIcon size={11} weight="fill" />
+                    {Math.max(0, Math.ceil((recentMessages[1].expiresAt - now) / 1000))}s
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-0.5 text-[#9098C8] text-[10px] shrink-0 font-medium">
+                    <InfinityIcon size={11} weight="bold" />
+                    Room
+                  </span>
+                )}
               </div>
             </>
           ) : recentMessages.length === 1 ? (
@@ -624,10 +638,17 @@ export const ActiveRoomView: React.FC = () => {
                     {recentMessages[0].text}
                   </span>
                 </div>
-                <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
-                  <FireIcon size={11} weight="fill" />
-                  {Math.max(0, Math.ceil((recentMessages[0].expiresAt - now) / 1000))}s
-                </span>
+                {recentMessages[0].expiresAt ? (
+                  <span className="flex items-center gap-0.5 text-[#f0b232] font-mono text-[10px] shrink-0 font-medium">
+                    <FireIcon size={11} weight="fill" />
+                    {Math.max(0, Math.ceil((recentMessages[0].expiresAt - now) / 1000))}s
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-0.5 text-[#9098C8] text-[10px] shrink-0 font-medium">
+                    <InfinityIcon size={11} weight="bold" />
+                    Room
+                  </span>
+                )}
               </div>
 
               {/* Line 2: Typing indicator or Tap to reply prompt */}
