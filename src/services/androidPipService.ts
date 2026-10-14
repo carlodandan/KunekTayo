@@ -53,3 +53,40 @@ export function isNativePipSupported(): boolean {
   if (typeof window === "undefined" || !window.AndroidCallBridge) return false;
   return window.AndroidCallBridge.isSupported?.() !== false;
 }
+
+/**
+ * Sets up an automatic PiP trigger when the user triggers back navigation
+ * (back swipe gesture or hardware/software back button).
+ * Pushes a history entry to intercept the navigation and returns an unbind cleanup function.
+ */
+export function setupAutoPipOnBack(onPipTriggered?: () => void): () => void {
+  if (typeof window === "undefined" || !window.history || !window.addEventListener) {
+    return () => {};
+  }
+
+  try {
+    window.history.pushState({ kunektayoCall: true }, "");
+  } catch {
+    // History restricted
+  }
+
+  const handlePopState = () => {
+    try {
+      window.history.pushState({ kunektayoCall: true }, "");
+    } catch {
+      // History restricted
+    }
+
+    if (isNativePipSupported()) {
+      const entered = requestNativePip();
+      if (entered) {
+        onPipTriggered?.();
+      }
+    }
+  };
+
+  window.addEventListener("popstate", handlePopState);
+  return () => {
+    window.removeEventListener("popstate", handlePopState);
+  };
+}

@@ -3,6 +3,7 @@ import {
   notifyNativeCallState,
   requestNativePip,
   isNativePipSupported,
+  setupAutoPipOnBack,
 } from "../androidPipService";
 
 describe("androidPipService", () => {
@@ -91,6 +92,53 @@ describe("androidPipService", () => {
       };
 
       expect(requestNativePip()).toBe(false);
+    });
+  });
+
+  describe("setupAutoPipOnBack", () => {
+    it("handles missing window or history gracefully", () => {
+      delete (globalThis as any).window;
+      const cleanup = setupAutoPipOnBack();
+      expect(typeof cleanup).toBe("function");
+      expect(() => cleanup()).not.toThrow();
+    });
+
+    it("registers popstate listener and triggers native PiP on popstate", () => {
+      const mockPushState = vi.fn();
+      const listeners: Record<string, Function[]> = {};
+
+      (globalThis as any).window = {
+        history: { pushState: mockPushState },
+        addEventListener: vi.fn((event: string, handler: Function) => {
+          listeners[event] = listeners[event] || [];
+          listeners[event].push(handler);
+        }),
+        removeEventListener: vi.fn((event: string, handler: Function) => {
+          if (listeners[event]) {
+            listeners[event] = listeners[event].filter((h) => h !== handler);
+          }
+        }),
+        AndroidCallBridge: {
+          enterPip: vi.fn().mockReturnValue(true),
+          isSupported: vi.fn().mockReturnValue(true),
+        },
+      };
+
+      const onPipTriggered = vi.fn();
+      const cleanup = setupAutoPipOnBack(onPipTriggered);
+
+      expect(mockPushState).toHaveBeenCalledWith({ kunektayoCall: true }, "");
+      expect(window.addEventListener).toHaveBeenCalledWith("popstate", expect.any(Function));
+
+      // Simulate popstate event (e.g. user swipe back or back button)
+      listeners["popstate"]?.forEach((handler) => handler());
+
+      expect(window.AndroidCallBridge?.enterPip).toHaveBeenCalled();
+      expect(onPipTriggered).toHaveBeenCalled();
+
+      // Test cleanup
+      cleanup();
+      expect(window.removeEventListener).toHaveBeenCalledWith("popstate", expect.any(Function));
     });
   });
 });

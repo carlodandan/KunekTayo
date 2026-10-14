@@ -29,7 +29,7 @@ import { useRoom } from "@/context/RoomContext";
 import { useWebRtc } from "@/context/WebRtcContext";
 import { useFileTransfer } from "@/context/FileTransferContext";
 import { useChat } from "@/context/ChatContext";
-import { isNativePipSupported, requestNativePip } from "@/services/androidPipService";
+import { isNativePipSupported, requestNativePip, setupAutoPipOnBack } from "@/services/androidPipService";
 import { cn } from "@/utils/cn";
 
 export const ActiveRoomView: React.FC = () => {
@@ -109,6 +109,14 @@ export const ActiveRoomView: React.FC = () => {
     };
     window.addEventListener("android:pip-changed", handleAndroidPip);
     return () => window.removeEventListener("android:pip-changed", handleAndroidPip);
+  }, []);
+
+  // Automatically enter Picture-in-Picture when user swipes back or taps the Back button
+  useEffect(() => {
+    const cleanup = setupAutoPipOnBack(() => {
+      setIsNativePiPActive(true);
+    });
+    return cleanup;
   }, []);
 
   // Monitor active video tracks on remote stream

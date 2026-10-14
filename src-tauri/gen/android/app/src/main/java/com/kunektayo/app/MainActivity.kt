@@ -16,6 +16,23 @@ class MainActivity : TauriActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // Automatically enter PiP when user swipes back or taps the Back button during an active call
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isCallActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                    val entered = enterPipInternal()
+                    if (entered) return
+                    // If already in PiP or PiP couldn't be entered, keep call alive in background
+                    moveTaskToBack(true)
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
     }
 
     override fun onWebViewCreate(webView: WebView) {
@@ -71,7 +88,7 @@ class MainActivity : TauriActivity() {
         }
     }
 
-    private fun updatePipParams() {
+    fun updatePipParams() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
             try {
@@ -90,22 +107,38 @@ class MainActivity : TauriActivity() {
         }
     }
 
+    fun enterPipInternal(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+            if (isFinishing || isDestroyed || isInPictureInPictureMode) {
+                return false
+            }
+            return try {
+                val isPortrait = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+                val ratio = if (isPortrait) Rational(9, 16) else Rational(16, 9)
+                val builder = PictureInPictureParams.Builder()
+                    .setAspectRatio(ratio)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    builder.setAutoEnterEnabled(isCallActive)
+                }
+
+                enterPictureInPictureMode(builder.build())
+            } catch (_: Exception) {
+                false
+            }
+        }
+        return false
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // On Android 8.0 through 11, manual enterPictureInPictureMode is needed on user leave.
-        // On Android 12+ (API 31+), setAutoEnterEnabled(true) handles this automatically;
-        // manually calling enterPictureInPictureMode here on Android 12+ can cause
-        // IllegalStateException / gesture animation race crashes on certain OEM skins.
-        if (isCallActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+        // Automatically enter Picture-in-Picture when user swipes up or presses Home button
+        if (isCallActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-                try {
-                    val isPortrait = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-                    val ratio = if (isPortrait) Rational(9, 16) else Rational(16, 9)
-                    val params = PictureInPictureParams.Builder()
-                        .setAspectRatio(ratio)
-                        .build()
-                    enterPictureInPictureMode(params)
-                } catch (_: Exception) {}
+                if (!isFinishing && !isDestroyed && !isInPictureInPictureMode) {
+                    enterPipInternal()
+                }
             }
         }
     }
@@ -152,16 +185,7 @@ class AndroidCallBridge(private val activity: MainActivity) {
             activity.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
             val future = java.util.concurrent.CompletableFuture<Boolean>()
             activity.runOnUiThread {
-                try {
-                    val isPortrait = activity.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-                    val ratio = if (isPortrait) Rational(9, 16) else Rational(16, 9)
-                    val params = PictureInPictureParams.Builder()
-                        .setAspectRatio(ratio)
-                        .build()
-                    future.complete(activity.enterPictureInPictureMode(params))
-                } catch (e: Exception) {
-                    future.complete(false)
-                }
+                future.complete(activity.enterPipInternal())
             }
             return try {
                 future.get(1, java.util.concurrent.TimeUnit.SECONDS)
