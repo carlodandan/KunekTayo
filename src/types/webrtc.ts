@@ -24,7 +24,7 @@ export interface EphemeralMessage {
   readonly text: string;
   readonly createdAt: number;
   readonly ttlSeconds: number;
-  readonly expiresAt: number;
+  readonly expiresAt: number | null;
   readonly status: "sending" | "delivered" | "expired";
 }
 

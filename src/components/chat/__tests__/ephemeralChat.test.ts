@@ -61,4 +61,34 @@ describe("EphemeralChat Input and Layout Logic", () => {
     expect(getRemainingSecs(msg1.expiresAt, now)).toBe(60);
     expect(getRemainingSecs(msg2.expiresAt, now)).toBe(0);
   });
+
+  it("handles room-persistent messages with null expiresAt correctly", () => {
+    const getRemainingSecs = (expiresAt: number | null, currentNow: number) => {
+      if (!expiresAt) return null;
+      return Math.max(0, Math.ceil((expiresAt - currentNow) / 1000));
+    };
+
+    const roomMsg = { expiresAt: null };
+    const timedMsg = { expiresAt: 1030000 };
+    const now = 1000000;
+
+    expect(getRemainingSecs(roomMsg.expiresAt, now)).toBeNull();
+    expect(getRemainingSecs(timedMsg.expiresAt, now)).toBe(30);
+  });
+
+  it("filters out expired messages while keeping room-persistent messages active", () => {
+    const now = 500000;
+    const testMessages = [
+      { id: "1", text: "Room stays as long as 1 person", expiresAt: null },
+      { id: "2", text: "Expiring soon", expiresAt: 510000 },
+      { id: "3", text: "Already expired", expiresAt: 499000 },
+    ];
+
+    const activeMessages = testMessages.filter(
+      (msg) => !msg.expiresAt || msg.expiresAt > now
+    );
+
+    expect(activeMessages).toHaveLength(2);
+    expect(activeMessages.map((m) => m.id)).toEqual(["1", "2"]);
+  });
 });
