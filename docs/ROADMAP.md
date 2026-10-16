@@ -79,6 +79,7 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Media device selectors (`DeviceSelectorModal.tsx` for microphone and camera switching)
 - [x] Device change listener with `navigator.mediaDevices.ondevicechange`
 - [x] Connection quality and latency indicator (`ConnectionQualityBadge.tsx` with RTT stats)
+- [x] Dynamic call duration timer indicator for active video/audio calls (`CallDurationBadge.tsx`)
 - [x] Room countdown timer indicator for solo waiting states (`WaitingRoomView.tsx`)
 - [x] Rejoin handling and banner prompt (`RejoinBanner.tsx`)
 

@@ -10,6 +10,7 @@ import { roomService } from "@/services/roomService";
 import { signalingService } from "@/services/signalingService";
 import { buildInviteUrl } from "@/utils/crypto";
 import { notifyNativeCallState } from "@/services/androidPipService";
+import { clearCallStartedAt } from "@/utils/callTimer";
 
 interface RoomContextValue {
   session: RoomSession | null;
@@ -193,6 +194,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const leaveRoom = useCallback(async () => {
     if (session) {
+      clearCallStartedAt(session.roomId);
       await roomService.leaveRoom(session.roomId, session.myParticipantId);
     }
     setSession(null);

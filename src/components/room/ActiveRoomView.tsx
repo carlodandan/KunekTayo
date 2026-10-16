@@ -24,6 +24,7 @@ import { VideoPlayer } from "@/components/media/VideoPlayer";
 import { DeviceSelectorModal } from "@/components/media/DeviceSelectorModal";
 import { FileShareModal } from "@/components/media/FileShareModal";
 import { ConnectionQualityBadge } from "@/components/room/ConnectionQualityBadge";
+import { CallDurationBadge } from "@/components/room/CallDurationBadge";
 import { EphemeralChat } from "@/components/chat/EphemeralChat";
 import { useRoom } from "@/context/RoomContext";
 import { useWebRtc } from "@/context/WebRtcContext";
@@ -308,6 +309,7 @@ export const ActiveRoomView: React.FC = () => {
       <div className={cn("flex items-center justify-between gap-2 px-1 py-0.5", isNativePiPActive && "hidden")}>
         <div className="flex items-center gap-2 flex-wrap">
           <ConnectionQualityBadge />
+          <CallDurationBadge />
           {isScreenSharing && (
             <Badge variant="warning" dot>
               <ProjectorScreenIcon size={13} weight="fill" />
