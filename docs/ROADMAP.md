@@ -33,7 +33,7 @@ Tracking progress across the 9 implementation phases defined in `APP.md`.
 - [x] Typed environment configuration (`src/config/env.ts`)
 - [x] Windows target verified (`cargo check`, clean Vite build)
 - [x] Android target scaffolded and mapped (`pnpm tauri android init` prerequisites documented)
-- [x] Project architecture documentation created in `project/`
+- [x] Project architecture documentation created in `docs/`
 
 ### Phase 2: Rooms (Completed)
 - [x] Cryptographically secure room and token generator (16-char ID, 32-char token, SHA-256 hash in `src/utils/crypto.ts`)
