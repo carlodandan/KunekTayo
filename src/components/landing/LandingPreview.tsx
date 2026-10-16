@@ -16,15 +16,19 @@ import {
   PaperclipIcon,
   PaperPlaneRightIcon,
   UserIcon,
+  TimerIcon,
 } from "@phosphor-icons/react";
+import { formatCallDuration } from "@/utils/callTimer";
 
 export const LandingPreview: React.FC = () => {
   // Simulated countdown for the interactive preview message
   const [countdown, setCountdown] = useState(48);
+  const [callSeconds, setCallSeconds] = useState(868);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => (prev <= 1 ? 60 : prev - 1));
+      setCallSeconds((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -53,6 +57,13 @@ export const LandingPreview: React.FC = () => {
                 <WifiHighIcon size={14} weight="bold" />
                 <span className="font-mono text-[11px]">18ms</span>
                 <span className="hidden sm:inline text-[10px] uppercase font-bold text-white/80">(excellent)</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#1e1f22] text-[#dbdee1] border border-[#35373c]">
+                <TimerIcon size={14} weight="bold" className="text-[#9098C8] shrink-0" />
+                <span className="font-mono text-[11px] tabular-nums font-semibold text-[#f2f3f5]">
+                  {formatCallDuration(callSeconds)}
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#9098C8] shrink-0 animate-pulse" />
               </div>
               <span className="text-xs text-[#949ba4] hidden sm:inline font-mono">
                 Room #e8a93b48

@@ -1,0 +1,43 @@
+# KunekTayo Robots Configuration
+# https://kunektayo.pages.dev
+
+User-agent: *
+Allow: /
+Allow: /logo.png
+Allow: /icon-192.png
+Allow: /icon-512.png
+Allow: /manifest.webmanifest
+Allow: /manifest.json
+Allow: /sitemap.xml
+Allow: /llms.txt
+
+# Disallow internal API endpoints, WebSocket signaling, and private room joins
+Disallow: /api/
+Disallow: /join/
+
+# AI Search Crawlers (Allow public marketing information, disallow internal APIs)
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /join/
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /join/
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /join/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /api/
+Disallow: /join/
+
+# Sitemap location
+Sitemap: https://kunektayo.pages.dev/sitemap.xml

@@ -8,6 +8,7 @@ on:
 
 jobs:
   build-windows:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-2025
 
     permissions:
@@ -47,6 +48,7 @@ jobs:
           prerelease: false
 
   build-android:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
 
     permissions:
@@ -149,3 +151,30 @@ jobs:
           files: src-tauri/gen/android/app/build/outputs/apk/KunekTayo-*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+
+  notify-discord:
+    name: Notify Discord
+    needs: [build-windows, build-android]
+    if: always() && (github.ref_name == 'prod' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/prod')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Send Discord Build Notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_KT }}
+          WINDOWS_STATUS: ${{ needs.build-windows.result }}
+          ANDROID_STATUS: ${{ needs.build-android.result }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          REPOSITORY: ${{ github.repository }}
+          SERVER_URL: ${{ github.server_url }}
+        run: node .github/scripts/notify-discord-build.mjs
