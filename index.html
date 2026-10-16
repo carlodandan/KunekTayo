@@ -3,16 +3,90 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="canonical" href="https://kunektayo.pages.dev/" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <meta name="theme-color" content="#1e1f22" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="KunekTayo" />
+    <title>KunekTayo — Ephemeral 1-on-1 Voice, Video & Chat</title>
     <meta
       name="description"
-      content="KunekTayo: Lightweight, temporary 1-to-1 communication app for Windows and Android with peer-to-peer audio, video, and vanishing chat."
+      content="Zero-knowledge, zero-footprint temporary 1-on-1 private voice, video, and vanishing chat for Windows, Android, and Web with WebRTC end-to-end encryption."
     />
-    <title>KunekTayo — Ephemeral 1-on-1 Voice, Video & Chat</title>
+    <meta
+      name="keywords"
+      content="ephemeral video call, private video chat, WebRTC P2P, zero knowledge call, 1-on-1 encrypted video, vanishing chat, secure audio call, open source video calling, Android video call PiP"
+    />
+    <meta name="author" content="Carlo Dandan" />
+    <meta name="application-name" content="KunekTayo" />
+
+    <!-- Open Graph / Facebook / Discord -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kunektayo.pages.dev/" />
+    <meta property="og:title" content="KunekTayo — Ephemeral 1-on-1 Voice, Video & Chat" />
+    <meta
+      property="og:description"
+      content="Zero-knowledge, zero-footprint temporary 1-on-1 private voice, video, and vanishing chat with WebRTC end-to-end encryption."
+    />
+    <meta property="og:image" content="https://kunektayo.pages.dev/logo.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="KunekTayo Logo" />
+    <meta property="og:site_name" content="KunekTayo" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="https://kunektayo.pages.dev/" />
+    <meta name="twitter:title" content="KunekTayo — Ephemeral 1-on-1 Voice, Video & Chat" />
+    <meta
+      name="twitter:description"
+      content="Zero-knowledge, zero-footprint temporary 1-on-1 private voice, video, and vanishing chat with WebRTC end-to-end encryption."
+    />
+    <meta name="twitter:image" content="https://kunektayo.pages.dev/logo.png" />
+    <meta name="twitter:creator" content="@carlodandan" />
+
+    <!-- Structured Data (JSON-LD) for Search & AEO -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "KunekTayo",
+        "url": "https://kunektayo.pages.dev/",
+        "description": "Zero-knowledge, zero-footprint ephemeral 1-on-1 private voice, video, and vanishing chat for Windows, Android, and Web.",
+        "applicationCategory": "CommunicationApplication",
+        "operatingSystem": "Windows, Android, Web",
+        "browserRequirements": "Requires WebRTC and Web Audio API support",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Carlo Dandan",
+          "url": "https://github.com/carlodandan"
+        },
+        "featureList": [
+          "End-to-End Encrypted WebRTC DTLS-SRTP Audio and Video",
+          "Strict 2-Participant Room Limit",
+          "Zero User Accounts or Personal Data Collection",
+          "Vanishing Ephemeral Chat with Configurable TTL",
+          "Direct Peer-to-Peer Encrypted File Sharing",
+          "Hardware Web Audio DSP Noise Suppression",
+          "Android Native Picture-in-Picture and Background Calling",
+          "Dynamic In-Call Duration Timer"
+        ],
+        "image": "https://kunektayo.pages.dev/logo.png"
+      }
+    </script>
   </head>
 
   <body class="bg-[#1e1f22] text-[#f2f3f5] antialiased select-none">

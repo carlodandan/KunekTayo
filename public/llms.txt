@@ -1,0 +1,27 @@
+# KunekTayo
+
+> Connect directly. Ephemeral by design. Lightweight, temporary 1-on-1 private voice, video, and vanishing chat for Windows, Android, and Web.
+
+KunekTayo (Filipino: "Let us connect") is a zero-knowledge, zero-footprint communication utility built for private, momentary 1-to-1 conversations. It is available as a native desktop application for Windows, a native mobile application for Android, and an instant web client hosted on Cloudflare Pages.
+
+## Core Invariants & Features
+- Authoritative 2-Person Ceiling: Exactly 2 participants allowed per room. Third-party joins receive an immediate HTTP 409 rejection.
+- Zero User Accounts: No sign-ups, passwords, phone numbers, or cookies.
+- Direct Peer-to-Peer Media: Audio, video, and screen sharing flow directly between peer devices over encrypted WebRTC DTLS-SRTP channels without transiting media servers.
+- Ephemeral Burning Chat: In-memory text messaging over WebRTC RTCDataChannel with configurable auto-purge timers (15s, 30s, 60s, 5m, or room lifetime).
+- Direct P2P File Sharing: Files are chunked and transferred in-memory via WebRTC DataChannel and vanish on session exit.
+- Web Audio DSP Noise Suppression: Hardware rumble high-pass filter (85 Hz), vocal presence peaking EQ (3 kHz), and dynamics compressor for clear speech.
+- Android Native PiP & Background Calling: Seamless Picture-in-Picture on navigation and continuous background calling via an unthrottled Foreground Service.
+- Dynamic In-Call Timer: Real-time dynamic call duration indicator during active video and voice calls.
+
+## Technology Stack
+- Windows Desktop: Tauri 2 (Rust MSVC), NSIS & MSI installers
+- Android Mobile: Tauri 2 (Rust Android NDK), release APK
+- Frontend: React 19, TypeScript, Vite, Tailwind CSS v4, Phosphor Icons
+- Signaling & Room Coordination: Cloudflare Workers & Durable Objects
+- Web Hosting: Cloudflare Pages
+
+## Links
+- Website: https://kunektayo.pages.dev/
+- Source Code & Releases: https://github.com/carlodandan/KunekTayo
+- Documentation: https://github.com/carlodandan/KunekTayo/tree/staging/docs
