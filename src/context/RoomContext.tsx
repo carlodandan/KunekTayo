@@ -71,6 +71,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubState = signalingService.on("room_state", (payload: any) => {
       if (payload.state) {
+        if (payload.state === "waiting") {
+          clearCallStartedAt(session.roomId);
+        }
         setStatus(payload.state);
         if (payload.state === "active") {
           setIsPeerReconnecting(false);
@@ -170,6 +173,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const result = await roomService.joinRoom(roomId, token || "", participantId);
+      if (result.status === "waiting") {
+        clearCallStartedAt(result.roomId);
+      }
       const newSession: RoomSession = {
         roomId: result.roomId,
         inviteToken: token || "",
@@ -238,6 +244,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const simulateSecondParticipantLeave = useCallback(() => {
     if (!session || session.participants.length < 2) return;
 
+    clearCallStartedAt(session.roomId);
     const remaining = session.participants.slice(0, 1);
 
     setSession((prev) => {

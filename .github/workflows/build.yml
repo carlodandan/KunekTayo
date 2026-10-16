@@ -3,13 +3,12 @@ name: Build KunekTayo
 on:
   workflow_dispatch:
   push:
-    branches:
-      - prod
     tags:
       - "v*"
 
 jobs:
   build-windows:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-2025
 
     permissions:
@@ -49,6 +48,7 @@ jobs:
           prerelease: false
 
   build-android:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
 
     permissions:

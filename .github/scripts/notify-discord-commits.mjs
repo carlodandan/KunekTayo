@@ -28,6 +28,7 @@ async function main() {
   const serverUrl = process.env.SERVER_URL || "https://github.com";
   const repoUrl = `${serverUrl}/${repo}`;
   const ciStatus = process.env.CI_STATUS || "success";
+  const isManualRun = process.env.EVENT_NAME === "workflow_dispatch";
   const runId = process.env.RUN_ID || "";
   const runUrl = runId ? `${repoUrl}/actions/runs/${runId}` : `${repoUrl}/actions`;
 
@@ -43,7 +44,7 @@ async function main() {
   if (displayed.length > 0) {
     commitListText = displayed.map((c) => {
       const shortSha = c.id ? c.id.slice(0, 7) : "unknown";
-      const firstLine = (c.message || "").split("\n")[0].trim();
+      const firstLine = (c.message || "").split("\n")[0].trim().slice(0, 200);
       const author = (c.author && c.author.name) || (event.pusher && event.pusher.name) || actor;
       const url = c.url || `${repoUrl}/commit/${c.id}`;
       return `• [\`${shortSha}\`](${url}) ${firstLine} — *${author}*`;
@@ -61,7 +62,7 @@ async function main() {
   const color = isSuccess ? 0x283E7C : 0xED4245; // KunekTayo Navy on success, Red on failure
   const verificationText = isSuccess ? "Passed" : (ciStatus === "failure" ? "Failed" : "Skipped");
 
-  const title = totalCommits > 1
+  const title = isManualRun ? "Manual CI Run" : totalCommits > 1
     ? `${totalCommits} New Commits Pushed to prod`
     : (totalCommits === 1 ? "New Commit Pushed to prod" : "Update Pushed to prod");
 
@@ -75,7 +76,7 @@ async function main() {
       {
         title,
         url: compareUrl,
-        description: commitListText,
+        description: commitListText.slice(0, 4096),
         color,
         fields: [
           {

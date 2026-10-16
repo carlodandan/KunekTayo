@@ -27,7 +27,7 @@ export function formatCallDuration(totalSeconds: number): string {
 export function resolveCallStartedAt(
   participants?: readonly { joinedAt: number }[],
   roomId?: string
-): number {
+): number | null {
   const storageKey = roomId ? `kunektayo_call_started_${roomId}` : null;
 
   if (typeof sessionStorage !== "undefined" && storageKey) {
@@ -44,13 +44,10 @@ export function resolveCallStartedAt(
     }
   }
 
-  let startTime = Date.now();
-  if (participants && participants.length >= 2) {
-    // When 2 participants are present, call started when the 2nd participant arrived
-    startTime = Math.max(...participants.map((p) => p.joinedAt));
-  } else if (participants && participants.length === 1) {
-    startTime = participants[0].joinedAt;
-  }
+  if (!participants || participants.length < 2) return null;
+
+  // When 2 participants are present, call started when the 2nd participant arrived
+  const startTime = Math.max(...participants.map((p) => p.joinedAt));
 
   if (typeof sessionStorage !== "undefined" && storageKey) {
     try {

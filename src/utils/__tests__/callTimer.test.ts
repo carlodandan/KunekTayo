@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   formatCallDuration,
   resolveCallStartedAt,
@@ -50,6 +50,19 @@ describe("Call Timer Utilities", () => {
           delete mockStorage[key];
         },
       });
+    });
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it.each([undefined, [], [{ joinedAt: 1000 }]])("waits for two participants before caching a start (%j)", (participants) => {
+      expect(resolveCallStartedAt(participants, "room1")).toBeNull();
+      expect(mockStorage["kunektayo_call_started_room1"]).toBeUndefined();
+      expect(resolveCallStartedAt([{ joinedAt: 1000 }, { joinedAt: 5000 }], "room1")).toBe(5000);
+    });
+
+    it("preserves the cached start during a brief interruption", () => {
+      mockStorage["kunektayo_call_started_room1"] = "4000";
+      expect(resolveCallStartedAt([{ joinedAt: 1000 }], "room1")).toBe(4000);
     });
 
     it("resolves start time from 2 participants using the 2nd joined participant", () => {

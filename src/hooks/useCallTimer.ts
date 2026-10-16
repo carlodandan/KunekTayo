@@ -28,23 +28,22 @@ export function useCallTimer({
   isActive = true,
 }: UseCallTimerOptions = {}): UseCallTimerResult {
   const [now, setNow] = useState(() => Date.now());
-  const [resolvedStartTime, setResolvedStartTime] = useState<number | null>(() => {
-    if (!isActive) return null;
-    if (explicitStartTime) return explicitStartTime;
-    return resolveCallStartedAt(participants, roomId);
-  });
+  const [resolved, setResolvedStartTime] = useState(() => ({
+    roomId,
+    startTime: isActive
+      ? explicitStartTime || resolveCallStartedAt(participants, roomId)
+      : null,
+  }));
+  const resolvedStartTime = resolved.roomId === roomId ? resolved.startTime : null;
 
   // Keep start time resolved when participants or roomId change
   useEffect(() => {
-    if (!isActive) {
-      setResolvedStartTime(null);
-      return;
-    }
-    if (explicitStartTime) {
-      setResolvedStartTime(explicitStartTime);
-      return;
-    }
-    setResolvedStartTime((prev) => prev || resolveCallStartedAt(participants, roomId));
+    setResolvedStartTime((prev) => ({
+      roomId,
+      startTime: !isActive ? null : explicitStartTime ||
+        (prev.roomId === roomId ? prev.startTime : null) ||
+        resolveCallStartedAt(participants, roomId),
+    }));
   }, [isActive, explicitStartTime, participants, roomId]);
 
   // Interval timer updating every second

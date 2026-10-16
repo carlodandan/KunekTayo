@@ -45,6 +45,7 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_KT }}
           CI_STATUS: ${{ needs.validate.result }}
+          EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
           SHA: ${{ github.sha }}
           ACTOR: ${{ github.actor }}
