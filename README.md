@@ -8,7 +8,7 @@
   <p><em>Lightweight, temporary 1-on-1 private voice, video, and vanishing chat for Windows, Android, and Web.</em></p>
 
   <p>
-    <a href="https://github.com/carlodandan/KunekTayo/releases/latest"><img src="https://img.shields.io/badge/version-v1.1.2-283E7C?style=for-the-badge" alt="Version 1.1.2" /></a>
+    <a href="https://github.com/carlodandan/KunekTayo/releases/latest"><img src="https://img.shields.io/badge/version-v1.1.3-283E7C?style=for-the-badge" alt="Version 1.1.3" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/tauri-v2.12-9098C8?style=for-the-badge&logo=tauri&logoColor=white" alt="Tauri v2" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/react-v19.3-283E7C?style=for-the-badge&logo=react&logoColor=white" alt="React 19" /></a>
     <a href="#-automated-testing"><img src="https://img.shields.io/badge/tests-46%2F46%20passed-1F332B?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest 46/46 Passed" /></a>
