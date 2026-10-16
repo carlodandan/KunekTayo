@@ -8,7 +8,7 @@
   <p><em>Lightweight, temporary 1-on-1 private voice, video, and vanishing chat for Windows, Android, and Web.</em></p>
 
   <p>
-    <a href="https://github.com/carlodandan/KunekTayo/releases"><img src="https://img.shields.io/badge/version-v1.1.0-283E7C?style=for-the-badge" alt="Version 1.1.0" /></a>
+    <a href="https://github.com/carlodandan/KunekTayo/releases/latest"><img src="https://img.shields.io/badge/version-v1.1.0-283E7C?style=for-the-badge" alt="Version 1.1.0" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/tauri-v2.12-9098C8?style=for-the-badge&logo=tauri&logoColor=white" alt="Tauri v2" /></a>
     <a href="#-tech-stack"><img src="https://img.shields.io/badge/react-v19.3-283E7C?style=for-the-badge&logo=react&logoColor=white" alt="React 19" /></a>
     <a href="#-automated-testing"><img src="https://img.shields.io/badge/tests-46%2F46%20passed-1F332B?style=for-the-badge&logo=vitest&logoColor=white" alt="Vitest 46/46 Passed" /></a>
@@ -30,7 +30,7 @@
 
 ---
 
-## ⚡ Overview
+## Overview
 
 **KunekTayo** (Filipino: *"Let us connect"*) is a zero-knowledge, zero-footprint communication utility built for private, momentary 1-to-1 conversations. 
 
@@ -44,48 +44,52 @@ In traditional platforms, every direct call and message leaves a persistent trai
 
 ---
 
-## 🌟 Key Features
+<a id="-features"></a>
+<a id="features"></a>
+## Key Features
 
-### 🔒 Privacy & Ephemeral Core
+### Privacy & Ephemeral Core
 * **Authoritative 2-Person Ceiling**: Third-party connections receive an immediate HTTP 409 (`ROOM_FULL`) rejection.
 * **Cryptographic Room Tokens**: 128-bit pseudorandom tokens (`crypto.getRandomValues`) validated with SHA-256 hashes and constant-time comparisons (`timingSafeEqual`).
 * **30-Minute Solo Room TTL**: Unpaired rooms self-destruct after 30 minutes. Once both peers connect, the countdown cancels and the call stays active indefinitely.
 * **Instant Destruction**: When both participants leave, the coordinator clears its in-memory state and Durable Object storage (`storage.deleteAll()`).
 
-### 🎙️ Audio & Video Excellence
+### Audio & Video Excellence
 * **Web Audio DSP Noise Suppression**: Multi-stage audio processing graph filtering low-frequency rumble (85 Hz high-pass), elevating vocal presence (3 kHz peaking EQ), and balancing vocal dynamics.
 * **Atomic Media Device Switching**: Seamlessly swap microphones, headphones, or cameras mid-call with zero connection drops. If a new hardware track fails, the existing stream is automatically retained.
 * **Android Native Picture-in-Picture (PiP)**: Swiping home automatically shrinks the live video into a native floating window over other apps.
 * **Continuous Background Calling**: Android Foreground Calling Service keeps microphone capture, audio output, and WebRTC streaming unthrottled with an ongoing notification when minimized.
 * **Adaptive Video Grid**: Fullscreen split-screen on desktop; responsive column layout with floating Picture-in-Picture on mobile.
 
-### 💬 In-Call Collaboration
+### In-Call Collaboration
 * **Burning Ephemeral Chat**: In-memory text messaging over WebRTC `RTCDataChannel`. Messages feature selectable auto-purge timers (15s, 30s, 60s, or 5m) with visual burning countdowns.
 * **Direct P2P Chunked File Sharing**: Send images and files directly to your peer in 32 KB chunks over encrypted DataChannels. Files exist only in volatile RAM Blobs and vanish upon closing the room.
 * **Screen Sharing**: HD application and desktop screen sharing via `getDisplayMedia` with automatic camera fallback.
 
-### 📱 Tailored Platform Experience
+### Tailored Platform Experience
 * **Native Apps (Windows & Android)**: Bypasses the marketing landing page and boots directly into the focused room workspace.
 * **Web Client (`https://kunektayo.pages.dev`)**: Hosts the marketing overview with an instant segmented toggle into the web client.
 * **Production Boundary**: System foundation diagnostics (`FoundationInfoCard`) are automatically stripped from production builds.
 
 ---
 
-## 📊 Comparison Matrix
+## Comparison Matrix
 
 | Feature | KunekTayo | Discord | Zoom | WhatsApp |
 | :--- | :---: | :---: | :---: | :---: |
-| **User Accounts Required** | ❌ **No (Zero)** | ✅ Yes | ✅ Yes | ✅ Yes (Phone Number) |
-| **Server Chat Logs** | ❌ **None (RAM Only)** | ✅ Yes | ✅ Yes | ⚠️ Stored on Device/Cloud |
-| **Media Servers (SFU/MCU)** | ❌ **Direct P2P Mesh** | ✅ Yes | ✅ Yes | ⚠️ Hybrid |
-| **Authoritative 2-Peer Cap** | ✅ **Strict 2/2** | ❌ Unlimited | ❌ Large Meetings | ❌ Group Cap |
-| **Message Auto-Purge (TTL)** | ✅ **15s – 5m Burning** | ❌ No | ❌ No | ⚠️ 24h – 90d |
-| **Data Retention on Exit** | ❌ **Zero (Wiped)** | ✅ Permanent | ✅ Account Logs | ⚠️ Permanent History |
-| **Third-Party Server Exposure**| **Pages API public unless Access-protected** | ⚠️ Public APIs | ⚠️ Public APIs | ⚠️ Centralized Meta |
+| **User Accounts Required** | **None (Zero)** | Yes | Yes | Yes (Phone Number) |
+| **Server Chat Logs** | **None (RAM Only)** | Yes | Yes | Stored on Device/Cloud |
+| **Media Servers (SFU/MCU)** | **Direct P2P Mesh** | Yes | Yes | Hybrid |
+| **Authoritative 2-Peer Cap** | **Strict 2/2** | Unlimited | Large Meetings | Group Cap |
+| **Message Auto-Purge (TTL)** | **15s – 5m Burning** | No | No | 24h – 90d |
+| **Data Retention on Exit** | **Zero (Wiped)** | Permanent | Account Logs | Permanent History |
+| **Third-Party Server Exposure** | **Pages API public unless Access-protected** | Public APIs | Public APIs | Centralized Meta |
 
 ---
 
-## 🏗️ Architecture & Topology
+<a id="-architecture--topology"></a>
+<a id="architecture--topology"></a>
+## Architecture & Topology
 
 KunekTayo uses a private signaling mesh to negotiate peer-to-peer sessions without exposing internal backend infrastructure:
 
@@ -134,7 +138,9 @@ flowchart TD
 
 ---
 
-## 🎨 Strict 7-Color Design System
+<a id="-strict-7-color-design-system"></a>
+<a id="strict-7-color-design-system"></a>
+## Strict 7-Color Design System
 
 KunekTayo’s visual interface is strictly confined to an authorized 7-color palette:
 
@@ -155,7 +161,9 @@ KunekTayo’s visual interface is strictly confined to an authorized 7-color pal
 
 ---
 
-## 🎧 Audio Processing Pipeline
+<a id="-audio-processing-pipeline"></a>
+<a id="audio-processing-pipeline"></a>
+## Audio Processing Pipeline
 
 Before audio frames are transmitted over WebRTC, the browser audio stream passes through a specialized Web Audio API processing graph:
 
@@ -176,7 +184,9 @@ flowchart LR
 
 ---
 
-## 🛠️ Tech Stack
+<a id="-tech-stack"></a>
+<a id="tech-stack"></a>
+## Tech Stack
 
 | Layer | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
@@ -193,7 +203,9 @@ flowchart LR
 
 ---
 
-## 🚀 Getting Started
+<a id="-getting-started"></a>
+<a id="getting-started"></a>
+## Getting Started
 
 ### Prerequisites
 
@@ -225,7 +237,9 @@ pnpm test
 
 ---
 
-## 📦 Production Builds
+<a id="-production-builds"></a>
+<a id="production-builds"></a>
+## Production Builds
 
 ### 1. Windows Desktop Installers (`.exe` & `.msi`)
 
@@ -269,11 +283,13 @@ cd server
 pnpm install
 pnpm run deploy
 ```
-*Note: In Cloudflare Pages Settings &rarr; Functions, add the `SIGNALING` Service Binding to `kunektayo-signaling` and turn OFF `workers.dev` to hide the direct Worker hostname. The Pages `/api/*` routes remain public; Cloudflare Access protection is required when external requests must be blocked (see the [deployment runbook](project/DEPLOYMENT.md#23-disable-the-direct-workersdev-route)).*
+*Note: In Cloudflare Pages Settings &rarr; Functions, add the `SIGNALING` Service Binding to `kunektayo-signaling` and turn OFF `workers.dev` to hide the direct Worker hostname. The Pages `/api/*` routes remain public; Cloudflare Access protection is required when external requests must be blocked (see the [deployment runbook](docs/DEPLOYMENT.md#23-disable-the-direct-workersdev-route)).*
 
 ---
 
-## 🛡️ Security & Privacy Guarantees
+<a id="-security--privacy-guarantees"></a>
+<a id="security--privacy-guarantees"></a>
+## Security & Privacy Guarantees
 
 1. **Zero-Knowledge Token Architecture**: Plaintext invite tokens never touch the server. Only SHA-256 hashes are transmitted and compared using constant-time `timingSafeEqual`.
 2. **Backend Server Isolation**: With `workers.dev` disabled, clients reach the signaling Worker through the Pages `/api/*` route and `SIGNALING` Service Binding. This route remains publicly reachable unless protected by Cloudflare Access.
@@ -283,7 +299,9 @@ pnpm run deploy
 
 ---
 
-## 🧪 Automated Testing
+<a id="-automated-testing"></a>
+<a id="automated-testing"></a>
+## Automated Testing
 
 All suites are run via Vitest:
 ```bash
@@ -308,19 +326,21 @@ Current test status:
 
 ---
 
-## 📚 Documentation
+<a id="-documentation"></a>
+<a id="documentation"></a>
+## Documentation
 
-Detailed specifications and engineering runbooks are maintained in the [`project/`](project/) directory:
+Detailed specifications and engineering runbooks are maintained in the [`docs/`](docs/) directory:
 
-* 📐 [Architecture Documentation](project/ARCHITECTURE.md) — System topology, WebRTC state machines, audio pipelines, and edge mesh.
-* 🎨 [UI/UX Design System](project/DESIGN_SYSTEM.md) — 7-color palette, touch target specifications, and typography.
-* 📋 [Technical Specifications](project/SPEC.md) — Data contracts, REST endpoints, and DataChannel schemas.
-* 🔒 [Security & Reliability Specification](project/SECURITY.md) — Threat model, cryptographic primitives, and rate limiting.
-* 🚀 [Production Deployment Runbook](project/DEPLOYMENT.md) — Step-by-step deployment guide for Windows, Android, and Cloudflare.
-* 🗺️ [Project Roadmap](project/ROADMAP.md) — Implementation phase tracker and milestone progress.
+* [Architecture Documentation](docs/ARCHITECTURE.md) — System topology, WebRTC state machines, audio pipelines, and edge mesh.
+* [UI/UX Design System](docs/DESIGN_SYSTEM.md) — 7-color palette, touch target specifications, and typography.
+* [Technical Specifications](docs/SPEC.md) — Data contracts, REST endpoints, and DataChannel schemas.
+* [Security & Reliability Specification](docs/SECURITY.md) — Threat model, cryptographic primitives, and rate limiting.
+* [Production Deployment Runbook](docs/DEPLOYMENT.md) — Step-by-step deployment guide for Windows, Android, and Cloudflare.
+* [Project Roadmap](docs/ROADMAP.md) — Implementation phase tracker and milestone progress.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](LICENSE) © 2026 [Carlo Dandan](https://github.com/carlodandan).

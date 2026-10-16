@@ -154,7 +154,7 @@ stateDiagram-v2
 
 ---
 
-## 7. Ephemeral Chat & DataChannel Architecture
+## 8. Ephemeral Chat & DataChannel Architecture
 
 * **Channel Label**: `"ephemeral-chat"`.
 * **Independent TTL**: Configurable auto-purge durations: 15s, 30s, 60s, or 5m.
