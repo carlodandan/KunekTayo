@@ -158,6 +158,9 @@ jobs:
     if: always() && (github.ref_name == 'prod' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/prod')
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
