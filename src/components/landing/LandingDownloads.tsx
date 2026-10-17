@@ -123,7 +123,7 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
               <ul className="space-y-2 text-xs text-[#dbdee1]">
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon size={14} className="text-[#9098C8] shrink-0" weight="fill" />
-                  <span>No installation required — pure web standards</span>
+                  <span>Installable via browser (PWA / Add to Home screen)</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircleIcon size={14} className="text-[#9098C8] shrink-0" weight="fill" />
@@ -136,14 +136,25 @@ export const LandingDownloads: React.FC<LandingDownloadsProps> = ({ onLaunchApp 
               </ul>
             </div>
 
-            <button
-              type="button"
-              onClick={onLaunchApp}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#35373c] hover:bg-[#404249] active:scale-[0.98] text-[#f2f3f5] text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[48px]"
-            >
-              <span>Launch Web Client</span>
-              <ArrowRightIcon size={16} weight="bold" />
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={onLaunchApp}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#35373c] hover:bg-[#404249] active:scale-[0.98] text-[#f2f3f5] text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[48px]"
+              >
+                <span>Launch Web Client</span>
+                <ArrowRightIcon size={16} weight="bold" />
+              </button>
+
+              <a
+                href="https://github.com/carlodandan/KunekTayo/releases/latest"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-1.5 text-xs text-[#9098C8] hover:text-[#f2f3f5] transition-colors py-1"
+              >
+                <span>Install for Windows, Android, or via PWA &rarr;</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
