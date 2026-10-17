@@ -15,7 +15,7 @@ import { ChatProvider } from "@/context/ChatContext";
 import { FileTransferProvider } from "@/context/FileTransferContext";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { usePlatform } from "@/hooks/usePlatform";
-import { WarningCircleIcon, XIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon, XIcon, DownloadSimpleIcon } from "@phosphor-icons/react";
 import { InviteJoinModal } from "@/components/room/InviteJoinModal";
 
 function RoomAppContent() {
@@ -136,6 +136,24 @@ function RoomAppContent() {
             audio, video, and vanishing chat with zero accounts and zero footprints.
           </p>
         </div>
+
+        {/* Web Platform Install Option */}
+        {isWeb && (
+          <div className="w-full max-w-xl mx-auto px-4 py-2.5 rounded-xl bg-[#2b2d31] border border-[#35373c] text-xs text-[#949ba4] flex flex-col sm:flex-row items-center justify-between gap-2.5 text-center sm:text-left">
+            <span>
+              Install KunekTayo as a Windows app, Android app, or via PWA.
+            </span>
+            <a
+              href="https://github.com/carlodandan/KunekTayo/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#283E7C] hover:bg-[#283E7C]/85 active:scale-[0.98] text-white font-medium shrink-0 transition-all cursor-pointer"
+            >
+              <DownloadSimpleIcon size={14} weight="bold" />
+              <span>Install App</span>
+            </a>
+          </div>
+        )}
 
         {/* Main Action Cards */}
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">

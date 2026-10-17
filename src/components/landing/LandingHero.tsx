@@ -8,6 +8,7 @@ import {
   InfinityIcon,
   UsersIcon,
   LockKeyIcon,
+  GlobeIcon,
 } from "@phosphor-icons/react";
 
 interface LandingHeroProps {
@@ -60,7 +61,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
         {/* Platform Downloads Shortcut */}
         <div className="flex items-center justify-center gap-3 pt-3 flex-wrap text-xs text-[#949ba4]">
-          <span className="text-[#80848e]">Also available as native apps:</span>
+          <span className="text-[#80848e]">Install as Windows app, Android app, or via PWA:</span>
           <a
             href="https://github.com/carlodandan/KunekTayo/releases/latest"
             target="_blank"
@@ -68,7 +69,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2b2d31] border border-[#35373c] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer"
           >
             <WindowsLogoIcon size={14} weight="fill" className="text-[#9098C8]" />
-            <span>Windows (.exe / .msi)</span>
+            <span>Windows (.msi)</span>
           </a>
           <a
             href="https://github.com/carlodandan/KunekTayo/releases/latest"
@@ -78,6 +79,15 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           >
             <AndroidLogoIcon size={14} weight="fill" className="text-[#9098C8]" />
             <span>Android (.apk)</span>
+          </a>
+          <a
+            href="https://github.com/carlodandan/KunekTayo/releases/latest"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2b2d31] border border-[#35373c] hover:text-[#f2f3f5] hover:bg-[#35373c] transition-colors cursor-pointer"
+          >
+            <GlobeIcon size={14} weight="bold" className="text-[#9098C8]" />
+            <span>PWA / Web</span>
           </a>
         </div>
 

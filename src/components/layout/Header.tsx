@@ -1,5 +1,5 @@
 import React from "react";
-import { DesktopIcon, DeviceMobileIcon, GlobeIcon, ShieldCheckIcon } from "@phosphor-icons/react";
+import { DesktopIcon, DeviceMobileIcon, GlobeIcon, ShieldCheckIcon, DownloadSimpleIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/common/Badge";
 import { usePlatform } from "@/hooks/usePlatform";
 import { APP_NAME, APP_VERSION } from "@/constants/app";
@@ -117,6 +117,18 @@ export const Header: React.FC<HeaderProps> = ({
             <span>P2P Ready</span>
           </Badge>
           {getPlatformBadge()}
+          {isWeb && (
+            <a
+              href="https://github.com/carlodandan/KunekTayo/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2b2d31] hover:bg-[#35373c] border border-[#35373c] text-[#dbdee1] hover:text-[#f2f3f5] text-xs font-medium transition-colors"
+              title="Install KunekTayo as a Windows app, Android app, or via PWA"
+            >
+              <DownloadSimpleIcon size={13} weight="bold" className="text-[#9098C8]" />
+              <span>Install App</span>
+            </a>
+          )}
         </div>
       </div>
     </header>
