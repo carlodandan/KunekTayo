@@ -64,7 +64,7 @@ describe("local media lifecycle", () => {
   });
 });
 
-describe("screen sharing negotiation", () => {
+describe.each([true, false])("screen sharing negotiation (host: %s)", (isHost) => {
   it.each(["audio", "video"] as const)("reuses the initial video sender for a %s call", async (kind) => {
     const local = media(kind);
     const display = media("video");
@@ -90,7 +90,7 @@ describe("screen sharing negotiation", () => {
       getDisplayMedia: vi.fn().mockResolvedValue(display.stream),
     } });
     await webrtcService.startLocalMedia();
-    webrtcService.initPeerConnection(true);
+    webrtcService.initPeerConnection(isHost);
     if (kind === "audio") {
       expect(pc.addTransceiver).toHaveBeenCalledWith("video", { direction: "sendrecv", streams: [local.stream] });
     } else {
@@ -109,6 +109,6 @@ describe("screen sharing negotiation", () => {
     expect(videoSender.track).toBe(display.track);
     expect(pc.addTrack).not.toHaveBeenCalled();
     expect(pc.addTransceiver).not.toHaveBeenCalled();
-    expect(pc.createOffer).toHaveBeenCalledOnce();
+    expect(pc.createOffer).toHaveBeenCalledTimes(isHost ? 1 : 0);
   });
 });

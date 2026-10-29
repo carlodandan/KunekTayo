@@ -235,8 +235,8 @@ class WebRtcService {
       });
     }
 
-    // Reserve a negotiated video sender on the Offerer for screen sharing or receive-only
-    if (isHost && !this.localStream?.getVideoTracks().length) {
+    // Reserve a negotiated video sender for screen sharing or receive-only.
+    if (!this.localStream?.getVideoTracks().length) {
       this.fallbackVideoSender = pc.addTransceiver("video", {
         direction: "sendrecv",
         streams: this.localStream ? [this.localStream] : [],

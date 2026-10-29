@@ -90,7 +90,6 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       webrtcService.startLocalMedia(true, true).then(() => {
         if (cancelled) {
-          webrtcService.stopAllMedia();
           return;
         }
         notifyNativeCallState(true);
@@ -149,57 +148,44 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     let isEffectActive = true;
 
-    // 1. Initial check when stream is acquired: if a Bluetooth device is connected, prefer it
+    let previousInputIds: Set<string> | null = null;
+    let previousOutputIds: Set<string> | null = null;
+
+    // Establish a baseline without overriding the user's current selections.
     deviceService
       .getAvailableDevices()
-      .then(async ({ audioInputs, audioOutputs }) => {
-        if (!isEffectActive || !localStream) return;
-        const currentTrack = localStream.getAudioTracks()[0];
-        const currentDeviceId = currentTrack?.getSettings()?.deviceId;
-        const preferredInput = deviceService.getPreferredAudioInput(audioInputs, currentDeviceId);
-
-        if (
-          preferredInput &&
-          isBluetoothOrHeadset(preferredInput.label) &&
-          preferredInput.deviceId !== currentDeviceId
-        ) {
-          console.log(
-            "[WebRtcContext] Auto-selecting initial headset/Bluetooth microphone:",
-            preferredInput.label
-          );
-          await deviceService.switchAudioDevice(
-            localStream,
-            preferredInput.deviceId,
-            (newTrack) => webrtcService.replaceAudioTrack(newTrack),
-            isNoiseSuppressionEnabled
-          );
-        }
-
-        const currentOutputId = deviceService.getSelectedAudioOutput();
-        const preferredOutput = deviceService.getPreferredAudioOutput(audioOutputs, currentOutputId);
-        if (preferredOutput && (isBluetoothOrHeadset(preferredOutput.label) || !currentOutputId)) {
-          await deviceService.applyAudioOutput(preferredOutput.deviceId);
-        }
+      .then(({ audioInputs, audioOutputs }) => {
+        if (!isEffectActive) return;
+        previousInputIds ??= new Set(audioInputs.map((device) => device.deviceId));
+        previousOutputIds ??= new Set(audioOutputs.map((device) => device.deviceId));
       })
       .catch((err) => {
         console.warn("[WebRtcContext] Initial device detection failed:", err);
       });
 
     // 2. Track ended listener (e.g. Bluetooth device disconnected / turned off mid-call)
-    const audioTrack = localStream.getAudioTracks()[0];
+    let audioTrack = localStream.getAudioTracks()[0];
+    const replaceAudioTrack = async (newTrack: MediaStreamTrack) => {
+      await webrtcService.replaceAudioTrack(newTrack);
+      if (!isEffectActive) return;
+      audioTrack?.removeEventListener("ended", handleTrackEnded);
+      audioTrack = newTrack;
+      audioTrack.addEventListener("ended", handleTrackEnded);
+    };
     const handleTrackEnded = async () => {
       if (!isEffectActive) return;
       console.warn("[WebRtcContext] Active audio track ended unexpectedly. Attempting fallback...");
       try {
-        const { audioInputs } = await deviceService.getAvailableDevices();
         const currentId = audioTrack?.getSettings()?.deviceId;
+        const { audioInputs } = await deviceService.getAvailableDevices();
+        if (!isEffectActive) return;
         const fallback =
           audioInputs.find((d) => d.deviceId && d.deviceId !== currentId) || audioInputs[0];
         if (fallback && localStream) {
           await deviceService.switchAudioDevice(
             localStream,
             fallback.deviceId,
-            (newTrack) => webrtcService.replaceAudioTrack(newTrack),
+            replaceAudioTrack,
             isNoiseSuppressionEnabled
           );
         }
@@ -217,9 +203,14 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       async ({ audioInputs, audioOutputs }) => {
         if (!isEffectActive || !localStream) return;
 
+        const newInputs = audioInputs.filter((device) => previousInputIds && !previousInputIds.has(device.deviceId));
+        const newOutputs = audioOutputs.filter((device) => previousOutputIds && !previousOutputIds.has(device.deviceId));
+        previousInputIds = new Set(audioInputs.map((device) => device.deviceId));
+        previousOutputIds = new Set(audioOutputs.map((device) => device.deviceId));
+
         const currentTrack = localStream.getAudioTracks()[0];
         const currentDeviceId = currentTrack?.getSettings()?.deviceId;
-        const preferredInput = deviceService.getPreferredAudioInput(audioInputs, currentDeviceId);
+        const preferredInput = deviceService.getPreferredAudioInput(newInputs, currentDeviceId);
 
         if (
           preferredInput &&
@@ -233,13 +224,14 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           await deviceService.switchAudioDevice(
             localStream,
             preferredInput.deviceId,
-            (newTrack) => webrtcService.replaceAudioTrack(newTrack),
+            replaceAudioTrack,
             isNoiseSuppressionEnabled
           );
         }
 
+        if (!isEffectActive) return;
         const currentOutputId = deviceService.getSelectedAudioOutput();
-        const preferredOutput = deviceService.getPreferredAudioOutput(audioOutputs, currentOutputId);
+        const preferredOutput = deviceService.getPreferredAudioOutput(newOutputs, currentOutputId);
         if (
           preferredOutput &&
           isBluetoothOrHeadset(preferredOutput.label) &&

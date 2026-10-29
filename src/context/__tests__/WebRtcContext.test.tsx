@@ -48,7 +48,26 @@ describe("room WebRTC lifecycle effect", () => {
     expect(notifyNativeCallState).not.toHaveBeenCalled();
     expect(webrtcService.initPeerConnection).not.toHaveBeenCalled();
     expect(webrtcService.createAndSendOffer).not.toHaveBeenCalled();
-    expect(webrtcService.stopAllMedia).toHaveBeenCalledOnce();
+    expect(webrtcService.stopAllMedia).not.toHaveBeenCalled();
+  });
+
+  it("keeps a newer setup active when a cancelled acquisition completes last", async () => {
+    let resolve!: (stream: MediaStream) => void;
+    vi.mocked(webrtcService.startLocalMedia)
+      .mockReturnValueOnce(new Promise((done) => { resolve = done; }))
+      .mockResolvedValueOnce({} as MediaStream);
+    const cleanupOlder = setupEffect();
+    cleanupOlder();
+    const cleanupNewer = setupEffect();
+    await Promise.resolve();
+    resolve({} as MediaStream);
+    await Promise.resolve();
+
+    expect(webrtcService.initPeerConnection).toHaveBeenCalledOnce();
+    expect(webrtcService.stopAllMedia).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(600);
+    expect(webrtcService.createAndSendOffer).toHaveBeenCalledOnce();
+    cleanupNewer();
   });
 
   it("cancels the host offer on cleanup", async () => {
