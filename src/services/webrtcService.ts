@@ -26,6 +26,7 @@ class WebRtcService {
   private isMuted = false;
   private isCameraOff = false;
   private noiseSuppressionEnabled = true;
+  private pendingOffer: RTCSessionDescriptionInit | null = null;
   private candidateQueue: RTCIceCandidateInit[] = [];
   private listeners = new Map<string, Set<WebRtcEventListener>>();
   private connectionState: PeerConnectionState = "new";
@@ -95,7 +96,19 @@ class WebRtcService {
   }
 
   /**
-   * Request user camera and microphone
+   * Wire signaling listeners BEFORE getUserMedia starts so any incoming SDP offer
+   * or ICE candidate from a faster peer is queued instead of dropped while the
+   * Android camera/microphone or permission prompt is still open.
+   */
+  prepareSignaling(isHost: boolean): void {
+    this.isOfferer = isHost;
+    this.pendingOffer = null;
+    this.candidateQueue = [];
+    this.wireSignaling();
+  }
+
+  /**
+   * Request user camera and microphone with progressive fallbacks for Android WebView
    */
   async startLocalMedia(audio = true, video = true): Promise<MediaStream | null> {
     const requestId = ++this.mediaRequestId;
@@ -110,7 +123,6 @@ class WebRtcService {
               echoCancellation: true,
               noiseSuppression: this.noiseSuppressionEnabled,
               autoGainControl: true,
-              channelCount: 1,
             }
           : false,
         video: video
@@ -127,13 +139,17 @@ class WebRtcService {
         return null;
       }
       this.localStream = stream;
+      this.isMuted = false;
+      this.isCameraOff = !stream.getVideoTracks().length;
       this.emit("local_stream", this.localStream);
+      this.emit("media_state", { isMuted: this.isMuted, isCameraOff: this.isCameraOff });
       return this.localStream;
     } catch (err: unknown) {
       if (requestId !== this.mediaRequestId) return null;
-      console.warn("getUserMedia failed or denied with video:", err);
-      // If combined audio+video failed, attempt fallback to audio-only to preserve calling capability
+      console.warn("getUserMedia failed or denied with video+audio:", err);
+
       if (video && audio) {
+        // Fallback 1: Audio-only
         try {
           console.warn("Attempting fallback to audio-only media stream...");
           const stream = await navigator.mediaDevices.getUserMedia({
@@ -141,7 +157,6 @@ class WebRtcService {
               echoCancellation: true,
               noiseSuppression: this.noiseSuppressionEnabled,
               autoGainControl: true,
-              channelCount: 1,
             },
             video: false,
           });
@@ -150,6 +165,7 @@ class WebRtcService {
             return null;
           }
           this.localStream = stream;
+          this.isMuted = false;
           this.isCameraOff = true;
           this.emit("local_stream", this.localStream);
           this.emit("media_state", { isMuted: this.isMuted, isCameraOff: true });
@@ -157,7 +173,29 @@ class WebRtcService {
         } catch (audioErr: unknown) {
           console.warn("Audio-only media fallback also failed:", audioErr);
         }
+
+        // Fallback 2: Video-only (in case Android audio focus/mic failed)
+        try {
+          console.warn("Attempting fallback to video-only media stream...");
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: "user" },
+          });
+          if (requestId !== this.mediaRequestId) {
+            stream.getTracks().forEach((track) => track.stop());
+            return null;
+          }
+          this.localStream = stream;
+          this.isMuted = true;
+          this.isCameraOff = false;
+          this.emit("local_stream", this.localStream);
+          this.emit("media_state", { isMuted: true, isCameraOff: false });
+          return this.localStream;
+        } catch (videoErr: unknown) {
+          console.warn("Video-only media fallback also failed:", videoErr);
+        }
       }
+
       if (requestId !== this.mediaRequestId) return null;
       this.emit("media_error", err);
       return null;
@@ -167,11 +205,16 @@ class WebRtcService {
   private dataChannel: RTCDataChannel | null = null;
 
   /**
-   * Initialize RTCPeerConnection and wire signaling handlers
+   * Initialize RTCPeerConnection and flush any buffered signaling offers/candidates
    */
   initPeerConnection(isHost: boolean): void {
+    const savedOffer = this.pendingOffer;
+    const savedCandidates = [...this.candidateQueue];
+
     this.closePeerConnection();
     this.isOfferer = isHost;
+    this.pendingOffer = savedOffer;
+    this.candidateQueue = savedCandidates;
     this.remoteStream = new MediaStream();
 
     const config: RTCConfiguration = {
@@ -192,8 +235,8 @@ class WebRtcService {
       });
     }
 
-    // Reserve a negotiated video sender for screen sharing in audio-only calls.
-    if (!this.localStream?.getVideoTracks().length) {
+    // Reserve a negotiated video sender on the Offerer for screen sharing or receive-only
+    if (isHost && !this.localStream?.getVideoTracks().length) {
       this.fallbackVideoSender = pc.addTransceiver("video", {
         direction: "sendrecv",
         streams: this.localStream ? [this.localStream] : [],
@@ -219,13 +262,23 @@ class WebRtcService {
       };
     }
 
-    // Handle incoming remote media tracks
+    // Handle incoming remote media tracks (both stream-associated and transceiver tracks)
     pc.ontrack = (event) => {
-      event.streams[0]?.getTracks().forEach((track) => {
-        if (!this.remoteStream?.getTracks().includes(track)) {
-          this.remoteStream?.addTrack(track);
+      if (!this.remoteStream) {
+        this.remoteStream = new MediaStream();
+      }
+      const incomingTracks = event.streams[0]?.getTracks().length
+        ? event.streams[0].getTracks()
+        : [event.track];
+
+      incomingTracks.forEach((track) => {
+        if (!this.remoteStream!.getTracks().some((t) => t.id === track.id)) {
+          this.remoteStream!.addTrack(track);
         }
       });
+
+      // Emit a new MediaStream reference with all current remote tracks so React always re-renders
+      this.remoteStream = new MediaStream(this.remoteStream.getTracks());
       this.emit("remote_stream", this.remoteStream);
     };
 
@@ -268,24 +321,40 @@ class WebRtcService {
 
     // Attach signaling listeners
     this.wireSignaling();
+
+    // If Guest already received an offer while getUserMedia was opening, answer it now
+    if (!isHost && this.pendingOffer) {
+      const offerToProcess = this.pendingOffer;
+      this.pendingOffer = null;
+      void this.handleIncomingOffer(offerToProcess);
+    }
+  }
+
+  private async handleIncomingOffer(sdp: RTCSessionDescriptionInit): Promise<void> {
+    if (!this.peerConnection || this.isOfferer) return;
+    try {
+      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+      await this.processQueuedCandidates();
+
+      const answer = await this.peerConnection.createAnswer();
+      await this.peerConnection.setLocalDescription(answer);
+      signalingService.sendAnswer(answer);
+    } catch (err) {
+      console.error("Failed to handle WebRTC offer:", err);
+    }
   }
 
   private wireSignaling(): void {
     this.unwireSignaling();
 
     const unsubOffer = signalingService.on("offer", async (payload: { sdp: RTCSessionDescriptionInit }) => {
-      if (!this.peerConnection || this.isOfferer) return;
-
-      try {
-        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-        this.processQueuedCandidates();
-
-        const answer = await this.peerConnection.createAnswer();
-        await this.peerConnection.setLocalDescription(answer);
-        signalingService.sendAnswer(answer);
-      } catch (err) {
-        console.error("Failed to handle WebRTC offer:", err);
+      if (this.isOfferer) return;
+      if (!this.peerConnection) {
+        // Buffer offer until startLocalMedia + initPeerConnection finish
+        this.pendingOffer = payload.sdp;
+        return;
       }
+      await this.handleIncomingOffer(payload.sdp);
     });
 
     const unsubAnswer = signalingService.on("answer", async (payload: { sdp: RTCSessionDescriptionInit }) => {
@@ -293,16 +362,16 @@ class WebRtcService {
 
       try {
         await this.peerConnection.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-        this.processQueuedCandidates();
+        await this.processQueuedCandidates();
       } catch (err) {
         console.error("Failed to handle WebRTC answer:", err);
       }
     });
 
     const unsubCandidate = signalingService.on("candidate", async (payload: { candidate: RTCIceCandidateInit }) => {
-      if (!this.peerConnection) return;
+      if (!payload?.candidate) return;
 
-      if (!this.peerConnection.remoteDescription) {
+      if (!this.peerConnection || !this.peerConnection.remoteDescription) {
         this.candidateQueue.push(payload.candidate);
         return;
       }
@@ -411,9 +480,6 @@ class WebRtcService {
     return this.noiseSuppressionEnabled;
   }
 
-  /**
-   * Toggle or update software noise suppression and echo cancellation constraints
-   */
   async setNoiseSuppression(enabled: boolean): Promise<boolean> {
     this.noiseSuppressionEnabled = enabled;
     if (this.localStream) {
@@ -424,7 +490,6 @@ class WebRtcService {
             noiseSuppression: enabled,
             echoCancellation: true,
             autoGainControl: true,
-            channelCount: 1,
           });
         } catch (err) {
           console.warn("Failed to apply noise suppression constraint on active track:", err);
@@ -435,9 +500,6 @@ class WebRtcService {
     return this.noiseSuppressionEnabled;
   }
 
-  /**
-   * Replace audio track on active peer connection; rejects if replacement fails
-   */
   async replaceAudioTrack(newTrack: MediaStreamTrack): Promise<void> {
     if (this.peerConnection) {
       const audioSender = this.peerConnection.getSenders().find((s) => s.track?.kind === "audio");
@@ -448,9 +510,6 @@ class WebRtcService {
     }
   }
 
-  /**
-   * Replace video track on active peer connection; rejects if replacement fails
-   */
   async replaceVideoTrack(newTrack: MediaStreamTrack): Promise<void> {
     if (this.peerConnection) {
       const videoSender = this.peerConnection.getSenders().find((s) => s.track?.kind === "video");
@@ -461,9 +520,6 @@ class WebRtcService {
     }
   }
 
-  /**
-   * Start screen sharing and replace current video track with display media
-   */
   async startScreenShare(): Promise<MediaStream | null> {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getDisplayMedia) {
       console.warn("Screen sharing is not supported in this browser environment.");
@@ -482,7 +538,6 @@ class WebRtcService {
       this.screenStream = stream;
       this.isScreenSharing = true;
 
-      // Replace track on the video sender if peer connection is active
       if (this.peerConnection) {
         const senders = this.peerConnection.getSenders();
         const videoSender = senders.find((s) => s.track?.kind === "video") || this.fallbackVideoSender;
@@ -491,7 +546,6 @@ class WebRtcService {
         }
       }
 
-      // Handle native user stop-sharing button
       screenTrack.onended = () => {
         this.stopScreenShare();
       };
@@ -504,9 +558,6 @@ class WebRtcService {
     }
   }
 
-  /**
-   * Stop screen sharing and restore camera video track
-   */
   async stopScreenShare(): Promise<void> {
     if (!this.isScreenSharing && !this.screenStream) return;
 
@@ -516,7 +567,6 @@ class WebRtcService {
     }
     this.isScreenSharing = false;
 
-    // Restore original camera track on video sender
     if (this.peerConnection && this.localStream) {
       const cameraTrack = this.localStream.getVideoTracks()[0] || null;
       const senders = this.peerConnection.getSenders();
@@ -565,13 +615,13 @@ class WebRtcService {
       }
     }
 
-    // Mirror to signaling / broadcast fallback if DataChannel is connecting or offline
     signalingService.send("datachannel_fallback", payload);
     return false;
   }
 
   closePeerConnection(): void {
     this.fallbackVideoSender = null;
+    this.pendingOffer = null;
     if (this.dataChannel) {
       try {
         this.dataChannel.close();

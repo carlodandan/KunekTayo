@@ -14,21 +14,28 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 
-/**
- * Foreground Service that preserves continuous microphone capture, WebRTC
- * peer connections, and audio streaming when KunekTayo runs in the background
- * or in Android Picture-in-Picture (PiP) mode.
- */
 class CallNotificationService : Service() {
 
     companion object {
         const val CHANNEL_ID = "kunektayo_active_call"
         const val NOTIFICATION_ID = 2001
         const val ACTION_START = "ACTION_START_CALL"
-        const val ACTION_STOP = "ACTION_STOP_CALL"
+
+        @Volatile
+        var isRunning: Boolean = false
+            private set
 
         fun start(context: Context) {
             try {
+                val hasMicPermission = ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.RECORD_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED
+
+                if (!hasMicPermission) {
+                    return
+                }
+
                 val intent = Intent(context, CallNotificationService::class.java).apply {
                     action = ACTION_START
                 }
@@ -43,11 +50,9 @@ class CallNotificationService : Service() {
         }
 
         fun stop(context: Context) {
+            if (!isRunning) return
             try {
-                val intent = Intent(context, CallNotificationService::class.java).apply {
-                    action = ACTION_STOP
-                }
-                context.startService(intent)
+                context.stopService(Intent(context, CallNotificationService::class.java))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -57,39 +62,84 @@ class CallNotificationService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_STOP) {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    stopForeground(Service.STOP_FOREGROUND_REMOVE)
-                } else {
-                    @Suppress("DEPRECATION")
-                    stopForeground(true)
-                }
-            } catch (_: Exception) {}
-            stopSelf()
-            return START_NOT_STICKY
-        }
+        createNotificationChannel()
+        val notification = buildNotification()
 
-        // On Android 14+ (API 34+), starting a foreground service of type microphone
-        // requires RECORD_AUDIO to already be granted. If the user is still on the permission
-        // dialog or denied microphone, calling startForeground with microphone type will throw
-        // SecurityException. If startForeground fails to attach a notification within 5 seconds
-        // of startForegroundService(), Android kills the app with ForegroundServiceDidNotStartInTimeException.
-        // Therefore, we MUST stopSelf() immediately if permission is missing, which cancels the timeout.
         val hasMicPermission = ContextCompat.checkSelfPermission(
             this,
             android.Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
 
-        if (!hasMicPermission) {
+        // Once startForegroundService() is called, Android REQUIRES startForeground()
+        // before stopSelf() is called, or it crashes with ForegroundServiceDidNotStartInTimeException.
+        var startedForeground = false
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val fgsType = if (hasMicPermission) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                } else {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                }
+                startForeground(NOTIFICATION_ID, notification, fgsType)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            startedForeground = true
+            isRunning = true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Satisfy Android's startForeground requirement with mediaPlayback fallback before stopping
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                    )
+                } else {
+                    startForeground(NOTIFICATION_ID, notification)
+                }
+                startedForeground = true
+            } catch (_: Exception) {}
+
+            if (startedForeground) {
+                stopForegroundCompat()
+            }
+            isRunning = false
             stopSelf()
             return START_NOT_STICKY
         }
 
-        createNotificationChannel()
+        if (!hasMicPermission) {
+            stopForegroundCompat()
+            isRunning = false
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        isRunning = false
+        stopForegroundCompat()
+        super.onDestroy()
+    }
+
+    private fun stopForegroundCompat() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(Service.STOP_FOREGROUND_REMOVE)
+            } else {
+                @Suppress("DEPRECATION")
+                stopForeground(true)
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun buildNotification(): Notification {
         val openAppIntent = Intent(this, MainActivity::class.java).apply {
-            setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -102,9 +152,13 @@ class CallNotificationService : Service() {
             }
         )
 
-        val smallIconRes = if (applicationInfo.icon != 0) applicationInfo.icon else android.R.drawable.ic_menu_call
+        val smallIconRes = if (applicationInfo.icon != 0) {
+            applicationInfo.icon
+        } else {
+            android.R.drawable.ic_menu_call
+        }
 
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("KunekTayo Call in Progress")
             .setContentText("Private 1-on-1 audio/video call active")
             .setSmallIcon(smallIconRes)
@@ -113,23 +167,6 @@ class CallNotificationService : Service() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .build()
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
-            } else {
-                startForeground(NOTIFICATION_ID, notification)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            // CRITICAL: If startForeground throws SecurityException or fails, we MUST call stopSelf()
-            // to cancel the system's 5-second pending FGS timeout and prevent the fatal
-            // ForegroundServiceDidNotStartInTimeException crash.
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
-        return START_STICKY
     }
 
     private fun createNotificationChannel() {

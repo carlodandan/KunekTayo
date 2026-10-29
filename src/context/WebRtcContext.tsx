@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { webrtcService, PeerConnectionState } from "@/services/webrtcService";
 import { notifyNativeCallState } from "@/services/androidPipService";
 import { useRoom } from "./RoomContext";
@@ -32,6 +32,8 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isNoiseSuppressionEnabled, setIsNoiseSuppressionEnabled] = useState(
     webrtcService.isNoiseSuppressionEnabled()
   );
+  const wasActiveRef = useRef(false);
+  const connStateRef = useRef<PeerConnectionState>("new");
 
   useEffect(() => {
     const unsubLocal = webrtcService.on("local_stream", (stream: MediaStream) => {
@@ -39,10 +41,12 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     const unsubRemote = webrtcService.on("remote_stream", (stream: MediaStream) => {
-      setRemoteStream(stream);
+      // Clone MediaStream reference so React re-renders when the 2nd track (audio + video) is added
+      setRemoteStream(stream ? new MediaStream(stream.getTracks()) : null);
     });
 
     const unsubConn = webrtcService.on("connection_state", (state: PeerConnectionState) => {
+      connStateRef.current = state;
       setConnectionState(state);
     });
 
@@ -74,37 +78,66 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     let cancelled = false;
     let offerTimeout: ReturnType<typeof setTimeout> | undefined;
+    let retryOfferTimeout: ReturnType<typeof setTimeout> | undefined;
 
     if (status === "active" && session) {
+      wasActiveRef.current = true;
       const isHost = session.myRole === "host";
 
-      webrtcService.startLocalMedia(true, true).then((stream) => {
+      // Wire signaling BEFORE getUserMedia so early offers/candidates are buffered
+      webrtcService.prepareSignaling(isHost);
+
+      webrtcService.startLocalMedia(true, true).then(() => {
         if (cancelled) return;
-        if (stream) {
-          notifyNativeCallState(true);
-          webrtcService.initPeerConnection(isHost);
-          if (isHost) {
-            // Give brief moment for peer connection ready, then offer
-            offerTimeout = setTimeout(() => {
-              if (!cancelled) webrtcService.createAndSendOffer();
-            }, 600);
-          }
+        notifyNativeCallState(true);
+        webrtcService.initPeerConnection(isHost);
+
+        if (isHost) {
+          offerTimeout = setTimeout(() => {
+            if (!cancelled) webrtcService.createAndSendOffer();
+          }, 600);
+
+          // Retry offer if Guest was still on the Android permission prompt
+          retryOfferTimeout = setTimeout(() => {
+            if (
+              !cancelled &&
+              connStateRef.current !== "connected" &&
+              connStateRef.current !== "connecting"
+            ) {
+              webrtcService.createAndSendOffer();
+            }
+          }, 3000);
         }
       });
-    } else if (status !== "active") {
+    } else if (status !== "active" && wasActiveRef.current) {
+      wasActiveRef.current = false;
+      notifyNativeCallState(false);
       webrtcService.stopAllMedia();
       setLocalStream(null);
       setRemoteStream(null);
       setScreenStream(null);
       setIsScreenSharing(false);
+      connStateRef.current = "new";
       setConnectionState("new");
     }
+
     return () => {
       cancelled = true;
       if (offerTimeout !== undefined) clearTimeout(offerTimeout);
-      webrtcService.stopAllMedia();
+      if (retryOfferTimeout !== undefined) clearTimeout(retryOfferTimeout);
     };
   }, [status, session?.roomId, session?.myRole]);
+
+  // Clean up when provider completely unmounts
+  useEffect(() => {
+    return () => {
+      if (wasActiveRef.current) {
+        wasActiveRef.current = false;
+        notifyNativeCallState(false);
+        webrtcService.stopAllMedia();
+      }
+    };
+  }, []);
 
   const toggleMic = () => {
     setIsMuted(webrtcService.toggleMicrophone());
