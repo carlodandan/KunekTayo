@@ -5,6 +5,8 @@ import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -25,6 +27,7 @@ class MainActivity : TauriActivity() {
     var isCallActive: Boolean = false
     private var isRequestingPermissions: Boolean = false
     private var pendingWebViewPermissionRequest: PermissionRequest? = null
+    private var audioDeviceCallback: AudioDeviceCallback? = null
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1001
@@ -36,6 +39,7 @@ class MainActivity : TauriActivity() {
 
         // Request Camera, Microphone, and Notification permissions upfront on launch
         ensureRuntimePermissions()
+        registerAudioDeviceCallback()
 
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -59,6 +63,11 @@ class MainActivity : TauriActivity() {
         }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             needed.add(Manifest.permission.RECORD_AUDIO)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -145,16 +154,128 @@ class MainActivity : TauriActivity() {
         }
     }
 
+    private fun registerAudioDeviceCallback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && audioDeviceCallback == null) {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+            val callback = object : AudioDeviceCallback() {
+                override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>?) {
+                    if (isCallActive) {
+                        runOnUiThread { configureCallAudio(true) }
+                    }
+                }
+
+                override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
+                    if (isCallActive) {
+                        runOnUiThread { configureCallAudio(true) }
+                    }
+                }
+            }
+            audioManager.registerAudioDeviceCallback(callback, null)
+            audioDeviceCallback = callback
+        }
+    }
+
+    private fun unregisterAudioDeviceCallback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && audioDeviceCallback != null) {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+            audioDeviceCallback?.let {
+                audioManager.unregisterAudioDeviceCallback(it)
+            }
+            audioDeviceCallback = null
+        }
+    }
+
     private fun configureCallAudio(active: Boolean) {
         try {
             val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
             if (active) {
                 audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-                @Suppress("DEPRECATION")
-                audioManager.isSpeakerphoneOn = true
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val devices = audioManager.availableCommunicationDevices
+                    // Priority order:
+                    // 1. Bluetooth headset / BLE headset / Bluetooth SCO
+                    // 2. Wired headset / wired headphones / USB headset
+                    // 3. Built-in speaker (speakerphone)
+                    val btDevice = devices.firstOrNull {
+                        it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+                        it.type == AudioDeviceInfo.TYPE_BLE_HEADSET ||
+                        it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                    }
+                    val wiredDevice = devices.firstOrNull {
+                        it.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                        it.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && it.type == AudioDeviceInfo.TYPE_USB_HEADSET)
+                    }
+                    val speakerDevice = devices.firstOrNull {
+                        it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER
+                    }
+
+                    val target = btDevice ?: wiredDevice ?: speakerDevice
+                    if (target != null) {
+                        audioManager.setCommunicationDevice(target)
+                    }
+                } else {
+                    val hasBluetooth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                        devices.any {
+                            it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+                            it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                        }
+                    } else {
+                        @Suppress("DEPRECATION")
+                        audioManager.isBluetoothA2dpOn || audioManager.isBluetoothScoAvailableOffCall
+                    }
+
+                    val hasWiredHeadset = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                        devices.any {
+                            it.type == AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                            it.type == AudioDeviceInfo.TYPE_WIRED_HEADPHONES ||
+                            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && it.type == AudioDeviceInfo.TYPE_USB_HEADSET)
+                        }
+                    } else {
+                        @Suppress("DEPRECATION")
+                        audioManager.isWiredHeadsetOn
+                    }
+
+                    if (hasBluetooth) {
+                        @Suppress("DEPRECATION")
+                        audioManager.startBluetoothSco()
+                        @Suppress("DEPRECATION")
+                        audioManager.isBluetoothScoOn = true
+                        @Suppress("DEPRECATION")
+                        audioManager.isSpeakerphoneOn = false
+                    } else if (hasWiredHeadset) {
+                        @Suppress("DEPRECATION")
+                        if (audioManager.isBluetoothScoOn) {
+                            audioManager.isBluetoothScoOn = false
+                            audioManager.stopBluetoothSco()
+                        }
+                        @Suppress("DEPRECATION")
+                        audioManager.isSpeakerphoneOn = false
+                    } else {
+                        @Suppress("DEPRECATION")
+                        if (audioManager.isBluetoothScoOn) {
+                            audioManager.isBluetoothScoOn = false
+                            audioManager.stopBluetoothSco()
+                        }
+                        @Suppress("DEPRECATION")
+                        audioManager.isSpeakerphoneOn = true
+                    }
+                }
             } else {
-                @Suppress("DEPRECATION")
-                audioManager.isSpeakerphoneOn = false
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    audioManager.clearCommunicationDevice()
+                } else {
+                    @Suppress("DEPRECATION")
+                    if (audioManager.isBluetoothScoOn) {
+                        audioManager.isBluetoothScoOn = false
+                        audioManager.stopBluetoothSco()
+                    }
+                    @Suppress("DEPRECATION")
+                    audioManager.isSpeakerphoneOn = false
+                }
                 audioManager.mode = AudioManager.MODE_NORMAL
             }
         } catch (e: Exception) {
@@ -285,6 +406,7 @@ class MainActivity : TauriActivity() {
     }
 
     override fun onDestroy() {
+        unregisterAudioDeviceCallback()
         configureCallAudio(false)
         CallNotificationService.stop(this)
         super.onDestroy()

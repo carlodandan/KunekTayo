@@ -16,6 +16,7 @@ vi.mock("../RoomContext", () => ({ useRoom: () => room }));
 vi.mock("@/services/androidPipService", () => ({ notifyNativeCallState: vi.fn() }));
 vi.mock("@/services/webrtcService", () => ({ webrtcService: {
   isNoiseSuppressionEnabled: () => true,
+  prepareSignaling: vi.fn(),
   startLocalMedia: vi.fn(), initPeerConnection: vi.fn(),
   createAndSendOffer: vi.fn(), stopAllMedia: vi.fn(),
 } }));
@@ -56,7 +57,7 @@ describe("room WebRTC lifecycle effect", () => {
     await Promise.resolve();
     expect(notifyNativeCallState).toHaveBeenCalledWith(true);
     expect(webrtcService.initPeerConnection).toHaveBeenCalledWith(true);
-    expect(vi.getTimerCount()).toBe(1);
+    expect(vi.getTimerCount()).toBe(2);
     cleanup();
     expect(vi.getTimerCount()).toBe(0);
     await vi.runAllTimersAsync();

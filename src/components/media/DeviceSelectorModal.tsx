@@ -32,6 +32,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
   });
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>("");
   const [selectedVideoInput, setSelectedVideoInput] = useState<string>("");
+  const [selectedAudioOutput, setSelectedAudioOutput] = useState<string>("");
   const [noiseSuppression, setNoiseSuppressionLocal] = useState(isNoiseSuppressionEnabled);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -42,11 +43,27 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
 
     deviceService.getAvailableDevices().then((res) => {
       setDevices(res);
-      if (res.audioInputs[0] && !selectedAudioInput) {
+
+      const currentAudioId = localStream?.getAudioTracks()[0]?.getSettings()?.deviceId;
+      if (currentAudioId && res.audioInputs.some((d) => d.deviceId === currentAudioId)) {
+        setSelectedAudioInput(currentAudioId);
+      } else if (res.audioInputs[0] && !selectedAudioInput) {
         setSelectedAudioInput(res.audioInputs[0].deviceId);
       }
-      if (res.videoInputs[0] && !selectedVideoInput) {
+
+      const currentVideoId = localStream?.getVideoTracks()[0]?.getSettings()?.deviceId;
+      if (currentVideoId && res.videoInputs.some((d) => d.deviceId === currentVideoId)) {
+        setSelectedVideoInput(currentVideoId);
+      } else if (res.videoInputs[0] && !selectedVideoInput) {
         setSelectedVideoInput(res.videoInputs[0].deviceId);
+      }
+
+      const currentOutputId = deviceService.getSelectedAudioOutput();
+      if (currentOutputId && res.audioOutputs.some((d) => d.deviceId === currentOutputId)) {
+        setSelectedAudioOutput(currentOutputId);
+      } else if (res.audioOutputs[0] && !selectedAudioOutput) {
+        const preferred = deviceService.getPreferredAudioOutput(res.audioOutputs);
+        setSelectedAudioOutput(preferred?.deviceId || res.audioOutputs[0].deviceId);
       }
     });
   }, [isOpen, isNoiseSuppressionEnabled]);
@@ -75,6 +92,9 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
         );
         if (!newAudioTrack) return;
       }
+    }
+    if (selectedAudioOutput) {
+      await deviceService.applyAudioOutput(selectedAudioOutput);
     }
     setSavedSuccess(true);
     setTimeout(() => {
@@ -111,11 +131,11 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
           </div>
         </div>
 
-        {/* MicrophoneIcon Selection */}
+        {/* Microphone Selection */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
             <MicrophoneIcon size={14} className="text-[#9098C8]" />
-            <span>MicrophoneIcon</span>
+            <span>Microphone</span>
           </label>
           <select
             value={selectedAudioInput}
@@ -123,7 +143,7 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
             className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors"
           >
             {devices.audioInputs.length === 0 ? (
-              <option value="">Default MicrophoneIcon</option>
+              <option value="">Default Microphone</option>
             ) : (
               devices.audioInputs.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>
@@ -196,9 +216,13 @@ export const DeviceSelectorModal: React.FC<DeviceSelectorModalProps> = ({
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-[#dbdee1] flex items-center gap-1.5">
               <SpeakerHighIcon size={14} className="text-[#9098C8]" />
-              <span>Speaker</span>
+              <span>Speaker / Headset</span>
             </label>
-            <select className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors">
+            <select
+              value={selectedAudioOutput}
+              onChange={(e) => setSelectedAudioOutput(e.target.value)}
+              className="w-full h-11 bg-[#1e1f22] border border-[#35373c] rounded-xl px-3 text-xs sm:text-sm text-[#f2f3f5] focus:border-[#283E7C] focus:outline-none transition-colors"
+            >
               {devices.audioOutputs.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>
                   {d.label}

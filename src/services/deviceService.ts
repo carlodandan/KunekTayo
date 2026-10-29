@@ -1,5 +1,5 @@
 /**
- * Media device enumeration and selection service
+ * Media device enumeration, selection, and auto-routing service
  */
 
 export interface MediaDeviceInfoSummary {
@@ -14,7 +14,58 @@ export interface AvailableDevices {
   videoInputs: MediaDeviceInfoSummary[];
 }
 
+export function isBluetoothOrHeadset(label: string): boolean {
+  return /bluetooth|headset|airpods|buds|wireless|headphones|earphones|hands-free|hfp/i.test(
+    label
+  );
+}
+
 class DeviceService {
+  private selectedOutputDeviceId = "";
+  private deviceChangeSubscribers = new Set<(devices: AvailableDevices) => void>();
+  private isListeningToDeviceChange = false;
+
+  private handleNativeDeviceChange = async () => {
+    try {
+      const devices = await this.getAvailableDevices();
+      this.deviceChangeSubscribers.forEach((cb) => {
+        try {
+          cb(devices);
+        } catch (err) {
+          console.error("[DeviceService] Error in devicechange subscriber:", err);
+        }
+      });
+    } catch (err) {
+      console.warn("[DeviceService] Failed to handle device change:", err);
+    }
+  };
+
+  /**
+   * Subscribe to hardware media device connection and disconnection events.
+   * Automatically starts listening to navigator.mediaDevices 'devicechange'.
+   */
+  onDeviceChange(callback: (devices: AvailableDevices) => void): () => void {
+    this.deviceChangeSubscribers.add(callback);
+
+    if (!this.isListeningToDeviceChange && typeof navigator !== "undefined" && navigator.mediaDevices?.addEventListener) {
+      navigator.mediaDevices.addEventListener("devicechange", this.handleNativeDeviceChange);
+      this.isListeningToDeviceChange = true;
+    }
+
+    return () => {
+      this.deviceChangeSubscribers.delete(callback);
+      if (
+        this.deviceChangeSubscribers.size === 0 &&
+        this.isListeningToDeviceChange &&
+        typeof navigator !== "undefined" &&
+        navigator.mediaDevices?.removeEventListener
+      ) {
+        navigator.mediaDevices.removeEventListener("devicechange", this.handleNativeDeviceChange);
+        this.isListeningToDeviceChange = false;
+      }
+    };
+  }
+
   async getAvailableDevices(): Promise<AvailableDevices> {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.enumerateDevices) {
       return { audioInputs: [], audioOutputs: [], videoInputs: [] };
@@ -27,7 +78,7 @@ class DeviceService {
       const videoInputs: MediaDeviceInfoSummary[] = [];
 
       devices.forEach((d, idx) => {
-        const item = {
+        const item: MediaDeviceInfoSummary = {
           deviceId: d.deviceId,
           label: d.label || `${d.kind.replace("input", " Input").replace("output", " Output")} #${idx + 1}`,
           kind: d.kind,
@@ -40,9 +91,67 @@ class DeviceService {
 
       return { audioInputs, audioOutputs, videoInputs };
     } catch (err) {
-      console.warn("Failed to enumerate devices:", err);
+      console.warn("[DeviceService] Failed to enumerate devices:", err);
       return { audioInputs: [], audioOutputs: [], videoInputs: [] };
     }
+  }
+
+  /**
+   * Pick the best audio input device (prioritizing Bluetooth / Headsets, then system default)
+   */
+  getPreferredAudioInput(devices: MediaDeviceInfoSummary[], currentDeviceId?: string): MediaDeviceInfoSummary | undefined {
+    if (!devices.length) return undefined;
+    // 1. Look for Bluetooth or external headset
+    const btOrHeadset = devices.find((d) => isBluetoothOrHeadset(d.label));
+    if (btOrHeadset && btOrHeadset.deviceId !== currentDeviceId) {
+      return btOrHeadset;
+    }
+    // 2. Return current or default
+    return devices.find((d) => d.deviceId === currentDeviceId) || devices.find((d) => d.deviceId === "default") || devices[0];
+  }
+
+  /**
+   * Pick the best audio output device (prioritizing Bluetooth / Headsets, then system default)
+   */
+  getPreferredAudioOutput(devices: MediaDeviceInfoSummary[], currentDeviceId?: string): MediaDeviceInfoSummary | undefined {
+    if (!devices.length) return undefined;
+    const btOrHeadset = devices.find((d) => isBluetoothOrHeadset(d.label));
+    if (btOrHeadset && btOrHeadset.deviceId !== currentDeviceId) {
+      return btOrHeadset;
+    }
+    return devices.find((d) => d.deviceId === currentDeviceId) || devices.find((d) => d.deviceId === "default") || devices[0];
+  }
+
+  /**
+   * Set output audio sink on an HTMLMediaElement (<video> or <audio>)
+   */
+  async setAudioOutputSink(element: HTMLMediaElement, deviceId?: string): Promise<boolean> {
+    const target = deviceId ?? this.selectedOutputDeviceId;
+    if (!target || typeof (element as any).setSinkId !== "function") return false;
+    try {
+      await (element as any).setSinkId(target);
+      return true;
+    } catch (err) {
+      console.warn("[DeviceService] Failed to set sinkId on media element:", err);
+      return false;
+    }
+  }
+
+  /**
+   * Apply selected audio output device to all media elements across the DOM
+   */
+  async applyAudioOutput(deviceId: string): Promise<void> {
+    this.selectedOutputDeviceId = deviceId;
+    if (typeof document !== "undefined") {
+      const mediaElements = document.querySelectorAll<HTMLMediaElement>("video, audio");
+      for (const el of mediaElements) {
+        await this.setAudioOutputSink(el, deviceId);
+      }
+    }
+  }
+
+  getSelectedAudioOutput(): string {
+    return this.selectedOutputDeviceId;
   }
 
   /**
@@ -75,7 +184,7 @@ class DeviceService {
       return newTrack;
     } catch (err) {
       newTrack?.stop();
-      console.error("Failed to switch video device:", err);
+      console.error("[DeviceService] Failed to switch video device:", err);
       return null;
     }
   }
@@ -98,7 +207,6 @@ class DeviceService {
           echoCancellation: true,
           noiseSuppression,
           autoGainControl: true,
-          channelCount: 1,
         },
       });
       newTrack = newStream.getAudioTracks()[0];
@@ -117,7 +225,7 @@ class DeviceService {
       return newTrack;
     } catch (err) {
       newTrack?.stop();
-      console.error("Failed to switch audio device:", err);
+      console.error("[DeviceService] Failed to switch audio device:", err);
       return null;
     }
   }

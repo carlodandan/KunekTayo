@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deviceService } from "../deviceService";
+import { deviceService, isBluetoothOrHeadset, MediaDeviceInfoSummary } from "../deviceService";
 import { webrtcService } from "../webrtcService";
 
 vi.mock("../signalingService", () => ({
@@ -110,5 +110,90 @@ describe.each(["audio", "video"] as const)("%s device replacement", (kind) => {
     expect(getTracks()).toEqual([newTrack]);
     expect(oldTrack.stop).toHaveBeenCalledOnce();
     expect(sender.replaceTrack).not.toHaveBeenCalled();
+  });
+});
+
+describe("Bluetooth and headset auto detection and routing", () => {
+  it("correctly identifies Bluetooth and headset labels", () => {
+    expect(isBluetoothOrHeadset("AirPods Pro")).toBe(true);
+    expect(isBluetoothOrHeadset("Galaxy Buds2 Pro")).toBe(true);
+    expect(isBluetoothOrHeadset("Sony WH-1000XM4 Headset")).toBe(true);
+    expect(isBluetoothOrHeadset("Wireless Headphones")).toBe(true);
+    expect(isBluetoothOrHeadset("Jabra Hands-Free AG Audio")).toBe(true);
+    expect(isBluetoothOrHeadset("USB Audio Headset")).toBe(true);
+    expect(isBluetoothOrHeadset("Built-in Microphone")).toBe(false);
+    expect(isBluetoothOrHeadset("Realtek High Definition Audio")).toBe(false);
+  });
+
+  it("prioritizes Bluetooth device over default in getPreferredAudioInput", () => {
+    const devices: MediaDeviceInfoSummary[] = [
+      { deviceId: "default", label: "Default - Internal Mic", kind: "audioinput" },
+      { deviceId: "bt-1", label: "AirPods Pro Hands-Free", kind: "audioinput" },
+      { deviceId: "mic-1", label: "Built-in Microphone", kind: "audioinput" },
+    ];
+
+    const preferred = deviceService.getPreferredAudioInput(devices, "default");
+    expect(preferred?.deviceId).toBe("bt-1");
+
+    // When already using Bluetooth, maintains it
+    const maintained = deviceService.getPreferredAudioInput(devices, "bt-1");
+    expect(maintained?.deviceId).toBe("bt-1");
+  });
+
+  it("falls back to default/first device when no Bluetooth device is found", () => {
+    const devices: MediaDeviceInfoSummary[] = [
+      { deviceId: "mic-1", label: "Internal Mic", kind: "audioinput" },
+      { deviceId: "mic-2", label: "Webcam Mic", kind: "audioinput" },
+    ];
+
+    const preferred = deviceService.getPreferredAudioInput(devices);
+    expect(preferred?.deviceId).toBe("mic-1");
+  });
+
+  it("prioritizes Bluetooth device over default in getPreferredAudioOutput", () => {
+    const devices: MediaDeviceInfoSummary[] = [
+      { deviceId: "default", label: "Default - Speakers", kind: "audiooutput" },
+      { deviceId: "bt-out-1", label: "Galaxy Buds2 Stereo", kind: "audiooutput" },
+      { deviceId: "spk-1", label: "Built-in Speakers", kind: "audiooutput" },
+    ];
+
+    const preferred = deviceService.getPreferredAudioOutput(devices, "default");
+    expect(preferred?.deviceId).toBe("bt-out-1");
+  });
+
+  it("manages HTMLMediaElement setSinkId in setAudioOutputSink", async () => {
+    const mockElement = {
+      setSinkId: vi.fn().mockResolvedValue(undefined),
+    } as unknown as HTMLMediaElement;
+
+    const success = await deviceService.setAudioOutputSink(mockElement, "test-device-id");
+    expect(success).toBe(true);
+    expect(mockElement.setSinkId).toHaveBeenCalledWith("test-device-id");
+  });
+
+  it("gracefully returns false when setSinkId is not supported", async () => {
+    const mockElement = {} as HTMLMediaElement;
+    const success = await deviceService.setAudioOutputSink(mockElement, "test-device-id");
+    expect(success).toBe(false);
+  });
+
+  it("subscribes to devicechange and unregisters when unsubscribed", () => {
+    const addEventListener = vi.fn();
+    const removeEventListener = vi.fn();
+    vi.stubGlobal("navigator", {
+      mediaDevices: {
+        addEventListener,
+        removeEventListener,
+        enumerateDevices: vi.fn().mockResolvedValue([]),
+      },
+    });
+
+    const callback = vi.fn();
+    const unsubscribe = deviceService.onDeviceChange(callback);
+
+    expect(addEventListener).toHaveBeenCalledWith("devicechange", expect.any(Function));
+
+    unsubscribe();
+    expect(removeEventListener).toHaveBeenCalledWith("devicechange", expect.any(Function));
   });
 });

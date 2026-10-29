@@ -42,8 +42,7 @@ describe("Audio Processing and Noise Suppression", () => {
       echoCancellation: true,
       noiseSuppression: true,
       autoGainControl: true,
-      channelCount: 1,
-    });
+          });
   });
 
   it("updates noise suppression state and applies constraints to active track", async () => {
@@ -78,8 +77,7 @@ describe("Audio Processing and Noise Suppression", () => {
       noiseSuppression: false,
       echoCancellation: true,
       autoGainControl: true,
-      channelCount: 1,
-    });
+          });
     expect(emittedEvent).toEqual({ noiseSuppression: false });
 
     // Re-enable noise suppression
@@ -90,8 +88,7 @@ describe("Audio Processing and Noise Suppression", () => {
       noiseSuppression: true,
       echoCancellation: true,
       autoGainControl: true,
-      channelCount: 1,
-    });
+          });
     expect(emittedEvent).toEqual({ noiseSuppression: true });
 
     unsub();
@@ -125,7 +122,6 @@ describe("Audio Processing and Noise Suppression", () => {
       echoCancellation: true,
       noiseSuppression: false,
       autoGainControl: true,
-      channelCount: 1,
-    });
+          });
   });
 });
