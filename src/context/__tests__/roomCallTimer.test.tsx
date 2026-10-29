@@ -57,7 +57,7 @@ beforeEach(() => {
   effects.length = 0;
   listeners.clear();
   renderToStaticMarkup(<RoomProvider><Probe /></RoomProvider>);
-  effects[2](); // Connect the session's signaling listeners.
+  effects[1](); // Connect the session's signaling listeners.
 });
 afterEach(() => {
   vi.unstubAllGlobals();

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { webrtcService, PeerConnectionState } from "@/services/webrtcService";
 import { notifyNativeCallState } from "@/services/androidPipService";
+import { deviceService, isBluetoothOrHeadset } from "@/services/deviceService";
 import { useRoom } from "./RoomContext";
 
 interface WebRtcContextValue {
@@ -32,6 +33,8 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isNoiseSuppressionEnabled, setIsNoiseSuppressionEnabled] = useState(
     webrtcService.isNoiseSuppressionEnabled()
   );
+  const wasActiveRef = useRef(false);
+  const connStateRef = useRef<PeerConnectionState>("new");
 
   useEffect(() => {
     const unsubLocal = webrtcService.on("local_stream", (stream: MediaStream) => {
@@ -39,10 +42,12 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     const unsubRemote = webrtcService.on("remote_stream", (stream: MediaStream) => {
-      setRemoteStream(stream);
+      // Clone MediaStream reference so React re-renders when the 2nd track (audio + video) is added
+      setRemoteStream(stream ? new MediaStream(stream.getTracks()) : null);
     });
 
     const unsubConn = webrtcService.on("connection_state", (state: PeerConnectionState) => {
+      connStateRef.current = state;
       setConnectionState(state);
     });
 
@@ -74,37 +79,181 @@ export const WebRtcProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     let cancelled = false;
     let offerTimeout: ReturnType<typeof setTimeout> | undefined;
+    let retryOfferTimeout: ReturnType<typeof setTimeout> | undefined;
 
     if (status === "active" && session) {
+      wasActiveRef.current = true;
       const isHost = session.myRole === "host";
 
-      webrtcService.startLocalMedia(true, true).then((stream) => {
-        if (cancelled) return;
-        if (stream) {
-          notifyNativeCallState(true);
-          webrtcService.initPeerConnection(isHost);
-          if (isHost) {
-            // Give brief moment for peer connection ready, then offer
-            offerTimeout = setTimeout(() => {
-              if (!cancelled) webrtcService.createAndSendOffer();
-            }, 600);
-          }
+      // Wire signaling BEFORE getUserMedia so early offers/candidates are buffered
+      webrtcService.prepareSignaling(isHost);
+
+      webrtcService.startLocalMedia(true, true).then(() => {
+        if (cancelled) {
+          return;
+        }
+        notifyNativeCallState(true);
+        webrtcService.initPeerConnection(isHost);
+
+        if (isHost) {
+          offerTimeout = setTimeout(() => {
+            if (!cancelled) webrtcService.createAndSendOffer();
+          }, 600);
+
+          // Retry offer if Guest was still on the Android permission prompt
+          retryOfferTimeout = setTimeout(() => {
+            if (
+              !cancelled &&
+              connStateRef.current !== "connected" &&
+              connStateRef.current !== "connecting"
+            ) {
+              webrtcService.createAndSendOffer();
+            }
+          }, 3000);
         }
       });
-    } else if (status !== "active") {
+    } else if (status !== "active" && wasActiveRef.current) {
+      wasActiveRef.current = false;
+      notifyNativeCallState(false);
       webrtcService.stopAllMedia();
       setLocalStream(null);
       setRemoteStream(null);
       setScreenStream(null);
       setIsScreenSharing(false);
+      connStateRef.current = "new";
       setConnectionState("new");
     }
+
     return () => {
       cancelled = true;
       if (offerTimeout !== undefined) clearTimeout(offerTimeout);
-      webrtcService.stopAllMedia();
+      if (retryOfferTimeout !== undefined) clearTimeout(retryOfferTimeout);
     };
   }, [status, session?.roomId, session?.myRole]);
+
+  // Clean up when provider completely unmounts
+  useEffect(() => {
+    return () => {
+      if (wasActiveRef.current) {
+        wasActiveRef.current = false;
+        notifyNativeCallState(false);
+        webrtcService.stopAllMedia();
+      }
+    };
+  }, []);
+
+  // Auto-detect and route Bluetooth or external headset devices (or fallback if disconnected)
+  useEffect(() => {
+    if (status !== "active" || !localStream) return;
+
+    let isEffectActive = true;
+
+    let previousInputIds: Set<string> | null = null;
+    let previousOutputIds: Set<string> | null = null;
+
+    // Establish a baseline without overriding the user's current selections.
+    deviceService
+      .getAvailableDevices()
+      .then(({ audioInputs, audioOutputs }) => {
+        if (!isEffectActive) return;
+        previousInputIds ??= new Set(audioInputs.map((device) => device.deviceId));
+        previousOutputIds ??= new Set(audioOutputs.map((device) => device.deviceId));
+      })
+      .catch((err) => {
+        console.warn("[WebRtcContext] Initial device detection failed:", err);
+      });
+
+    // 2. Track ended listener (e.g. Bluetooth device disconnected / turned off mid-call)
+    let audioTrack = localStream.getAudioTracks()[0];
+    const replaceAudioTrack = async (newTrack: MediaStreamTrack) => {
+      await webrtcService.replaceAudioTrack(newTrack);
+      if (!isEffectActive) return;
+      audioTrack?.removeEventListener("ended", handleTrackEnded);
+      audioTrack = newTrack;
+      audioTrack.addEventListener("ended", handleTrackEnded);
+    };
+    const handleTrackEnded = async () => {
+      if (!isEffectActive) return;
+      console.warn("[WebRtcContext] Active audio track ended unexpectedly. Attempting fallback...");
+      try {
+        const currentId = audioTrack?.getSettings()?.deviceId;
+        const { audioInputs } = await deviceService.getAvailableDevices();
+        if (!isEffectActive) return;
+        const fallback =
+          audioInputs.find((d) => d.deviceId && d.deviceId !== currentId) || audioInputs[0];
+        if (fallback && localStream) {
+          await deviceService.switchAudioDevice(
+            localStream,
+            fallback.deviceId,
+            replaceAudioTrack,
+            isNoiseSuppressionEnabled
+          );
+        }
+      } catch (err) {
+        console.error("[WebRtcContext] Failed to recover audio track on ended:", err);
+      }
+    };
+
+    if (audioTrack) {
+      audioTrack.addEventListener("ended", handleTrackEnded);
+    }
+
+    // 3. Dynamic device change listener (user plugs in or connects Bluetooth headphones during call)
+    const unsubscribeDeviceChange = deviceService.onDeviceChange(
+      async ({ audioInputs, audioOutputs }) => {
+        if (!isEffectActive || !localStream) return;
+
+        const newInputs = audioInputs.filter((device) => previousInputIds && !previousInputIds.has(device.deviceId));
+        const newOutputs = audioOutputs.filter((device) => previousOutputIds && !previousOutputIds.has(device.deviceId));
+        previousInputIds = new Set(audioInputs.map((device) => device.deviceId));
+        previousOutputIds = new Set(audioOutputs.map((device) => device.deviceId));
+
+        const currentTrack = localStream.getAudioTracks()[0];
+        const currentDeviceId = currentTrack?.getSettings()?.deviceId;
+        const preferredInput = deviceService.getPreferredAudioInput(newInputs, currentDeviceId);
+
+        if (
+          preferredInput &&
+          isBluetoothOrHeadset(preferredInput.label) &&
+          preferredInput.deviceId !== currentDeviceId
+        ) {
+          console.log(
+            "[WebRtcContext] Auto-switching to preferred headset/Bluetooth microphone:",
+            preferredInput.label
+          );
+          await deviceService.switchAudioDevice(
+            localStream,
+            preferredInput.deviceId,
+            replaceAudioTrack,
+            isNoiseSuppressionEnabled
+          );
+        }
+
+        if (!isEffectActive) return;
+        const currentOutputId = deviceService.getSelectedAudioOutput();
+        const preferredOutput = deviceService.getPreferredAudioOutput(newOutputs, currentOutputId);
+        if (
+          preferredOutput &&
+          isBluetoothOrHeadset(preferredOutput.label) &&
+          preferredOutput.deviceId !== currentOutputId
+        ) {
+          console.log(
+            "[WebRtcContext] Auto-switching to preferred headset/Bluetooth output:",
+            preferredOutput.label
+          );
+          await deviceService.applyAudioOutput(preferredOutput.deviceId);
+        }
+      }
+    );
+
+    return () => {
+      isEffectActive = false;
+      if (audioTrack) {
+        audioTrack.removeEventListener("ended", handleTrackEnded);
+      }
+      unsubscribeDeviceChange();
+    };
+  }, [status, localStream, isNoiseSuppressionEnabled]);
 
   const toggleMic = () => {
     setIsMuted(webrtcService.toggleMicrophone());

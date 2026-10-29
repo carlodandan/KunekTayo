@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { UserIcon, VideoCameraSlashIcon, MicrophoneSlashIcon } from "@phosphor-icons/react";
 import { cn } from "@/utils/cn";
+import { deviceService } from "@/services/deviceService";
 
 export interface VideoPlayerProps {
   stream: MediaStream | null;
@@ -51,11 +52,14 @@ export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
       if (internalVideoRef.current) {
         if (stream) {
           internalVideoRef.current.srcObject = stream;
+          if (!isLocal) {
+            deviceService.setAudioOutputSink(internalVideoRef.current);
+          }
         } else {
           internalVideoRef.current.srcObject = null;
         }
       }
-    }, [stream]);
+    }, [stream, isLocal]);
 
   const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && !isVideoOff;
 

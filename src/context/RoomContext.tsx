@@ -45,19 +45,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [rejoinSession, setRejoinSession] = useState<RejoinSession | null>(null);
   const [isPeerReconnecting, setIsPeerReconnecting] = useState(false);
 
-  // CheckIcon for cached rejoin session on mount
+  // Check for cached rejoin session on mount
   useEffect(() => {
     const cached = roomService.getRejoinSession();
     if (cached) {
       setRejoinSession(cached);
     }
   }, []);
-
-  // Sync active call state with native Android container (PiP & Foreground Service)
-  useEffect(() => {
-    notifyNativeCallState(status === "active");
-    return () => notifyNativeCallState(false);
-  }, [status]);
 
   // Connect signaling whenever active session changes
   useEffect(() => {
@@ -83,7 +77,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return {
             ...prev,
             status: payload.state,
-            soloExpiresAt: null, // Room has no expiration timer; stays active while host is inside
+            soloExpiresAt: null,
             participants: payload.participants || prev.participants,
           };
         });
@@ -123,7 +117,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [session?.roomId, session?.inviteToken, session?.myParticipantId]);
 
-  // Rooms have no expiration countdown; life cycle depends on the host
   const computeTimeRemaining = () => null;
 
   const createRoom = useCallback(async () => {
@@ -199,6 +192,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const leaveRoom = useCallback(async () => {
+    notifyNativeCallState(false);
     if (session) {
       clearCallStartedAt(session.roomId);
       await roomService.leaveRoom(session.roomId, session.myParticipantId);
@@ -217,7 +211,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await joinRoom(cached.roomId, cached.inviteToken, cached.participantId);
   }, [joinRoom]);
 
-  // Dev simulation helpers: test 2nd participant join / leave
   const simulateSecondParticipantJoin = useCallback(() => {
     if (!session || session.participants.length >= 2) return;
 
@@ -234,7 +227,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {
         ...prev,
         status: "active",
-        soloExpiresAt: null, // Cancel countdown
+        soloExpiresAt: null,
         participants: [...prev.participants, guestParticipant],
       };
     });
@@ -251,13 +244,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!prev) return null;
       return {
         ...prev,
-        status: "waiting",
-        soloExpiresAt: null, // Room stays open as long as one person is inside
+        status: "active" === status ? "waiting" : status,
+        soloExpiresAt: null,
         participants: remaining,
       };
     });
     setStatus("waiting");
-  }, [session]);
+  }, [session, status]);
 
   const inviteUrl = session
     ? buildInviteUrl(session.roomId, session.inviteToken)
