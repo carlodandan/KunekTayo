@@ -61,7 +61,14 @@ export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
       }
     }, [stream, isLocal]);
 
-  const hasVideoTrack = stream && stream.getVideoTracks().length > 0 && !isVideoOff;
+  const videoTrack = stream && stream.getVideoTracks()[0];
+  const hasVideoTrack = !!videoTrack && !isVideoOff;
+  const isBackCamera = Boolean(
+    videoTrack &&
+      (videoTrack.getSettings?.().facingMode === "environment" ||
+        /back|rear|environment/i.test(videoTrack.label))
+  );
+  const shouldMirror = isLocal && !isBackCamera;
 
   return (
     <div
@@ -81,7 +88,7 @@ export const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
         muted={isLocal} // Local video must always be muted to prevent acoustic feedback
         className={cn(
           "w-full h-full object-cover transition-opacity duration-200",
-          isLocal && "scale-x-[-1]", // Mirror local webcam preview
+          shouldMirror && "scale-x-[-1]", // Mirror local front/user camera only
           !hasVideoTrack && "opacity-0"
         )}
       />

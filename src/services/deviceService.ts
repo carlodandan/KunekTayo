@@ -240,36 +240,101 @@ class DeviceService {
   }
 
   /**
-   * Switch active video input device on an existing MediaStream
+   * Switch active video input device on an existing MediaStream.
+   * Handles desktop concurrent acquisition and mobile/Android 12 exclusive hardware locks.
    */
   async switchVideoDevice(
     stream: MediaStream,
     deviceId: string,
     replaceTrack: (track: MediaStreamTrack) => Promise<void>
   ): Promise<MediaStreamTrack | null> {
+    const oldTrack = stream.getVideoTracks()[0];
+    const oldEnabled = oldTrack?.enabled ?? true;
+    const oldDeviceId = oldTrack?.getSettings?.()?.deviceId;
+
     let newTrack: MediaStreamTrack | undefined;
+
+    // Strategy 1: Concurrent acquisition (keeps old track live until new is negotiated; works on desktop)
     try {
-      const oldTrack = stream.getVideoTracks()[0];
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { deviceId: { exact: deviceId } },
       });
       newTrack = newStream.getVideoTracks()[0];
-      if (!newTrack) return null;
-      newTrack.enabled = oldTrack?.enabled ?? true;
+      if (newTrack) {
+        newTrack.enabled = oldEnabled;
+        await replaceTrack(newTrack);
 
-      // Keep the current track live until the peer accepts its replacement.
-      await replaceTrack(newTrack);
+        if (oldTrack) {
+          stream.removeTrack(oldTrack);
+          oldTrack.stop();
+        }
 
-      if (oldTrack) {
-        stream.removeTrack(oldTrack);
-        oldTrack.stop();
+        stream.addTrack(newTrack);
+        return newTrack;
+      }
+    } catch (concurrentErr: unknown) {
+      // If replaceTrack rejected, abort and preserve existing track
+      if (newTrack) {
+        newTrack.stop();
+        console.error("[DeviceService] Failed to switch video device:", concurrentErr);
+        return null;
       }
 
+      // If getUserMedia failed (e.g. Android 12 camera hardware lock / NotReadableError),
+      // release the active camera track to unlock the camera subsystem on mobile
+      console.warn(
+        "[DeviceService] Concurrent camera acquisition failed, releasing active track for hardware switch:",
+        concurrentErr
+      );
+    }
+
+    // Strategy 2: Release old track and acquire target device (Android 12 Camera2 HAL requirement)
+    if (oldTrack) {
+      stream.removeTrack(oldTrack);
+      oldTrack.stop();
+    }
+
+    try {
+      let targetStream: MediaStream | null = null;
+      try {
+        targetStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: deviceId } },
+        });
+      } catch {
+        targetStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { ideal: deviceId } },
+        });
+      }
+
+      newTrack = targetStream.getVideoTracks()[0];
+      if (!newTrack) throw new Error("No video track found in target stream");
+
+      newTrack.enabled = oldEnabled;
+      await replaceTrack(newTrack);
       stream.addTrack(newTrack);
       return newTrack;
-    } catch (err) {
+    } catch (switchErr) {
       newTrack?.stop();
-      console.error("[DeviceService] Failed to switch video device:", err);
+      console.error(
+        "[DeviceService] Failed to acquire target camera, attempting rollback:",
+        switchErr
+      );
+
+      // Rollback to previous or default camera to avoid leaving stream in dead state
+      try {
+        const rollbackStream = await navigator.mediaDevices.getUserMedia({
+          video: oldDeviceId ? { deviceId: { ideal: oldDeviceId } } : { facingMode: "user" },
+        });
+        const rollbackTrack = rollbackStream.getVideoTracks()[0];
+        if (rollbackTrack) {
+          rollbackTrack.enabled = oldEnabled;
+          await replaceTrack(rollbackTrack);
+          stream.addTrack(rollbackTrack);
+        }
+      } catch (rollbackErr) {
+        console.error("[DeviceService] Rollback to previous camera also failed:", rollbackErr);
+      }
+
       return null;
     }
   }

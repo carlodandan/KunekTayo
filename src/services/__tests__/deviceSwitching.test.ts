@@ -278,3 +278,114 @@ describe("Device label formatting and typography normalization", () => {
     ]);
   });
 });
+
+describe("Mobile / Android video hardware lock release and fallback", () => {
+  it("releases locked camera and switches to target camera on NotReadableError", async () => {
+    const oldTrack = {
+      kind: "video",
+      enabled: true,
+      stop: vi.fn(),
+      getSettings: () => ({ deviceId: "cam-front-id" }),
+    } as unknown as MediaStreamTrack;
+
+    const newTrack = {
+      kind: "video",
+      enabled: true,
+      stop: vi.fn(),
+      getSettings: () => ({ deviceId: "cam-back-id" }),
+    } as unknown as MediaStreamTrack;
+
+    let tracks = [oldTrack];
+    const stream = {
+      getVideoTracks: () => tracks.filter((t) => t.kind === "video"),
+      removeTrack: vi.fn((t) => {
+        tracks = tracks.filter((item) => item !== t);
+      }),
+      addTrack: vi.fn((t) => {
+        tracks.push(t);
+      }),
+    } as unknown as MediaStream;
+
+    const replaceTrack = vi.fn().mockResolvedValue(undefined);
+
+    // First call (concurrent) fails with NotReadableError (hardware lock)
+    // Second call (after releasing old track) succeeds with newTrack
+    const getUserMedia = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("NotReadableError: Could not start video source"))
+      .mockResolvedValueOnce({
+        getVideoTracks: () => [newTrack],
+      });
+
+    vi.stubGlobal("navigator", { mediaDevices: { getUserMedia } });
+
+    const switched = await deviceService.switchVideoDevice(
+      stream,
+      "cam-back-id",
+      replaceTrack
+    );
+
+    expect(switched).toBe(newTrack);
+    expect(oldTrack.stop).toHaveBeenCalledOnce();
+    expect(stream.removeTrack).toHaveBeenCalledWith(oldTrack);
+    expect(replaceTrack).toHaveBeenCalledWith(newTrack);
+    expect(stream.addTrack).toHaveBeenCalledWith(newTrack);
+    expect(tracks).toEqual([newTrack]);
+  });
+
+  it("attempts rollback to previous camera if target camera acquisition completely fails", async () => {
+    const oldTrack = {
+      kind: "video",
+      enabled: true,
+      stop: vi.fn(),
+      getSettings: () => ({ deviceId: "cam-front-id" }),
+    } as unknown as MediaStreamTrack;
+
+    const rollbackTrack = {
+      kind: "video",
+      enabled: true,
+      stop: vi.fn(),
+      getSettings: () => ({ deviceId: "cam-front-id" }),
+    } as unknown as MediaStreamTrack;
+
+    let tracks = [oldTrack];
+    const stream = {
+      getVideoTracks: () => tracks.filter((t) => t.kind === "video"),
+      removeTrack: vi.fn((t) => {
+        tracks = tracks.filter((item) => item !== t);
+      }),
+      addTrack: vi.fn((t) => {
+        tracks.push(t);
+      }),
+    } as unknown as MediaStream;
+
+    const replaceTrack = vi.fn().mockResolvedValue(undefined);
+
+    // Call 1 (concurrent) fails
+    // Call 2 (exact target) fails
+    // Call 3 (ideal target) fails
+    // Call 4 (rollback) succeeds
+    const getUserMedia = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("NotReadableError"))
+      .mockRejectedValueOnce(new Error("Target device unavailable"))
+      .mockRejectedValueOnce(new Error("Target device ideal unavailable"))
+      .mockResolvedValueOnce({
+        getVideoTracks: () => [rollbackTrack],
+      });
+
+    vi.stubGlobal("navigator", { mediaDevices: { getUserMedia } });
+
+    const result = await deviceService.switchVideoDevice(
+      stream,
+      "cam-broken-id",
+      replaceTrack
+    );
+
+    expect(result).toBeNull();
+    expect(oldTrack.stop).toHaveBeenCalledOnce();
+    expect(replaceTrack).toHaveBeenCalledWith(rollbackTrack);
+    expect(stream.addTrack).toHaveBeenCalledWith(rollbackTrack);
+    expect(tracks).toEqual([rollbackTrack]);
+  });
+});
