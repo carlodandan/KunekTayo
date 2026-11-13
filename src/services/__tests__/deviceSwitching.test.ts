@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deviceService, isBluetoothOrHeadset, MediaDeviceInfoSummary } from "../deviceService";
+import {
+  deviceService,
+  formatDeviceLabel,
+  isBluetoothOrHeadset,
+  MediaDeviceInfoSummary,
+} from "../deviceService";
 import { webrtcService } from "../webrtcService";
 
 vi.mock("../signalingService", () => ({
@@ -195,5 +200,81 @@ describe("Bluetooth and headset auto detection and routing", () => {
 
     unsubscribe();
     expect(removeEventListener).toHaveBeenCalledWith("devicechange", expect.any(Function));
+  });
+});
+
+describe("Device label formatting and typography normalization", () => {
+  it("normalizes raw Android Camera HAL labels", () => {
+    expect(formatDeviceLabel("camera 1, facing front", "videoinput", 0)).toBe(
+      "Front Camera (Camera 1)"
+    );
+    expect(formatDeviceLabel("camera 0, facing back", "videoinput", 1)).toBe(
+      "Back Camera (Camera 0)"
+    );
+    expect(formatDeviceLabel("camera 2, facing back", "videoinput", 2)).toBe(
+      "Back Camera (Camera 2)"
+    );
+    expect(formatDeviceLabel("facing front", "videoinput", 0)).toBe("Front Camera");
+    expect(formatDeviceLabel("facing back", "videoinput", 1)).toBe("Back Camera");
+    expect(formatDeviceLabel("camera 0", "videoinput", 0)).toBe("Camera 0");
+  });
+
+  it("normalizes awkward lower-case fallback labels with numbers", () => {
+    expect(formatDeviceLabel(" audio Output #7", "audiooutput", 6)).toBe(
+      "Speaker / Headset 7"
+    );
+    expect(formatDeviceLabel("audio Input #1", "audioinput", 0)).toBe("Microphone 1");
+    expect(formatDeviceLabel("video input #2", "videoinput", 1)).toBe("Camera 2");
+  });
+
+  it("generates clean titled fallbacks when labels are empty or whitespace", () => {
+    expect(formatDeviceLabel("", "audioinput", 0)).toBe("Microphone 1");
+    expect(formatDeviceLabel(undefined, "audioinput", 1)).toBe("Microphone 2");
+    expect(formatDeviceLabel("   ", "audiooutput", 0)).toBe("Speaker / Headset 1");
+    expect(formatDeviceLabel("", "videoinput", 0)).toBe("Camera 1");
+  });
+
+  it("normalizes system default keywords", () => {
+    expect(formatDeviceLabel("default", "audioinput", 0)).toBe("Default Microphone");
+    expect(formatDeviceLabel("default", "audiooutput", 0)).toBe("Default Speaker / Headset");
+    expect(formatDeviceLabel("communications", "audioinput", 0)).toBe(
+      "Communications Microphone"
+    );
+    expect(formatDeviceLabel("communications", "audiooutput", 0)).toBe(
+      "Communications Speaker"
+    );
+  });
+
+  it("converts all-lowercase accessory labels to Title Case", () => {
+    expect(formatDeviceLabel("wired headset", "audioinput", 0)).toBe("Wired Headset");
+    expect(formatDeviceLabel("bluetooth headphones", "audiooutput", 0)).toBe(
+      "Bluetooth Headphones"
+    );
+  });
+
+  it("formats enumerated devices in getAvailableDevices with category-specific indices", async () => {
+    vi.stubGlobal("navigator", {
+      mediaDevices: {
+        enumerateDevices: vi.fn().mockResolvedValue([
+          { deviceId: "cam-front", label: "camera 1, facing front", kind: "videoinput" },
+          { deviceId: "cam-back", label: "camera 0, facing back", kind: "videoinput" },
+          { deviceId: "mic-raw", label: "audio Input #1", kind: "audioinput" },
+          { deviceId: "spk-raw", label: " audio Output #7", kind: "audiooutput" },
+        ]),
+      },
+    });
+
+    const res = await deviceService.getAvailableDevices();
+
+    expect(res.videoInputs).toEqual([
+      { deviceId: "cam-front", label: "Front Camera (Camera 1)", kind: "videoinput" },
+      { deviceId: "cam-back", label: "Back Camera (Camera 0)", kind: "videoinput" },
+    ]);
+    expect(res.audioInputs).toEqual([
+      { deviceId: "mic-raw", label: "Microphone 1", kind: "audioinput" },
+    ]);
+    expect(res.audioOutputs).toEqual([
+      { deviceId: "spk-raw", label: "Speaker / Headset 7", kind: "audiooutput" },
+    ]);
   });
 });
