@@ -193,4 +193,34 @@ describe("Room Resilience & Session Persistence", () => {
     );
     expect(roomService.getRejoinSession()).toBeNull();
   });
+
+  it("dispatches leaveRoomBeacon via fetch with keepalive when sendBeacon is unavailable", () => {
+    roomService.saveRejoinSession({
+      roomId: "room_beacon_fallback",
+      inviteToken: "token_fallback",
+      participantId: "p_fallback_1",
+      role: "guest",
+      lastActiveAt: Date.now(),
+    });
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    } as Response);
+
+    vi.stubGlobal("navigator", {});
+
+    const sent = roomService.leaveRoomBeacon("room_beacon_fallback", "p_fallback_1");
+
+    expect(sent).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining("/api/rooms/room_beacon_fallback/leave"),
+      expect.objectContaining({
+        method: "POST",
+        keepalive: true,
+        body: JSON.stringify({ participantId: "p_fallback_1", isBeacon: true }),
+      })
+    );
+    expect(roomService.getRejoinSession()).toBeNull();
+  });
 });

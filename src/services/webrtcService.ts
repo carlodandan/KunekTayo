@@ -645,6 +645,15 @@ class WebRtcService {
     this.emit("connection_state", "closed");
   }
 
+  handlePeerLeft(): void {
+    if (this.remoteStream) {
+      this.remoteStream.getTracks().forEach((t) => t.stop());
+      this.remoteStream = null;
+    }
+    this.emit("remote_stream", null);
+    this.closePeerConnection();
+  }
+
   stopAllMedia(): void {
     ++this.mediaRequestId;
     if (this.screenStream) {

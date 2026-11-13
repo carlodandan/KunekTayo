@@ -91,10 +91,15 @@ class LocalRoomCoordinator {
     }
 
     if (room.participants.length >= 2) {
-      throw {
-        code: "ROOM_FULL",
-        message: "Room is full. KunekTayo allows a maximum of 2 participants.",
-      } as RoomError;
+      const guestIdx = room.participants.findIndex((p) => p.role === "guest");
+      if (guestIdx !== -1) {
+        room.participants.splice(guestIdx, 1);
+      } else {
+        throw {
+          code: "ROOM_FULL",
+          message: "Room is full. KunekTayo allows a maximum of 2 participants.",
+        } as RoomError;
+      }
     }
 
     const now = Date.now();
@@ -122,7 +127,7 @@ class LocalRoomCoordinator {
     };
   }
 
-  leave(roomId: string, participantId: string) {
+  leave(roomId: string, participantId: string, isBeacon?: boolean) {
     const room = this.rooms.get(roomId);
     if (!room) return;
 
@@ -130,7 +135,7 @@ class LocalRoomCoordinator {
     const isHost = leaving?.role === "host";
 
     room.participants = room.participants.filter((p) => p.id !== participantId);
-    if (isHost || room.participants.length === 0) {
+    if ((isHost && !isBeacon) || room.participants.length === 0) {
       room.status = "closed";
       if (room.timer) clearTimeout(room.timer);
       this.rooms.delete(roomId);
@@ -281,18 +286,35 @@ export const roomService = {
   },
 
   /**
-   * Leave room via navigator.sendBeacon on window/app unload
+   * Leave room via navigator.sendBeacon or fetch keepalive on window/app unload
    */
   leaveRoomBeacon(roomId: string, participantId: string): boolean {
     this.clearRejoinSession();
+    localCoordinator.leave(roomId, participantId, true);
+    const url = `${env.signalingUrl.replace("ws", "http")}/api/rooms/${roomId}/leave`;
+    const body = JSON.stringify({ participantId, isBeacon: true });
+
     try {
-      const url = `${env.signalingUrl.replace("ws", "http")}/api/rooms/${roomId}/leave`;
-      const body = JSON.stringify({ participantId });
       if (typeof navigator !== "undefined" && navigator.sendBeacon) {
         const blob = new Blob([body], { type: "application/json" });
-        return navigator.sendBeacon(url, blob);
+        if (navigator.sendBeacon(url, blob)) {
+          return true;
+        }
       }
     } catch {}
+
+    try {
+      if (typeof fetch !== "undefined") {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+          keepalive: true,
+        }).catch(() => {});
+        return true;
+      }
+    } catch {}
+
     return false;
   },
 

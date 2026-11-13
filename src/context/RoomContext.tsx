@@ -11,6 +11,7 @@ import { signalingService } from "@/services/signalingService";
 import { buildInviteUrl } from "@/utils/crypto";
 import { notifyNativeCallState } from "@/services/androidPipService";
 import { clearCallStartedAt } from "@/utils/callTimer";
+import { webrtcService } from "@/services/webrtcService";
 
 interface RoomContextValue {
   session: RoomSession | null;
@@ -67,6 +68,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (payload.state) {
         if (payload.state === "waiting") {
           clearCallStartedAt(session.roomId);
+          setIsPeerReconnecting(false);
+          webrtcService.handlePeerLeft();
         }
         setStatus(payload.state);
         if (payload.state === "active") {
@@ -107,6 +110,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubPeerLeft = signalingService.on("peer_left", () => {
       setIsPeerReconnecting(false);
+      webrtcService.handlePeerLeft();
     });
 
     return () => {
@@ -116,6 +120,23 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       unsubPeerLeft();
     };
   }, [session?.roomId, session?.inviteToken, session?.myParticipantId]);
+
+  // Listen for pagehide / beforeunload to immediately release room slot on close / swipe away
+  useEffect(() => {
+    if (!session) return;
+
+    const handleUnload = () => {
+      roomService.leaveRoomBeacon(session.roomId, session.myParticipantId);
+    };
+
+    window.addEventListener("pagehide", handleUnload);
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      window.removeEventListener("pagehide", handleUnload);
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [session?.roomId, session?.myParticipantId]);
 
   const computeTimeRemaining = () => null;
 

@@ -141,4 +141,35 @@ describe("disconnect grace alarms", () => {
     expect(state.status).toBe("waiting");
     expect(storage.setAlarm).not.toHaveBeenCalled();
   });
+
+  it("reclaims a disconnected participant slot instead of throwing ROOM_FULL when an app is closed and reopened with a new participantId", async () => {
+    const { room, state, connect, disconnect } = setup("active");
+    // Host has active socket, guest socket is closed/disconnected
+    connect("host");
+    await disconnect("guest");
+
+    // Guest reopens app, generates new participantId "guest_new", attempts to join
+    const res = await room.fetch(new Request("https://test/join", {
+      method: "POST",
+      body: JSON.stringify({ participantId: "guest_new", inviteTokenHash: "hash" }),
+    }));
+
+    expect(res.status).toBe(200);
+    const data = await res.json() as any;
+    expect(data.success).toBe(true);
+    expect(data.role).toBe("guest");
+    expect(state.participants.map((p) => p.id)).toEqual(["host", "guest_new"]);
+    expect(state.status).toBe("active");
+    expect(state.disconnectGraceExpiresAt).toBeNull();
+  });
+
+  it("immediately transitions active room to waiting when guest disconnects with code 1001 (Going Away / app closed)", async () => {
+    const { room, state } = setup("active");
+    // WebSocket closes with 1001 (Going Away)
+    await room.webSocketClose({ id: "guest" } as unknown as WebSocket, 1001, "Going Away");
+
+    expect(state.status).toBe("waiting");
+    expect(state.participants.map((p) => p.id)).toEqual(["host"]);
+    expect(state.disconnectGraceExpiresAt).toBeNull();
+  });
 });

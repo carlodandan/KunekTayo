@@ -365,12 +365,21 @@ export const ActiveRoomView: React.FC = () => {
         {/* Desktop Side-by-Side Split View (only mounted on desktop >= md to prevent duplicate video sinks/decoders) */}
         {!isMobile && (
           <div className={cn("grid grid-cols-2 gap-4", isChatOpen ? "lg:col-span-2" : "col-span-1")}>
-            <VideoPlayer
-              ref={desktopRemoteVideoRef}
-              stream={remoteStream}
-              label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
-              className="aspect-video"
-            />
+            <div className="relative aspect-video">
+              <VideoPlayer
+                ref={desktopRemoteVideoRef}
+                stream={remoteStream}
+                label={session?.myRole === "host" ? "Guest (Peer)" : "Host (Peer)"}
+                className="w-full h-full"
+              />
+              {isPeerReconnecting && (
+                <div className="absolute inset-0 z-10 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center p-4 text-center rounded-2xl animate-in fade-in duration-200">
+                  <ArrowsClockwiseIcon size={32} className="animate-spin text-amber-400 mb-2" />
+                  <p className="text-sm font-semibold text-[#f2f3f5]">Peer disconnected</p>
+                  <p className="text-xs text-[#949ba4] mt-1">Waiting for peer to return...</p>
+                </div>
+              )}
+            </div>
             <VideoPlayer
               stream={localStream}
               label="You"
@@ -391,15 +400,24 @@ export const ActiveRoomView: React.FC = () => {
             )}
           >
             {/* Mobile Main Video Feed */}
-            <VideoPlayer
-              ref={mobileMainVideoRef}
-              stream={isLocalSwapped ? localStream : remoteStream}
-              label={isLocalSwapped ? "You" : session?.myRole === "host" ? "Guest" : "Host"}
-              isLocal={isLocalSwapped}
-              isMuted={isLocalSwapped ? isMuted : false}
-              isVideoOff={isLocalSwapped ? isCameraOff : false}
-              className="w-full h-full border-0 rounded-none"
-            />
+            <div className="relative w-full h-full">
+              <VideoPlayer
+                ref={mobileMainVideoRef}
+                stream={isLocalSwapped ? localStream : remoteStream}
+                label={isLocalSwapped ? "You" : session?.myRole === "host" ? "Guest" : "Host"}
+                isLocal={isLocalSwapped}
+                isMuted={isLocalSwapped ? isMuted : false}
+                isVideoOff={isLocalSwapped ? isCameraOff : false}
+                className="w-full h-full border-0 rounded-none"
+              />
+              {!isLocalSwapped && isPeerReconnecting && (
+                <div className="absolute inset-0 z-10 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center p-4 text-center animate-in fade-in duration-200">
+                  <ArrowsClockwiseIcon size={32} className="animate-spin text-amber-400 mb-2" />
+                  <p className="text-sm font-semibold text-[#f2f3f5]">Peer disconnected</p>
+                  <p className="text-xs text-[#949ba4] mt-1">Waiting for peer to return...</p>
+                </div>
+              )}
+            </div>
 
             {/* Mobile Floating Picture-in-Picture (Tap to swap feeds, positioned top-right) */}
             <div
@@ -420,6 +438,12 @@ export const ActiveRoomView: React.FC = () => {
                 onClick={() => setIsLocalSwapped(!isLocalSwapped)}
                 className="w-full h-full border-0 rounded-none"
               />
+              {isLocalSwapped && isPeerReconnecting && (
+                <div className="absolute inset-0 z-10 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center p-2 text-center animate-in fade-in duration-200">
+                  <ArrowsClockwiseIcon size={20} className="animate-spin text-amber-400 mb-1" />
+                  <p className="text-[10px] font-semibold text-[#f2f3f5] leading-tight">Reconnecting...</p>
+                </div>
+              )}
             </div>
           </div>
         )}
