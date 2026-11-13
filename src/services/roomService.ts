@@ -264,6 +264,7 @@ export const roomService = {
    * Leave a room
    */
   async leaveRoom(roomId: string, participantId: string): Promise<void> {
+    this.clearRejoinSession();
     try {
       await fetch(
         `${env.signalingUrl.replace("ws", "http")}/api/rooms/${roomId}/leave`,
@@ -271,13 +272,28 @@ export const roomService = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ participantId }),
+          keepalive: true,
         }
       );
     } catch {
       localCoordinator.leave(roomId, participantId);
-    } finally {
-      this.clearRejoinSession();
     }
+  },
+
+  /**
+   * Leave room via navigator.sendBeacon on window/app unload
+   */
+  leaveRoomBeacon(roomId: string, participantId: string): boolean {
+    this.clearRejoinSession();
+    try {
+      const url = `${env.signalingUrl.replace("ws", "http")}/api/rooms/${roomId}/leave`;
+      const body = JSON.stringify({ participantId });
+      if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+        const blob = new Blob([body], { type: "application/json" });
+        return navigator.sendBeacon(url, blob);
+      }
+    } catch {}
+    return false;
   },
 
   /**

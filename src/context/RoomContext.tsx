@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import {
   Participant,
   RejoinSession,
@@ -191,17 +191,35 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const isLeavingRef = useRef(false);
+
   const leaveRoom = useCallback(async () => {
+    if (isLeavingRef.current) return;
+    isLeavingRef.current = true;
+
     notifyNativeCallState(false);
-    if (session) {
-      clearCallStartedAt(session.roomId);
-      await roomService.leaveRoom(session.roomId, session.myParticipantId);
+    const activeSession = session;
+    if (activeSession) {
+      clearCallStartedAt(activeSession.roomId);
     }
+
+    // Immediately reset UI state and disconnect signaling without awaiting network I/O
     setSession(null);
     setStatus("idle");
     setRejoinSession(null);
     setIsPeerReconnecting(false);
     signalingService.disconnect();
+
+    // Dispatch leave request in background
+    if (activeSession) {
+      try {
+        await roomService.leaveRoom(activeSession.roomId, activeSession.myParticipantId);
+      } catch (err) {
+        console.warn("[RoomContext] Error dispatching leaveRoom:", err);
+      }
+    }
+
+    isLeavingRef.current = false;
   }, [session]);
 
   const rejoinLastRoom = useCallback(async () => {

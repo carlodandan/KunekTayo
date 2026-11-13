@@ -54,7 +54,18 @@ export const ActiveRoomView: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isLocalSwapped, setIsLocalSwapped] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [now, setNow] = useState(Date.now());
+
+  const handleLeaveCall = async () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    try {
+      await leaveRoom();
+    } finally {
+      setIsLeaving(false);
+    }
+  };
 
   // Ticker for real-time TTL countdown updates
   useEffect(() => {
@@ -549,13 +560,14 @@ export const ActiveRoomView: React.FC = () => {
         <Button
           variant="danger"
           size="md"
-          onClick={leaveRoom}
+          onClick={handleLeaveCall}
+          disabled={isLeaving}
           icon={<SignOutIcon size={20} weight="bold" />}
-          className="rounded-full sm:rounded-xl min-h-[44px] min-w-[44px] w-11 h-11 sm:w-auto p-0 sm:px-4 shrink-0 font-medium"
+          className="rounded-full sm:rounded-xl min-h-[48px] min-w-[48px] w-12 h-12 sm:w-auto p-0 sm:px-4 shrink-0 font-medium active:scale-95 transition-transform"
           title="Leave Call"
           aria-label="Leave Call"
         >
-          <span className="hidden sm:inline">Leave Call</span>
+          <span className="hidden sm:inline">{isLeaving ? "Leaving..." : "Leave Call"}</span>
         </Button>
       </Card>
 
