@@ -143,4 +143,84 @@ describe("Room Resilience & Session Persistence", () => {
       roomService.joinRoom(created.roomId, created.inviteToken)
     ).rejects.toMatchObject({ code: "ROOM_EXPIRED" });
   });
+
+  it("dispatches leaveRoom with keepalive and clears rejoin session", async () => {
+    roomService.saveRejoinSession({
+      roomId: "room_leave_test",
+      inviteToken: "token_leave",
+      participantId: "p_leave_1",
+      role: "host",
+      lastActiveAt: Date.now(),
+    });
+    expect(roomService.getRejoinSession()).not.toBeNull();
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true }),
+    } as Response);
+
+    await roomService.leaveRoom("room_leave_test", "p_leave_1");
+
+    expect(roomService.getRejoinSession()).toBeNull();
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining("/api/rooms/room_leave_test/leave"),
+      expect.objectContaining({
+        method: "POST",
+        keepalive: true,
+        body: JSON.stringify({ participantId: "p_leave_1" }),
+      })
+    );
+  });
+
+  it("dispatches leaveRoomBeacon with sendBeacon when available", () => {
+    roomService.saveRejoinSession({
+      roomId: "room_beacon_test",
+      inviteToken: "token_beacon",
+      participantId: "p_beacon_1",
+      role: "guest",
+      lastActiveAt: Date.now(),
+    });
+
+    const sendBeacon = vi.fn().mockReturnValue(true);
+    vi.stubGlobal("navigator", { sendBeacon });
+
+    const sent = roomService.leaveRoomBeacon("room_beacon_test", "p_beacon_1");
+
+    expect(sent).toBe(true);
+    expect(sendBeacon).toHaveBeenCalledWith(
+      expect.stringContaining("/api/rooms/room_beacon_test/leave"),
+      expect.any(Blob)
+    );
+    expect(roomService.getRejoinSession()).toBeNull();
+  });
+
+  it("dispatches leaveRoomBeacon via fetch with keepalive when sendBeacon is unavailable", () => {
+    roomService.saveRejoinSession({
+      roomId: "room_beacon_fallback",
+      inviteToken: "token_fallback",
+      participantId: "p_fallback_1",
+      role: "guest",
+      lastActiveAt: Date.now(),
+    });
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    } as Response);
+
+    vi.stubGlobal("navigator", {});
+
+    const sent = roomService.leaveRoomBeacon("room_beacon_fallback", "p_fallback_1");
+
+    expect(sent).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining("/api/rooms/room_beacon_fallback/leave"),
+      expect.objectContaining({
+        method: "POST",
+        keepalive: true,
+        body: JSON.stringify({ participantId: "p_fallback_1", isBeacon: true }),
+      })
+    );
+    expect(roomService.getRejoinSession()).toBeNull();
+  });
 });

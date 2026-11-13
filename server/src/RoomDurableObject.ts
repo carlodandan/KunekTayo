@@ -224,8 +224,62 @@ export class RoomDurableObject extends DurableObject {
       );
     }
 
-    // Strict 2-participant room limit
+    // Strict 2-participant room limit check with slot reclamation for disconnected participants
     if (state.participants.length >= 2) {
+      const inactiveIndex = state.participants.findIndex(
+        (p) => this.ctx.getWebSockets(p.id).length === 0
+      );
+
+      if (inactiveIndex !== -1) {
+        const inactiveParticipant = state.participants[inactiveIndex];
+        const reclaimedRole = inactiveParticipant.role;
+
+        state.participants.splice(inactiveIndex, 1);
+        if (state.disconnectedParticipants) {
+          delete state.disconnectedParticipants[inactiveParticipant.id];
+        }
+
+        const newParticipant: ParticipantRecord = {
+          id: body.participantId,
+          role: reclaimedRole,
+          joinedAt: now,
+          lastPingAt: now,
+        };
+        state.participants.push(newParticipant);
+
+        state.status = "active";
+        state.soloExpiresAt = null;
+        state.disconnectGraceExpiresAt = null;
+        state.disconnectedParticipants = {};
+        await this.ctx.storage.deleteAlarm();
+        await this.saveState(state);
+
+        this.broadcast({
+          type: "peer_left",
+          participantId: inactiveParticipant.id,
+        });
+
+        this.broadcast({
+          type: "room_state",
+          state: state.status,
+          participants: state.participants,
+          soloExpiresAt: null,
+        });
+        this.broadcast({
+          type: "peer_ready",
+        });
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            role: reclaimedRole,
+            state,
+            rejoined: true,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           error: "Room is full. KunekTayo allows a maximum of 2 participants.",
@@ -279,7 +333,7 @@ export class RoomDurableObject extends DurableObject {
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
-    const body = (await request.json()) as { participantId: string };
+    const body = (await request.json()) as { participantId: string; isBeacon?: boolean };
     const leaving = state.participants.find((p) => p.id === body.participantId);
     const isHost = leaving?.role === "host";
 
@@ -289,7 +343,9 @@ export class RoomDurableObject extends DurableObject {
     }
     state.disconnectGraceExpiresAt = null;
 
-    if (isHost || state.participants.length === 0) {
+    const shouldClose = state.participants.length === 0 || (isHost && !body.isBeacon);
+
+    if (shouldClose) {
       // Host left or all participants have left; close and clean up room
       state.status = "closed";
       await this.ctx.storage.deleteAlarm();
@@ -544,6 +600,50 @@ export class RoomDurableObject extends DurableObject {
 
     const state = await this.getState();
     if (!state || state.status === "closed" || state.status === "expired") {
+      return;
+    }
+
+    // If the WebSocket was closed because the user closed the window or navigated away (1001 Going Away)
+    if (_code === 1001) {
+      state.participants = state.participants.filter((p) => p.id !== participantId);
+      if (state.disconnectedParticipants) {
+        delete state.disconnectedParticipants[participantId];
+      }
+      state.disconnectGraceExpiresAt = null;
+
+      if (state.participants.length === 0) {
+        state.status = "closed";
+        await this.ctx.storage.deleteAlarm();
+        this.broadcast({
+          type: "room_state",
+          state: "closed",
+          reason: "all_left",
+        });
+        for (const sock of this.ctx.getWebSockets()) {
+          try {
+            sock.close(4000, "Room Closed");
+          } catch {}
+        }
+        await this.ctx.storage.deleteAll();
+        this.stateCache = null;
+        return;
+      }
+
+      state.status = "waiting";
+      state.soloExpiresAt = null;
+      await this.ctx.storage.deleteAlarm();
+      await this.saveState(state);
+
+      this.broadcast({
+        type: "room_state",
+        state: state.status,
+        participants: state.participants,
+        soloExpiresAt: null,
+      });
+      this.broadcast({
+        type: "peer_left",
+        participantId,
+      });
       return;
     }
 

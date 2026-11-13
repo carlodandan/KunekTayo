@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import {
   Participant,
   RejoinSession,
@@ -11,6 +11,7 @@ import { signalingService } from "@/services/signalingService";
 import { buildInviteUrl } from "@/utils/crypto";
 import { notifyNativeCallState } from "@/services/androidPipService";
 import { clearCallStartedAt } from "@/utils/callTimer";
+import { webrtcService } from "@/services/webrtcService";
 
 interface RoomContextValue {
   session: RoomSession | null;
@@ -67,6 +68,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (payload.state) {
         if (payload.state === "waiting") {
           clearCallStartedAt(session.roomId);
+          setIsPeerReconnecting(false);
+          webrtcService.handlePeerLeft();
         }
         setStatus(payload.state);
         if (payload.state === "active") {
@@ -107,6 +110,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubPeerLeft = signalingService.on("peer_left", () => {
       setIsPeerReconnecting(false);
+      webrtcService.handlePeerLeft();
     });
 
     return () => {
@@ -116,6 +120,23 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       unsubPeerLeft();
     };
   }, [session?.roomId, session?.inviteToken, session?.myParticipantId]);
+
+  // Listen for pagehide / beforeunload to immediately release room slot on close / swipe away
+  useEffect(() => {
+    if (!session) return;
+
+    const handleUnload = () => {
+      roomService.leaveRoomBeacon(session.roomId, session.myParticipantId);
+    };
+
+    window.addEventListener("pagehide", handleUnload);
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      window.removeEventListener("pagehide", handleUnload);
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [session?.roomId, session?.myParticipantId]);
 
   const computeTimeRemaining = () => null;
 
@@ -191,17 +212,35 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const isLeavingRef = useRef(false);
+
   const leaveRoom = useCallback(async () => {
+    if (isLeavingRef.current) return;
+    isLeavingRef.current = true;
+
     notifyNativeCallState(false);
-    if (session) {
-      clearCallStartedAt(session.roomId);
-      await roomService.leaveRoom(session.roomId, session.myParticipantId);
+    const activeSession = session;
+    if (activeSession) {
+      clearCallStartedAt(activeSession.roomId);
     }
+
+    // Immediately reset UI state and disconnect signaling without awaiting network I/O
     setSession(null);
     setStatus("idle");
     setRejoinSession(null);
     setIsPeerReconnecting(false);
     signalingService.disconnect();
+
+    // Dispatch leave request in background
+    if (activeSession) {
+      try {
+        await roomService.leaveRoom(activeSession.roomId, activeSession.myParticipantId);
+      } catch (err) {
+        console.warn("[RoomContext] Error dispatching leaveRoom:", err);
+      }
+    }
+
+    isLeavingRef.current = false;
   }, [session]);
 
   const rejoinLastRoom = useCallback(async () => {

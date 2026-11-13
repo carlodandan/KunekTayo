@@ -20,6 +20,86 @@ export function isBluetoothOrHeadset(label: string): boolean {
   );
 }
 
+/**
+ * Format raw and fallback device labels into clean, title-cased typography.
+ * Resolves raw Android Camera HAL labels (e.g. "camera 1, facing front")
+ * and awkward lower-case fallback strings (e.g. " audio Output #7").
+ */
+export function formatDeviceLabel(
+  rawLabel: string | undefined,
+  kind: MediaDeviceKind,
+  index: number
+): string {
+  const trimmed = rawLabel?.trim() || "";
+
+  // 1. Fallback for empty or whitespace-only labels
+  if (!trimmed) {
+    if (kind === "audioinput") return `Microphone ${index + 1}`;
+    if (kind === "audiooutput") return `Speaker / Headset ${index + 1}`;
+    if (kind === "videoinput") return `Camera ${index + 1}`;
+    return `Device ${index + 1}`;
+  }
+
+  // 2. Camera label normalization (Android Camera HAL & webcams)
+  if (kind === "videoinput") {
+    const androidCamMatch = trimmed.match(
+      /^camera\s*(\d+)[,\s]+facing\s+(front|back|external|user|environment)/i
+    );
+    if (androidCamMatch) {
+      const camNum = androidCamMatch[1];
+      const direction = androidCamMatch[2].toLowerCase();
+      const isFront = direction === "front" || direction === "user";
+      return isFront ? `Front Camera (Camera ${camNum})` : `Back Camera (Camera ${camNum})`;
+    }
+
+    if (/^facing\s+front/i.test(trimmed)) return "Front Camera";
+    if (/^facing\s+back/i.test(trimmed)) return "Back Camera";
+
+    const simpleCamMatch = trimmed.match(/^camera\s*(\d+)$/i);
+    if (simpleCamMatch) {
+      return `Camera ${simpleCamMatch[1]}`;
+    }
+
+    if (/^video\s*input/i.test(trimmed)) {
+      const cleaned = trimmed.replace(/^video\s*input\s*(#)?/i, "").trim();
+      return cleaned ? `Camera ${cleaned}` : `Camera ${index + 1}`;
+    }
+  }
+
+  // 3. Audio input label normalization
+  if (kind === "audioinput") {
+    if (/^default$/i.test(trimmed)) return "Default Microphone";
+    if (/^communications$/i.test(trimmed)) return "Communications Microphone";
+
+    if (/^audio\s*input/i.test(trimmed)) {
+      const cleaned = trimmed.replace(/^audio\s*input\s*(#)?/i, "").trim();
+      return cleaned ? `Microphone ${cleaned}` : `Microphone ${index + 1}`;
+    }
+  }
+
+  // 4. Audio output label normalization
+  if (kind === "audiooutput") {
+    if (/^default$/i.test(trimmed)) return "Default Speaker / Headset";
+    if (/^communications$/i.test(trimmed)) return "Communications Speaker";
+
+    if (/^audio\s*output/i.test(trimmed)) {
+      const cleaned = trimmed.replace(/^audio\s*output\s*(#)?/i, "").trim();
+      return cleaned ? `Speaker / Headset ${cleaned}` : `Speaker / Headset ${index + 1}`;
+    }
+  }
+
+  // 5. Title-case conversion if label is entirely lowercase
+  if (trimmed === trimmed.toLowerCase()) {
+    return trimmed
+      .split(/\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+
+  // Ensure first character is capitalized
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
 class DeviceService {
   private selectedOutputDeviceId = "";
   private deviceChangeSubscribers = new Set<(devices: AvailableDevices) => void>();
@@ -77,16 +157,21 @@ class DeviceService {
       const audioOutputs: MediaDeviceInfoSummary[] = [];
       const videoInputs: MediaDeviceInfoSummary[] = [];
 
-      devices.forEach((d, idx) => {
-        const item: MediaDeviceInfoSummary = {
-          deviceId: d.deviceId,
-          label: d.label || `${d.kind.replace("input", " Input").replace("output", " Output")} #${idx + 1}`,
-          kind: d.kind,
-        };
+      let audioInputIndex = 0;
+      let audioOutputIndex = 0;
+      let videoInputIndex = 0;
 
-        if (d.kind === "audioinput") audioInputs.push(item);
-        else if (d.kind === "audiooutput") audioOutputs.push(item);
-        else if (d.kind === "videoinput") videoInputs.push(item);
+      devices.forEach((d) => {
+        if (d.kind === "audioinput") {
+          const label = formatDeviceLabel(d.label, d.kind, audioInputIndex++);
+          audioInputs.push({ deviceId: d.deviceId, label, kind: d.kind });
+        } else if (d.kind === "audiooutput") {
+          const label = formatDeviceLabel(d.label, d.kind, audioOutputIndex++);
+          audioOutputs.push({ deviceId: d.deviceId, label, kind: d.kind });
+        } else if (d.kind === "videoinput") {
+          const label = formatDeviceLabel(d.label, d.kind, videoInputIndex++);
+          videoInputs.push({ deviceId: d.deviceId, label, kind: d.kind });
+        }
       });
 
       return { audioInputs, audioOutputs, videoInputs };
@@ -155,36 +240,101 @@ class DeviceService {
   }
 
   /**
-   * Switch active video input device on an existing MediaStream
+   * Switch active video input device on an existing MediaStream.
+   * Handles desktop concurrent acquisition and mobile/Android 12 exclusive hardware locks.
    */
   async switchVideoDevice(
     stream: MediaStream,
     deviceId: string,
     replaceTrack: (track: MediaStreamTrack) => Promise<void>
   ): Promise<MediaStreamTrack | null> {
+    const oldTrack = stream.getVideoTracks()[0];
+    const oldEnabled = oldTrack?.enabled ?? true;
+    const oldDeviceId = oldTrack?.getSettings?.()?.deviceId;
+
     let newTrack: MediaStreamTrack | undefined;
+
+    // Strategy 1: Concurrent acquisition (keeps old track live until new is negotiated; works on desktop)
     try {
-      const oldTrack = stream.getVideoTracks()[0];
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { deviceId: { exact: deviceId } },
       });
       newTrack = newStream.getVideoTracks()[0];
-      if (!newTrack) return null;
-      newTrack.enabled = oldTrack?.enabled ?? true;
+      if (newTrack) {
+        newTrack.enabled = oldEnabled;
+        await replaceTrack(newTrack);
 
-      // Keep the current track live until the peer accepts its replacement.
-      await replaceTrack(newTrack);
+        if (oldTrack) {
+          stream.removeTrack(oldTrack);
+          oldTrack.stop();
+        }
 
-      if (oldTrack) {
-        stream.removeTrack(oldTrack);
-        oldTrack.stop();
+        stream.addTrack(newTrack);
+        return newTrack;
+      }
+    } catch (concurrentErr: unknown) {
+      // If replaceTrack rejected, abort and preserve existing track
+      if (newTrack) {
+        newTrack.stop();
+        console.error("[DeviceService] Failed to switch video device:", concurrentErr);
+        return null;
       }
 
+      // If getUserMedia failed (e.g. Android 12 camera hardware lock / NotReadableError),
+      // release the active camera track to unlock the camera subsystem on mobile
+      console.warn(
+        "[DeviceService] Concurrent camera acquisition failed, releasing active track for hardware switch:",
+        concurrentErr
+      );
+    }
+
+    // Strategy 2: Release old track and acquire target device (Android 12 Camera2 HAL requirement)
+    if (oldTrack) {
+      stream.removeTrack(oldTrack);
+      oldTrack.stop();
+    }
+
+    try {
+      let targetStream: MediaStream | null = null;
+      try {
+        targetStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: deviceId } },
+        });
+      } catch {
+        targetStream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { ideal: deviceId } },
+        });
+      }
+
+      newTrack = targetStream.getVideoTracks()[0];
+      if (!newTrack) throw new Error("No video track found in target stream");
+
+      newTrack.enabled = oldEnabled;
+      await replaceTrack(newTrack);
       stream.addTrack(newTrack);
       return newTrack;
-    } catch (err) {
+    } catch (switchErr) {
       newTrack?.stop();
-      console.error("[DeviceService] Failed to switch video device:", err);
+      console.error(
+        "[DeviceService] Failed to acquire target camera, attempting rollback:",
+        switchErr
+      );
+
+      // Rollback to previous or default camera to avoid leaving stream in dead state
+      try {
+        const rollbackStream = await navigator.mediaDevices.getUserMedia({
+          video: oldDeviceId ? { deviceId: { ideal: oldDeviceId } } : { facingMode: "user" },
+        });
+        const rollbackTrack = rollbackStream.getVideoTracks()[0];
+        if (rollbackTrack) {
+          rollbackTrack.enabled = oldEnabled;
+          await replaceTrack(rollbackTrack);
+          stream.addTrack(rollbackTrack);
+        }
+      } catch (rollbackErr) {
+        console.error("[DeviceService] Rollback to previous camera also failed:", rollbackErr);
+      }
+
       return null;
     }
   }
